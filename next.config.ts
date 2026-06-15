@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Matikan dev overlay Next.js (sumber Geist font 403 di Cloud Workstation)
+  // Izinkan Cloud Workstation domain mengakses resource dev Next.js
+  allowedDevOrigins: ["*.cloudworkstations.dev"],
   devIndicators: false,
   experimental: {
     serverActions: {
