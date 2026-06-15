@@ -1,0 +1,203 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { ChevronLeft, CheckCircle } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
+import { Navbar } from "@/components/layout/navbar";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { store } from "@/lib/store";
+import { Patient, OutcomeStatus } from "@/lib/types";
+import { cn } from "@/lib/utils";
+
+const STATUS_OPTIONS: { value: OutcomeStatus; label: string; desc: string; icon: string; color: string }[] = [
+  {
+    value: "STABLE",
+    label: "Rawat Jalan Stabil",
+    desc: "Pasien kondisi stabil, tidak ada perburukan bermakna.",
+    icon: "✅",
+    color: "border-green-400 bg-green-50",
+  },
+  {
+    value: "HOSPITALIZED",
+    label: "Rawat Inap Ulang",
+    desc: "Pasien kembali dirawat inap karena dekompensasi.",
+    icon: "🏥",
+    color: "border-amber-400 bg-amber-50",
+  },
+  {
+    value: "REFERRED",
+    label: "Dirujuk ke Faskes Lanjut",
+    desc: "Pasien berhasil dirujuk dan diterima di RS tujuan.",
+    icon: "➡️",
+    color: "border-blue-400 bg-blue-50",
+  },
+  {
+    value: "DECEASED",
+    label: "Meninggal Dunia",
+    desc: "Pasien meninggal dalam periode follow-up.",
+    icon: "🕊️",
+    color: "border-gray-400 bg-gray-50",
+  },
+  {
+    value: "LOST_TO_FOLLOWUP",
+    label: "Lost to Follow-up",
+    desc: "Pasien tidak dapat dihubungi atau tidak kontrol kembali.",
+    icon: "❓",
+    color: "border-orange-400 bg-orange-50",
+  },
+];
+
+export default function FollowUpPage() {
+  const { id } = useParams<{ id: string }>();
+  const { doctor, isLoading } = useAuth();
+  const router = useRouter();
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [status, setStatus] = useState<OutcomeStatus | "">("");
+  const [followUpDays, setFollowUpDays] = useState("30");
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && !doctor) router.replace("/login");
+  }, [doctor, isLoading, router]);
+
+  useEffect(() => {
+    if (!id || !doctor) return;
+    const p = store.getPatient(id);
+    if (!p) { router.replace("/patients"); return; }
+    setPatient(p);
+    const existing = store.getOutcomeByPatient(id);
+    if (existing) {
+      setStatus(existing.status);
+      setFollowUpDays(String(existing.followUpDays));
+    }
+  }, [id, doctor, router]);
+
+  if (isLoading || !doctor || !patient) return null;
+
+  const handleSave = async () => {
+    if (!status) return;
+    setSaving(true);
+    await new Promise((r) => setTimeout(r, 400));
+
+    store.addOutcome({
+      id: `o-${Date.now()}`,
+      patientId: patient.id,
+      status,
+      followUpDays: Number(followUpDays) || 30,
+      recordedAt: new Date().toISOString(),
+      notes: notes || undefined,
+    });
+
+    setSaved(true);
+    setSaving(false);
+    setTimeout(() => router.push(`/patients/${patient.id}`), 1200);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <Navbar />
+      <main className="pt-14">
+        <div className="max-w-md mx-auto px-4 py-6 space-y-4">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Kembali
+          </button>
+
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Update Follow-up</h1>
+            <p className="text-sm text-gray-500">
+              Pasien: <strong>{patient.patientInitial}</strong> • {patient.age} th •{" "}
+              {patient.gender === "M" ? "L" : "P"}
+            </p>
+          </div>
+
+          {saved && (
+            <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg p-3 text-green-700">
+              <CheckCircle className="w-4 h-4 shrink-0" />
+              <p className="text-sm font-semibold">Follow-up berhasil disimpan!</p>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-gray-900">Status Outcome 30-Hari *</p>
+            {STATUS_OPTIONS.map((opt) => (
+              <label
+                key={opt.value}
+                htmlFor={`status-${opt.value}`}
+                className={cn(
+                  "flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all",
+                  status === opt.value
+                    ? opt.color + " border-opacity-100"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                )}
+              >
+                <input
+                  type="radio"
+                  id={`status-${opt.value}`}
+                  name="status"
+                  value={opt.value}
+                  checked={status === opt.value}
+                  onChange={() => setStatus(opt.value)}
+                  className="mt-1 accent-blue-600"
+                />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span>{opt.icon}</span>
+                    <p className="text-sm font-semibold text-gray-900">{opt.label}</p>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4 space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="days">Hari Sejak Triase</Label>
+                <Input
+                  id="days"
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={followUpDays}
+                  onChange={(e) => setFollowUpDays(e.target.value)}
+                />
+                <p className="text-xs text-gray-400">Berapa hari sejak triase awal dilakukan?</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="notes">Catatan Klinis (opsional)</Label>
+                <textarea
+                  id="notes"
+                  rows={3}
+                  placeholder="Tambahkan catatan klinis tambahan..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="flex w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-none"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Button
+            size="xl"
+            className="w-full"
+            disabled={!status || saving || saved}
+            onClick={handleSave}
+          >
+            {saving ? "Menyimpan..." : saved ? "Tersimpan ✓" : "Simpan Status Follow-up"}
+          </Button>
+        </div>
+      </main>
+    </div>
+  );
+}
