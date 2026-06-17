@@ -19,7 +19,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { TriageCriteria } from "@/lib/types";
 import { TRIAGE_CRITERIA_LABELS, calculateTriageScore } from "@/lib/triage";
@@ -72,6 +71,13 @@ const defaultProfile: ProfileData = {
 const defaultCriteria: TriageCriteria = {
   I: false, N: false, E1: false, E2: false, D: false, H: false, E3: false, L: false, P: false,
 };
+
+const NYHA_OPTIONS = [
+  { value: "I", caption: "Tanpa gejala saat aktivitas" },
+  { value: "II", caption: "Gejala saat aktivitas berat" },
+  { value: "III", caption: "Gejala saat aktivitas ringan" },
+  { value: "IV", caption: "Gejala saat istirahat" },
+] as const;
 
 function StepIndicator({ step }: { step: Step }) {
   return (
@@ -321,22 +327,25 @@ export default function NewTriagePage() {
                       Kelas Fungsional NYHA{" "}
                       <span className="text-gray-400 font-normal">(opsional)</span>
                     </Label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {(["I", "II", "III", "IV"] as const).map((cls) => (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {NYHA_OPTIONS.map((opt) => (
                         <button
-                          key={cls}
+                          key={opt.value}
                           type="button"
                           onClick={() =>
-                            updateProfile("nyhaClass", profile.nyhaClass === cls ? "" : cls)
+                            updateProfile("nyhaClass", profile.nyhaClass === opt.value ? "" : opt.value)
                           }
                           className={cn(
-                            "py-2.5 rounded-lg border-2 text-sm font-medium transition-all",
-                            profile.nyhaClass === cls
+                            "py-2 px-1.5 rounded-lg border-2 text-center transition-all",
+                            profile.nyhaClass === opt.value
                               ? "border-blue-500 bg-blue-50 text-blue-700"
                               : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                           )}
                         >
-                          {cls}
+                          <span className="text-sm font-bold block">{opt.value}</span>
+                          <span className="text-[10px] leading-tight block mt-0.5 opacity-80">
+                            {opt.caption}
+                          </span>
                         </button>
                       ))}
                     </div>

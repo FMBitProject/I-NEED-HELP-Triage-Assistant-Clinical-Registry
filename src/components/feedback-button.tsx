@@ -21,7 +21,7 @@ export function FeedbackButton() {
   return (
     <div className="fixed bottom-5 right-4 z-40 flex flex-col items-end gap-2">
       {expanded && (
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-4 w-64 text-sm">
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-4 w-64 max-w-[calc(100vw-2rem)] text-sm">
           <p className="font-semibold text-gray-900 mb-1">Kirim Masukan</p>
           <p className="text-xs text-gray-500 mb-3 leading-relaxed">
             Ada fitur yang kurang, bug, atau saran? Hubungi developer langsung.
