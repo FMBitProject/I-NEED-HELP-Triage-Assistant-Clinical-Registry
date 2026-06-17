@@ -13,13 +13,13 @@ import {
   X,
   HeartPulse,
   Bell,
+  FileText,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/store";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -32,12 +32,17 @@ export function Navbar() {
   const { doctor, logout } = useAuth();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
 
-  const patients = store.getPatients();
-  const outcomes = store.getOutcomes();
-  const pendingCount = patients.filter(
-    (p) => !outcomes.find((o) => o.patientId === p.id)
-  ).length;
+  useEffect(() => {
+    if (!doctor) return;
+    fetch("/api/patients")
+      .then((r) => r.json())
+      .then((patients: { outcome?: unknown }[]) => {
+        setPendingCount(patients.filter((p) => !p.outcome).length);
+      })
+      .catch(() => {});
+  }, [doctor]);
 
   return (
     <>
@@ -158,6 +163,14 @@ export function Navbar() {
                 <p className="text-sm font-semibold text-gray-900">{doctor?.name}</p>
                 <p className="text-xs text-gray-500">{doctor?.institutionType}</p>
               </div>
+              <Link
+                href="/settings"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100"
+              >
+                <FileText className="w-4 h-4" />
+                Pengaturan Akun
+              </Link>
               <button
                 onClick={() => { setOpen(false); logout(); }}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 w-full"
@@ -165,6 +178,22 @@ export function Navbar() {
                 <LogOut className="w-4 h-4" />
                 Keluar
               </button>
+              <div className="flex gap-3 px-3 pt-3 mt-1 border-t border-gray-100">
+                <Link
+                  href="/privacy-policy"
+                  onClick={() => setOpen(false)}
+                  className="text-xs text-gray-400 hover:text-gray-600 hover:underline"
+                >
+                  Kebijakan Privasi
+                </Link>
+                <Link
+                  href="/terms"
+                  onClick={() => setOpen(false)}
+                  className="text-xs text-gray-400 hover:text-gray-600 hover:underline"
+                >
+                  Syarat &amp; Ketentuan
+                </Link>
+              </div>
             </div>
           </div>
         </div>

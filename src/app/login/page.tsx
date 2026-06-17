@@ -118,11 +118,16 @@ export default function LoginPage() {
           </Link>
         </p>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
-          Data pasien dikumpulkan secara anonim untuk keperluan riset ilmiah.
-          <br />
-          Sesuai protokol etik penelitian.
-        </p>
+        <div className="text-center mt-5 space-y-1">
+          <p className="text-xs text-gray-400">
+            Data pasien dikumpulkan secara pseudoanonim untuk keperluan riset ilmiah.
+          </p>
+          <p className="text-xs text-gray-400">
+            <Link href="/privacy-policy" className="hover:underline text-gray-500">Kebijakan Privasi</Link>
+            {" · "}
+            <Link href="/terms" className="hover:underline text-gray-500">Syarat &amp; Ketentuan</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

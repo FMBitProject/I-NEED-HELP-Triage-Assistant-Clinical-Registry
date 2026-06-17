@@ -13,6 +13,7 @@ import {
   CheckCircle,
   Clock,
   ArrowRight,
+  Trash2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Navbar } from "@/components/layout/navbar";
@@ -38,6 +39,8 @@ export default function PatientDetailPage() {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [triageLog, setTriageLog] = useState<TriageLog | null>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !doctor) router.replace("/login");
@@ -56,6 +59,12 @@ export default function PatientDetailPage() {
   }, [id, doctor, router]);
 
   if (isLoading || !doctor || !patient) return null;
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    await fetch(`/api/patients/${patient.id}`, { method: "DELETE" });
+    router.replace("/patients");
+  };
 
   const isRefer = triageLog?.recommendationGiven === "REFER";
   const gdmtCount = countGdmt(patient);
@@ -291,6 +300,43 @@ export default function PatientDetailPage() {
               </CardContent>
             </Card>
           )}
+          {/* Delete patient data — UU PDP hak hapus */}
+          <div className="border-t border-gray-200 pt-4">
+            {!deleteConfirm ? (
+              <button
+                onClick={() => setDeleteConfirm(true)}
+                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-600 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Hapus data pasien ini
+              </button>
+            ) : (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 space-y-2">
+                <p className="text-xs text-red-800 font-semibold">
+                  Hapus semua data pasien ini secara permanen? Tindakan ini tidak dapat dibatalkan.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDeleteConfirm(false)}
+                    disabled={deleting}
+                    className="flex-1 text-xs"
+                  >
+                    Batal
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs"
+                    disabled={deleting}
+                    onClick={handleDelete}
+                  >
+                    {deleting ? "Menghapus..." : "Ya, Hapus"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </div>

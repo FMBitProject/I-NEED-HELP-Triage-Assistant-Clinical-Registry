@@ -32,3 +32,25 @@ export async function GET(
 
   return Response.json({ patient, triage: triage ?? null, outcome: outcome ?? null });
 }
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { session, error } = await requireSession();
+  if (error) return error;
+
+  const { id } = await params;
+
+  const patient = await db.query.patients.findFirst({
+    where: and(eq(patients.id, id), eq(patients.doctorId, session.user.id)),
+  });
+
+  if (!patient) {
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
+
+  await db.delete(patients).where(eq(patients.id, id));
+
+  return Response.json({ success: true });
+}

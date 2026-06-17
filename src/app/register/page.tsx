@@ -294,10 +294,17 @@ export default function RegisterPage() {
           </Link>
         </p>
 
-        <p className="text-center text-[10px] text-gray-400 mt-3 leading-relaxed px-4">
-          Platform ini tunduk pada UU PDP No. 27/2022, Permenkes No. 24/2022,
-          Permenkominfo No. 5/2020, dan prinsip ICH E6(R3) Good Clinical Practice.
-        </p>
+        <div className="text-center mt-3 space-y-1">
+          <p className="text-[10px] text-gray-400 leading-relaxed px-4">
+            Platform ini tunduk pada UU PDP No. 27/2022, Permenkes No. 24/2022,
+            Permenkominfo No. 5/2020, dan prinsip ICH E6(R3) GCP.
+          </p>
+          <p className="text-[10px] text-gray-400">
+            <Link href="/privacy-policy" className="hover:underline text-gray-500">Kebijakan Privasi</Link>
+            {" · "}
+            <Link href="/terms" className="hover:underline text-gray-500">Syarat &amp; Ketentuan</Link>
+          </p>
+        </div>
       </div>
     </div>
   );
