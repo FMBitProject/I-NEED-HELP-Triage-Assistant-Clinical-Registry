@@ -11,7 +11,9 @@ const appUrl = process.env.BETTER_AUTH_URL || "http://localhost:3000";
 const trustedOrigins: string[] = [
   "http://localhost:3000",
   appUrl,
+  // Vercel auto-injects these: VERCEL_URL = deployment URL, VERCEL_PROJECT_PRODUCTION_URL = production URL
   ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+  ...(process.env.VERCEL_PROJECT_PRODUCTION_URL ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`] : []),
   ...(process.env.NEXT_PUBLIC_APP_URL ? [process.env.NEXT_PUBLIC_APP_URL] : []),
 ].filter((v, i, a) => a.indexOf(v) === i); // deduplicate
 
