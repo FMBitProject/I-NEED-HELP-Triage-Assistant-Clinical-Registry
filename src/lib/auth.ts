@@ -4,9 +4,21 @@ import { nextCookies } from "better-auth/next-js";
 import { db } from "./db";
 import * as schema from "./db/schema";
 
+const appUrl = process.env.BETTER_AUTH_URL || "http://localhost:3000";
+
+// Collect all trusted origins from env so dev environments (cloud workstations,
+// Vercel preview URLs) don't get rejected with 403.
+const trustedOrigins: string[] = [
+  "http://localhost:3000",
+  appUrl,
+  ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+  ...(process.env.NEXT_PUBLIC_APP_URL ? [process.env.NEXT_PUBLIC_APP_URL] : []),
+].filter((v, i, a) => a.indexOf(v) === i); // deduplicate
+
 export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  baseURL: appUrl,
   secret: process.env.BETTER_AUTH_SECRET,
+  trustedOrigins,
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
