@@ -68,6 +68,8 @@ export interface Doctor {
   institutionType: string;
   createdAt: string;
   role: "DOCTOR" | "ADMIN";
+  ethicalClearanceNo?: string | null;
+  ethicalClearanceDate?: string | null;
 }
 
 export interface PatientWithDetails extends Patient {

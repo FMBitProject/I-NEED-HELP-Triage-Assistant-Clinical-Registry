@@ -13,6 +13,8 @@ export async function GET() {
       doctorId: user.id,
       doctorName: user.name,
       institutionType: user.institutionType,
+      ethicalClearanceNo: user.ethicalClearanceNo,
+      ethicalClearanceDate: user.ethicalClearanceDate,
       // Patient info
       patientId: patients.id,
       patientInitial: patients.patientInitial,
@@ -52,7 +54,7 @@ export async function GET() {
     .orderBy(patients.createdAt);
 
   const headers = [
-    "doctorId","doctorName","institutionType",
+    "doctorId","doctorName","institutionType","ethicalClearanceNo","ethicalClearanceDate",
     "patientId","patientInitial","age","gender",
     "systolicBp","diastolicBp","heartRate",
     "lvef","egfr","ntProbnp",

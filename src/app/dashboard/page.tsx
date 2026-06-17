@@ -180,6 +180,30 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
+          {/* Soft reminder: ethical clearance belum diisi (muncul setelah 5 pasien) */}
+          {!doctor.ethicalClearanceNo && totalPatients >= 5 && (
+            <Card className="border-blue-200 bg-blue-50 shadow-sm border-0 ring-1 ring-blue-200">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <ClipboardList className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-blue-900">
+                      Nomor ethical clearance belum diisi
+                    </p>
+                    <p className="text-xs text-blue-700 mt-0.5">
+                      Opsional — dapat diisi nanti sebelum publikasi. Puskesmas bisa mengajukan ke FK/FKM universitas terdekat.
+                    </p>
+                  </div>
+                  <Link href="/settings">
+                    <Button variant="outline" size="sm" className="shrink-0 border-blue-300 text-blue-700 hover:bg-blue-100">
+                      Isi Nanti
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Pending followup alert */}
           {pendingFollowup.length > 0 && (
             <Card className="border-amber-200 bg-amber-50 shadow-sm border-0 ring-1 ring-amber-200">

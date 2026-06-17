@@ -50,6 +50,16 @@ export const auth = betterAuth({
         defaultValue: false,
         fieldName: "researchConsent",
       },
+      ethicalClearanceNo: {
+        type: "string",
+        required: false,
+        fieldName: "ethicalClearanceNo",
+      },
+      ethicalClearanceDate: {
+        type: "string",
+        required: false,
+        fieldName: "ethicalClearanceDate",
+      },
     },
   },
   plugins: [nextCookies()],

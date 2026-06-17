@@ -1,5 +1,7 @@
 "use client";
 
+"use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -11,6 +13,8 @@ import {
   User,
   FileText,
   ExternalLink,
+  ClipboardCheck,
+  CheckCircle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Navbar } from "@/components/layout/navbar";
@@ -25,10 +29,31 @@ export default function SettingsPage() {
   const [deletePhase, setDeletePhase] = useState<"idle" | "confirm" | "typing" | "deleting">("idle");
   const [confirmText, setConfirmText] = useState("");
 
+  // Ethical clearance state
+  const [ecNo, setEcNo] = useState(doctor?.ethicalClearanceNo ?? "");
+  const [ecDate, setEcDate] = useState(doctor?.ethicalClearanceDate ?? "");
+  const [ecSaving, setEcSaving] = useState(false);
+  const [ecSaved, setEcSaved] = useState(false);
+
   if (!doctor) {
     router.replace("/login");
     return null;
   }
+
+  const handleSaveEc = async () => {
+    setEcSaving(true);
+    await fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ethicalClearanceNo: ecNo.trim() || null,
+        ethicalClearanceDate: ecDate.trim() || null,
+      }),
+    });
+    setEcSaving(false);
+    setEcSaved(true);
+    setTimeout(() => setEcSaved(false), 3000);
+  };
 
   const handleDeleteAccount = async () => {
     if (confirmText !== "HAPUS AKUN SAYA") return;
@@ -125,6 +150,62 @@ export default function SettingsPage() {
                     dpo@ineedhelp-registry.id
                   </a>
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Ethical Clearance */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <ClipboardCheck className="w-4 h-4 text-gray-500" />
+                Kode Etik Penelitian
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-3">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+                <p className="font-semibold mb-0.5">Dapat diisi retroaktif</p>
+                <p>
+                  Nomor ethical clearance boleh dikosongkan dulu dan diisi nanti setelah data
+                  terkumpul, saat akan submit ke jurnal atau konferensi. Puskesmas yang tidak
+                  punya komite etik dapat mengajukan ke FK/FKM universitas atau RSUD terdekat.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="ec-no">Nomor Ethical Clearance</Label>
+                <Input
+                  id="ec-no"
+                  placeholder="mis. 123/KEPK-FK/2025"
+                  value={ecNo}
+                  onChange={(e) => { setEcNo(e.target.value); setEcSaved(false); }}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="ec-date">Tanggal Terbit EC</Label>
+                <Input
+                  id="ec-date"
+                  type="date"
+                  value={ecDate}
+                  onChange={(e) => { setEcDate(e.target.value); setEcSaved(false); }}
+                />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Button
+                  size="sm"
+                  onClick={handleSaveEc}
+                  disabled={ecSaving}
+                >
+                  {ecSaving ? "Menyimpan..." : "Simpan"}
+                </Button>
+                {ecSaved && (
+                  <span className="flex items-center gap-1 text-xs text-green-700 font-medium">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    Tersimpan
+                  </span>
+                )}
               </div>
             </CardContent>
           </Card>

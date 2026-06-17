@@ -30,6 +30,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const u = session?.user as (NonNullable<typeof session>["user"] & {
     institutionType?: string;
     role?: string;
+    ethicalClearanceNo?: string | null;
+    ethicalClearanceDate?: string | null;
   }) | undefined;
 
   const doctor: Doctor | null = u
@@ -40,6 +42,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         institutionType: u.institutionType || "",
         createdAt: u.createdAt instanceof Date ? u.createdAt.toISOString() : String(u.createdAt),
         role: (u.role as "DOCTOR" | "ADMIN") || "DOCTOR",
+        ethicalClearanceNo: u.ethicalClearanceNo ?? null,
+        ethicalClearanceDate: u.ethicalClearanceDate ?? null,
       }
     : null;
 

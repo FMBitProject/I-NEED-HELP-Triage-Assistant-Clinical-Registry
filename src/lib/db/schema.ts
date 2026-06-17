@@ -24,6 +24,8 @@ export const user = pgTable("user", {
   institutionType: text("institution_type"),
   role: text("role").notNull().default("DOCTOR"),
   researchConsent: boolean("research_consent").notNull().default(false),
+  ethicalClearanceNo: text("ethical_clearance_no"),
+  ethicalClearanceDate: text("ethical_clearance_date"),
 });
 
 export const session = pgTable("session", {
