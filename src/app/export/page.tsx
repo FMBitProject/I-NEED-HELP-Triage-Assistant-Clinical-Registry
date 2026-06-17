@@ -46,7 +46,7 @@ export default function ExportPage() {
   useEffect(() => {
     if (doctor?.role === "ADMIN") {
       fetch("/api/patients")
-        .then((r) => r.json())
+        .then((r) => r.ok ? r.json() : [])
         .then((patients) => {
           setStats({
             total: patients.length,

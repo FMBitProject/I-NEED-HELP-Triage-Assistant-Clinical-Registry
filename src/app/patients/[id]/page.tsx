@@ -7,12 +7,10 @@ import {
   ChevronLeft,
   HeartPulse,
   Pill,
-  FlaskConical,
   Activity,
   AlertTriangle,
   CheckCircle,
   Clock,
-  ArrowRight,
   Trash2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";

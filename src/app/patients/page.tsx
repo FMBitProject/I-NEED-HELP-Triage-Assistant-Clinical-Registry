@@ -52,7 +52,7 @@ export default function PatientsPage() {
   useEffect(() => {
     if (doctor) {
       fetch("/api/patients")
-        .then((r) => r.json())
+        .then((r) => r.ok ? r.json() : [])
         .then(setPatients);
     }
   }, [doctor]);
