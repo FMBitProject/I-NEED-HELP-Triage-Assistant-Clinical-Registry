@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { HeartPulse, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { HeartPulse, Eye, EyeOff, AlertCircle, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,11 +26,6 @@ export default function LoginPage() {
       setError(result.error || "Login gagal");
       setLoading(false);
     }
-  };
-
-  const fillDemo = () => {
-    setEmail("demo@puskesmas.id");
-    setPassword("demo123");
   };
 
   return (
@@ -97,17 +92,6 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-              <p className="text-xs font-semibold text-blue-800 mb-1">Demo Akses:</p>
-              <p className="text-xs text-blue-700">Dokter: demo@puskesmas.id / demo123</p>
-              <p className="text-xs text-blue-700">Admin: admin@registry.id / admin123</p>
-              <button
-                onClick={fillDemo}
-                className="text-xs text-blue-600 font-semibold underline mt-1 hover:text-blue-800"
-              >
-                Isi otomatis akun demo
-              </button>
-            </div>
           </CardContent>
         </Card>
 
@@ -118,7 +102,7 @@ export default function LoginPage() {
           </Link>
         </p>
 
-        <div className="text-center mt-5 space-y-1">
+        <div className="text-center mt-5 space-y-1.5">
           <p className="text-xs text-gray-400">
             Data pasien dikumpulkan secara pseudoanonim untuk keperluan riset ilmiah.
           </p>
@@ -127,6 +111,13 @@ export default function LoginPage() {
             {" · "}
             <Link href="/terms" className="hover:underline text-gray-500">Syarat &amp; Ketentuan</Link>
           </p>
+          <a
+            href="mailto:renfael6@gmail.com?subject=Masukan%20untuk%20I-NEED-HELP%20Registry"
+            className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-blue-600 transition-colors"
+          >
+            <Mail className="w-3 h-3" />
+            Kirim masukan ke developer
+          </a>
         </div>
       </div>
     </div>
