@@ -111,11 +111,14 @@ export default function ExportPage() {
               <div className="flex items-start gap-2">
                 <Shield className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
                 <div className="text-xs text-blue-800 space-y-1">
-                  <p className="font-semibold">Pernyataan Etik Penelitian</p>
+                  <p className="font-semibold">Pernyataan Etik Penelitian &amp; Kepatuhan Regulasi</p>
                   <p>
-                    Data yang diekspor telah dianonimisasi. Tidak ada informasi identitas langsung
-                    pasien (nama, NIK, alamat) yang tersimpan. Penggunaan data harus sesuai
-                    protokol etik yang telah disetujui komite etik penelitian terkait.
+                    Data yang diekspor telah dianonimisasi (pseudoanonim). Tidak ada identitas
+                    langsung pasien (nama lengkap, NIK, alamat) yang tersimpan. Penggunaan data
+                    harus sesuai protokol etik komite etik penelitian terkait (ICH E6(R3) GCP),
+                    UU PDP No. 27/2022, Permenkes No. 24/2022, dan Permenkominfo No. 5/2020.
+                    Peneliti bertanggung jawab atas kepatuhan terhadap regulasi tersebut dalam
+                    setiap publikasi atau diseminasi hasil penelitian.
                   </p>
                 </div>
               </div>

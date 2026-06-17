@@ -286,11 +286,16 @@ export default function ResultPage() {
             </Button>
           </Link>
 
-          <div className="text-center">
+          <div className="text-center space-y-1">
             <p className="text-[10px] text-gray-400 leading-relaxed">
               Rekomendasi ini dibuat berdasarkan kriteria I-NEED-HELP sesuai Panduan Tata Laksana
-              Gagal Jantung PERKI 2020/2023. Keputusan klinis final tetap berada pada dokter yang
-              memeriksa pasien.
+              Gagal Jantung PERKI 2020/2023 dan bersifat <em>clinical decision support</em>.
+              Keputusan klinis final sepenuhnya berada pada dokter yang memeriksa pasien.
+            </p>
+            <p className="text-[10px] text-gray-400 leading-relaxed">
+              Data klinis diproses sesuai UU PDP No. 27/2022, ICH E6(R3) GCP, Permenkes
+              No. 24/2022, dan Permenkominfo No. 5/2020. Data disimpan secara pseudoanonim
+              untuk keperluan registri klinis ilmiah.
             </p>
           </div>
         </div>

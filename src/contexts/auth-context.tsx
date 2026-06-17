@@ -18,6 +18,7 @@ interface RegisterData {
   email: string;
   password: string;
   institutionType: string;
+  institutionName?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -50,11 +51,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (data: RegisterData) => {
+    const combined = data.institutionName?.trim()
+      ? `${data.institutionType} – ${data.institutionName.trim()}`
+      : data.institutionType;
     const { error } = await (authClient.signUp.email as Function)({
       email: data.email,
       password: data.password,
       name: data.name,
-      institutionType: data.institutionType,
+      institutionType: combined,
       researchConsent: true,
     });
     if (error) return { success: false, error: error.message || "Pendaftaran gagal." };
