@@ -69,6 +69,11 @@ export interface Doctor {
   role: "DOCTOR" | "ADMIN";
 }
 
+export interface PatientWithDetails extends Patient {
+  triage: TriageLog | null;
+  outcome: Outcome | null;
+}
+
 export interface DashboardStats {
   totalPatients: number;
   totalThisMonth: number;

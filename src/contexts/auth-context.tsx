@@ -1,9 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { Doctor } from "@/lib/types";
-import { store } from "@/lib/store";
+import { authClient, useSession } from "@/lib/auth-client";
 
 interface AuthContextType {
   doctor: Doctor | null;
@@ -23,86 +23,52 @@ interface RegisterData {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [doctor, setDoctor] = useState<Doctor | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: session, isPending } = useSession();
   const router = useRouter();
 
-  useEffect(() => {
-    const d = store.getDoctor();
-    if (d) {
-      setDoctor(d);
-      store.seedDemoData(d.id);
-    }
-    setIsLoading(false);
-  }, []);
+  const u = session?.user as (NonNullable<typeof session>["user"] & {
+    institutionType?: string;
+    role?: string;
+  }) | undefined;
+
+  const doctor: Doctor | null = u
+    ? {
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        institutionType: u.institutionType || "",
+        createdAt: u.createdAt instanceof Date ? u.createdAt.toISOString() : String(u.createdAt),
+        role: (u.role as "DOCTOR" | "ADMIN") || "DOCTOR",
+      }
+    : null;
 
   const login = async (email: string, password: string) => {
-    await new Promise((r) => setTimeout(r, 600));
-
-    if (email === "demo@puskesmas.id" && password === "demo123") {
-      const doc: Doctor = {
-        id: "dr-demo-001",
-        email,
-        name: "dr. Budi Santoso",
-        institutionType: "Puskesmas",
-        createdAt: new Date().toISOString(),
-        role: "DOCTOR",
-      };
-      store.setDoctor(doc);
-      store.seedDemoData(doc.id);
-      setDoctor(doc);
-      router.push("/dashboard");
-      return { success: true };
-    }
-
-    if (email === "admin@registry.id" && password === "admin123") {
-      const doc: Doctor = {
-        id: "dr-admin-001",
-        email,
-        name: "Prof. Ahmad Yani, SpJP",
-        institutionType: "RS Pusat Jantung",
-        createdAt: new Date().toISOString(),
-        role: "ADMIN",
-      };
-      store.setDoctor(doc);
-      store.seedDemoData(doc.id);
-      setDoctor(doc);
-      router.push("/dashboard");
-      return { success: true };
-    }
-
-    return { success: false, error: "Email atau password salah. Coba demo@puskesmas.id / demo123" };
-  };
-
-  const register = async (data: RegisterData) => {
-    await new Promise((r) => setTimeout(r, 800));
-
-    if (!data.email || !data.password || !data.name || !data.institutionType) {
-      return { success: false, error: "Semua field harus diisi." };
-    }
-
-    const doc: Doctor = {
-      id: `dr-${Date.now()}`,
-      email: data.email,
-      name: data.name,
-      institutionType: data.institutionType,
-      createdAt: new Date().toISOString(),
-      role: "DOCTOR",
-    };
-    store.setDoctor(doc);
-    setDoctor(doc);
+    const { error } = await authClient.signIn.email({ email, password });
+    if (error) return { success: false, error: error.message || "Email atau password salah." };
     router.push("/dashboard");
     return { success: true };
   };
 
-  const logout = () => {
-    store.setDoctor(null);
-    setDoctor(null);
+  const register = async (data: RegisterData) => {
+    const { error } = await (authClient.signUp.email as Function)({
+      email: data.email,
+      password: data.password,
+      name: data.name,
+      institutionType: data.institutionType,
+      researchConsent: true,
+    });
+    if (error) return { success: false, error: error.message || "Pendaftaran gagal." };
+    router.push("/dashboard");
+    return { success: true };
+  };
+
+  const logout = async () => {
+    await authClient.signOut();
     router.push("/login");
   };
 
   return (
-    <AuthContext.Provider value={{ doctor, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ doctor, login, register, logout, isLoading: isPending }}>
       {children}
     </AuthContext.Provider>
   );

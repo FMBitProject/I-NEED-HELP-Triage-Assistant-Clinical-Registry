@@ -18,8 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { store } from "@/lib/store";
-import { Patient, TriageLog, Outcome } from "@/lib/types";
+import { PatientWithDetails } from "@/lib/types";
 import { countGdmt } from "@/lib/triage";
 import { cn } from "@/lib/utils";
 
@@ -42,9 +41,7 @@ const OUTCOME_LABELS: Record<string, { label: string; color: string }> = {
 export default function PatientsPage() {
   const { doctor, isLoading } = useAuth();
   const router = useRouter();
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [logs, setLogs] = useState<TriageLog[]>([]);
-  const [outcomes, setOutcomes] = useState<Outcome[]>([]);
+  const [patients, setPatients] = useState<PatientWithDetails[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "refer" | "continue" | "pending">("all");
 
@@ -54,26 +51,22 @@ export default function PatientsPage() {
 
   useEffect(() => {
     if (doctor) {
-      setPatients(store.getPatients());
-      setLogs(store.getTriageLogs());
-      setOutcomes(store.getOutcomes());
+      fetch("/api/patients")
+        .then((r) => r.json())
+        .then(setPatients);
     }
   }, [doctor]);
 
   if (isLoading || !doctor) return null;
 
-  const filtered = patients
-    .filter((p) => {
-      const q = search.toLowerCase();
-      if (q && !p.patientInitial.toLowerCase().includes(q)) return false;
-      const log = logs.find((l) => l.patientId === p.id);
-      const hasOutcome = !!outcomes.find((o) => o.patientId === p.id);
-      if (filter === "refer") return log?.recommendationGiven === "REFER";
-      if (filter === "continue") return log?.recommendationGiven === "CONTINUE_GDMT";
-      if (filter === "pending") return !hasOutcome;
-      return true;
-    })
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const filtered = patients.filter((p) => {
+    const q = search.toLowerCase();
+    if (q && !p.patientInitial.toLowerCase().includes(q)) return false;
+    if (filter === "refer") return p.triage?.recommendationGiven === "REFER";
+    if (filter === "continue") return p.triage?.recommendationGiven === "CONTINUE_GDMT";
+    if (filter === "pending") return !p.outcome;
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -141,8 +134,8 @@ export default function PatientsPage() {
           ) : (
             <div className="space-y-2">
               {filtered.map((p) => {
-                const log = logs.find((l) => l.patientId === p.id);
-                const outcome = outcomes.find((o) => o.patientId === p.id);
+                const log = p.triage;
+                const outcome = p.outcome;
                 const gdmt = countGdmt(p);
                 const outcomeInfo = outcome ? OUTCOME_LABELS[outcome.status] : null;
 

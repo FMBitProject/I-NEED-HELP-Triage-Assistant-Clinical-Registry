@@ -20,8 +20,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { store } from "@/lib/store";
-import { Patient, TriageLog, Outcome } from "@/lib/types";
+import { PatientWithDetails } from "@/lib/types";
 import { countGdmt } from "@/lib/triage";
 
 function formatDate(iso: string) {
@@ -43,9 +42,7 @@ function getDaysAgo(iso: string) {
 export default function DashboardPage() {
   const { doctor, isLoading } = useAuth();
   const router = useRouter();
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [logs, setLogs] = useState<TriageLog[]>([]);
-  const [outcomes, setOutcomes] = useState<Outcome[]>([]);
+  const [patients, setPatients] = useState<PatientWithDetails[]>([]);
 
   useEffect(() => {
     if (!isLoading && !doctor) router.replace("/login");
@@ -53,9 +50,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (doctor) {
-      setPatients(store.getPatients());
-      setLogs(store.getTriageLogs());
-      setOutcomes(store.getOutcomes());
+      fetch("/api/patients")
+        .then((r) => r.json())
+        .then(setPatients);
     }
   }, [doctor]);
 
@@ -68,19 +65,16 @@ export default function DashboardPage() {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).length;
 
-  const referrals = logs.filter((l) => l.recommendationGiven === "REFER").length;
+  const logs = patients.map((p) => p.triage).filter(Boolean);
+  const referrals = logs.filter((l) => l!.recommendationGiven === "REFER").length;
   const referralRate = logs.length > 0 ? Math.round((referrals / logs.length) * 100) : 0;
 
   const gdmtFull = patients.filter((p) => countGdmt(p) === 4).length;
   const gdmtRate = totalPatients > 0 ? Math.round((gdmtFull / totalPatients) * 100) : 0;
 
-  const pendingFollowup = patients.filter(
-    (p) => !outcomes.find((o) => o.patientId === p.id)
-  );
+  const pendingFollowup = patients.filter((p) => !p.outcome);
 
-  const recentPatients = [...patients]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5);
+  const recentPatients = patients.slice(0, 5);
 
   const stats = [
     {
@@ -208,8 +202,8 @@ export default function DashboardPage() {
                 ) : (
                   <ul className="divide-y divide-gray-100">
                     {recentPatients.map((p) => {
-                      const log = logs.find((l) => l.patientId === p.id);
-                      const outcome = outcomes.find((o) => o.patientId === p.id);
+                      const log = p.triage;
+                      const outcome = p.outcome;
                       return (
                         <li key={p.id}>
                           <Link
@@ -261,10 +255,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {[
-                  {
-                    label: "ACE-I / ARB / ARNI",
-                    count: patients.filter((p) => p.onAceArni).length,
-                  },
+                  { label: "ACE-I / ARB / ARNI", count: patients.filter((p) => p.onAceArni).length },
                   { label: "Beta-Blocker", count: patients.filter((p) => p.onBb).length },
                   { label: "MRA", count: patients.filter((p) => p.onMra).length },
                   { label: "SGLT2i", count: patients.filter((p) => p.onSglt2i).length },
@@ -325,7 +316,7 @@ export default function DashboardPage() {
               <CardContent className="p-0">
                 <ul className="divide-y divide-gray-100">
                   {pendingFollowup.slice(0, 3).map((p) => {
-                    const log = logs.find((l) => l.patientId === p.id);
+                    const log = p.triage;
                     const daysWaiting = Math.floor(
                       (Date.now() - new Date(p.createdAt).getTime()) / 86400000
                     );

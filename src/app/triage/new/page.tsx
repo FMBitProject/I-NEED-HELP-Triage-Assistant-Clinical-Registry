@@ -21,9 +21,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { store } from "@/lib/store";
-import { Patient, TriageCriteria } from "@/lib/types";
-import { TRIAGE_CRITERIA_LABELS, calculateTriageScore, getRecommendation } from "@/lib/triage";
+import { TriageCriteria } from "@/lib/types";
+import { TRIAGE_CRITERIA_LABELS, calculateTriageScore } from "@/lib/triage";
 import { cn } from "@/lib/utils";
 
 type Step = 1 | 2;
@@ -182,49 +181,45 @@ export default function NewTriagePage() {
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 500));
+    try {
+      const patientRes = await fetch("/api/patients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patientInitial: profile.patientInitial.toUpperCase().trim(),
+          age: Number(profile.age),
+          gender: profile.gender,
+          systolicBp: Number(profile.systolicBp),
+          diastolicBp: Number(profile.diastolicBp),
+          heartRate: Number(profile.heartRate),
+          lvef: profile.lvef ? Number(profile.lvef) : null,
+          egfr: profile.egfr ? Number(profile.egfr) : null,
+          ntProbnp: profile.ntProbnp ? Number(profile.ntProbnp) : null,
+          comorbidDm: profile.comorbidDm,
+          comorbidHtn: profile.comorbidHtn,
+          comorbidCkd: profile.comorbidCkd,
+          comorbidAf: profile.comorbidAf,
+          onAceArni: profile.onAceArni,
+          onBb: profile.onBb,
+          onMra: profile.onMra,
+          onSglt2i: profile.onSglt2i,
+        }),
+      });
+      if (!patientRes.ok) throw new Error("Gagal menyimpan data pasien");
+      const patient = await patientRes.json();
 
-    const patientId = `p-${Date.now()}`;
-    const triageId = `t-${Date.now()}`;
-    const now = new Date().toISOString();
+      const triageRes = await fetch("/api/triage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patientId: patient.id, criteria }),
+      });
+      if (!triageRes.ok) throw new Error("Gagal menyimpan data triase");
+      const triage = await triageRes.json();
 
-    const patient: Patient = {
-      id: patientId,
-      doctorId: doctor.id,
-      patientInitial: profile.patientInitial.toUpperCase().trim(),
-      age: Number(profile.age),
-      gender: profile.gender as "M" | "F",
-      systolicBp: Number(profile.systolicBp),
-      diastolicBp: Number(profile.diastolicBp),
-      heartRate: Number(profile.heartRate),
-      lvef: profile.lvef ? Number(profile.lvef) : undefined,
-      egfr: profile.egfr ? Number(profile.egfr) : undefined,
-      ntProbnp: profile.ntProbnp ? Number(profile.ntProbnp) : undefined,
-      comorbidDm: profile.comorbidDm,
-      comorbidHtn: profile.comorbidHtn,
-      comorbidCkd: profile.comorbidCkd,
-      comorbidAf: profile.comorbidAf,
-      onAceArni: profile.onAceArni,
-      onBb: profile.onBb,
-      onMra: profile.onMra,
-      onSglt2i: profile.onSglt2i,
-      createdAt: now,
-    };
-
-    const score = calculateTriageScore(criteria);
-    const recommendation = getRecommendation(score);
-
-    store.addPatient(patient);
-    store.addTriageLog({
-      id: triageId,
-      patientId,
-      score,
-      criteriaMet: criteria,
-      recommendationGiven: recommendation,
-      createdAt: now,
-    });
-
-    router.push(`/triage/${triageId}/result`);
+      router.push(`/triage/${triage.id}/result`);
+    } catch {
+      setSubmitting(false);
+    }
   };
 
   const score = calculateTriageScore(criteria);

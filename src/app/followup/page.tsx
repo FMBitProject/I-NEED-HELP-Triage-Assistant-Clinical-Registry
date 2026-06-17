@@ -9,8 +9,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { store } from "@/lib/store";
-import { Patient, TriageLog, Outcome } from "@/lib/types";
+import { PatientWithDetails } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const OUTCOME_LABELS: Record<string, { label: string; icon: string; color: string }> = {
@@ -24,9 +23,7 @@ const OUTCOME_LABELS: Record<string, { label: string; icon: string; color: strin
 export default function FollowUpListPage() {
   const { doctor, isLoading } = useAuth();
   const router = useRouter();
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [logs, setLogs] = useState<TriageLog[]>([]);
-  const [outcomes, setOutcomes] = useState<Outcome[]>([]);
+  const [patients, setPatients] = useState<PatientWithDetails[]>([]);
   const [tab, setTab] = useState<"pending" | "done">("pending");
 
   useEffect(() => {
@@ -35,20 +32,20 @@ export default function FollowUpListPage() {
 
   useEffect(() => {
     if (doctor) {
-      setPatients(store.getPatients());
-      setLogs(store.getTriageLogs());
-      setOutcomes(store.getOutcomes());
+      fetch("/api/patients")
+        .then((r) => r.json())
+        .then(setPatients);
     }
   }, [doctor]);
 
   if (isLoading || !doctor) return null;
 
   const pending = patients
-    .filter((p) => !outcomes.find((o) => o.patientId === p.id))
+    .filter((p) => !p.outcome)
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
   const done = patients
-    .filter((p) => !!outcomes.find((o) => o.patientId === p.id))
+    .filter((p) => !!p.outcome)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const list = tab === "pending" ? pending : done;
@@ -131,8 +128,8 @@ export default function FollowUpListPage() {
           ) : (
             <div className="space-y-2">
               {list.map((p) => {
-                const log = logs.find((l) => l.patientId === p.id);
-                const outcome = outcomes.find((o) => o.patientId === p.id);
+                const log = p.triage;
+                const outcome = p.outcome;
                 const daysWaiting = Math.floor(
                   (Date.now() - new Date(p.createdAt).getTime()) / 86400000
                 );

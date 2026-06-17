@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { store } from "@/lib/store";
 import { Patient, OutcomeStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -68,14 +67,16 @@ export default function FollowUpPage() {
 
   useEffect(() => {
     if (!id || !doctor) return;
-    const p = store.getPatient(id);
-    if (!p) { router.replace("/patients"); return; }
-    setPatient(p);
-    const existing = store.getOutcomeByPatient(id);
-    if (existing) {
-      setStatus(existing.status);
-      setFollowUpDays(String(existing.followUpDays));
-    }
+    fetch(`/api/patients/${id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) { router.replace("/patients"); return; }
+        setPatient(data.patient);
+        if (data.outcome) {
+          setStatus(data.outcome.status);
+          setFollowUpDays(String(data.outcome.followUpDays));
+        }
+      });
   }, [id, doctor, router]);
 
   if (isLoading || !doctor || !patient) return null;
@@ -83,17 +84,16 @@ export default function FollowUpPage() {
   const handleSave = async () => {
     if (!status) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 400));
-
-    store.addOutcome({
-      id: `o-${Date.now()}`,
-      patientId: patient.id,
-      status,
-      followUpDays: Number(followUpDays) || 30,
-      recordedAt: new Date().toISOString(),
-      notes: notes || undefined,
+    await fetch("/api/outcomes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        patientId: patient.id,
+        status,
+        followUpDays: Number(followUpDays) || 30,
+        notes: notes || null,
+      }),
     });
-
     setSaved(true);
     setSaving(false);
     setTimeout(() => router.push(`/patients/${patient.id}`), 1200);

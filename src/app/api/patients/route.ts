@@ -1,19 +1,43 @@
 import { db } from "@/lib/db";
-import { patients } from "@/lib/db/schema";
+import { outcomes, patients, triageLogs } from "@/lib/db/schema";
 import { requireSession } from "@/lib/api-auth";
-import { eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 
 export async function GET() {
   const { session, error } = await requireSession();
   if (error) return error;
 
-  const rows = await db
+  const patientsList = await db
     .select()
     .from(patients)
     .where(eq(patients.doctorId, session.user.id))
-    .orderBy(patients.createdAt);
+    .orderBy(desc(patients.createdAt));
 
-  return Response.json(rows);
+  if (patientsList.length === 0) return Response.json([]);
+
+  const patientIds = patientsList.map((p) => p.id);
+
+  const [allLogs, allOutcomes] = await Promise.all([
+    db.select().from(triageLogs).where(inArray(triageLogs.patientId, patientIds)),
+    db.select().from(outcomes).where(inArray(outcomes.patientId, patientIds)),
+  ]);
+
+  const enriched = patientsList.map((p) => ({
+    ...p,
+    egfr: p.egfr != null ? parseFloat(p.egfr) : null,
+    triage:
+      allLogs
+        .filter((l) => l.patientId === p.id)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] ??
+      null,
+    outcome:
+      allOutcomes
+        .filter((o) => o.patientId === p.id)
+        .sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime())[0] ??
+      null,
+  }));
+
+  return Response.json(enriched);
 }
 
 export async function POST(request: Request) {
@@ -46,5 +70,5 @@ export async function POST(request: Request) {
     })
     .returning();
 
-  return Response.json(patient, { status: 201 });
+  return Response.json({ ...patient, egfr: patient.egfr != null ? parseFloat(patient.egfr) : null }, { status: 201 });
 }

@@ -19,7 +19,6 @@ import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { store } from "@/lib/store";
 import { Patient, TriageLog, Outcome } from "@/lib/types";
 import { TRIAGE_CRITERIA_LABELS, countGdmt } from "@/lib/triage";
 import { cn } from "@/lib/utils";
@@ -46,11 +45,14 @@ export default function PatientDetailPage() {
 
   useEffect(() => {
     if (!id || !doctor) return;
-    const p = store.getPatient(id);
-    if (!p) { router.replace("/patients"); return; }
-    setPatient(p);
-    setTriageLog(store.getTriageLogByPatient(id) || null);
-    setOutcome(store.getOutcomeByPatient(id) || null);
+    fetch(`/api/patients/${id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) { router.replace("/patients"); return; }
+        setPatient(data.patient);
+        setTriageLog(data.triage);
+        setOutcome(data.outcome);
+      });
   }, [id, doctor, router]);
 
   if (isLoading || !doctor || !patient) return null;

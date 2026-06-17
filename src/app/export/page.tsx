@@ -17,30 +17,12 @@ import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/store";
 import { countGdmt } from "@/lib/triage";
 
-function toCSV(rows: Record<string, string | number | boolean | undefined | null>[]): string {
-  if (rows.length === 0) return "";
-  const headers = Object.keys(rows[0]);
-  const lines = [
-    headers.join(","),
-    ...rows.map((row) =>
-      headers
-        .map((h) => {
-          const val = row[h];
-          if (val === null || val === undefined) return "";
-          const str = String(val);
-          return str.includes(",") || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str;
-        })
-        .join(",")
-    ),
-  ];
-  return lines.join("\n");
-}
-
-function downloadCSV(content: string, filename: string) {
-  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+async function downloadFromAPI(filename: string) {
+  const res = await fetch("/api/export");
+  if (!res.ok) throw new Error("Export gagal");
+  const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -54,114 +36,53 @@ export default function ExportPage() {
   const router = useRouter();
   const [exporting, setExporting] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  const [stats, setStats] = useState({ total: 0, referrals: 0, withOutcome: 0, fullGdmt: 0 });
 
   useEffect(() => {
     if (!isLoading && !doctor) router.replace("/login");
     if (!isLoading && doctor && doctor.role !== "ADMIN") router.replace("/dashboard");
   }, [doctor, isLoading, router]);
 
+  useEffect(() => {
+    if (doctor?.role === "ADMIN") {
+      fetch("/api/patients")
+        .then((r) => r.json())
+        .then((patients) => {
+          setStats({
+            total: patients.length,
+            referrals: patients.filter((p: { triage?: { recommendationGiven: string } }) => p.triage?.recommendationGiven === "REFER").length,
+            withOutcome: patients.filter((p: { outcome?: unknown }) => !!p.outcome).length,
+            fullGdmt: patients.filter((p: Parameters<typeof countGdmt>[0]) => countGdmt(p) === 4).length,
+          });
+        });
+    }
+  }, [doctor]);
+
   if (isLoading || !doctor) return null;
 
-  const patients = store.getPatients();
-  const logs = store.getTriageLogs();
-  const outcomes = store.getOutcomes();
-
-  const stats = {
-    total: patients.length,
-    referrals: logs.filter((l) => l.recommendationGiven === "REFER").length,
-    withOutcome: outcomes.length,
-    fullGdmt: patients.filter((p) => countGdmt(p) === 4).length,
+  const exportAll = async () => {
+    setExporting("all");
+    try {
+      await downloadFromAPI(`registry_export_${new Date().toISOString().slice(0, 10)}.csv`);
+      setDone("all");
+      setTimeout(() => setDone(null), 3000);
+    } catch {
+      // silent
+    }
+    setExporting(null);
   };
 
   const exportPatients = async () => {
     setExporting("patients");
-    await new Promise((r) => setTimeout(r, 600));
-
-    const rows = patients.map((p) => ({
-      id: p.id,
-      doctor_id: p.doctorId,
-      patient_initial: p.patientInitial,
-      age: p.age,
-      gender: p.gender,
-      systolic_bp: p.systolicBp,
-      diastolic_bp: p.diastolicBp,
-      heart_rate: p.heartRate,
-      lvef: p.lvef ?? "",
-      egfr: p.egfr ?? "",
-      nt_probnp: p.ntProbnp ?? "",
-      comorbid_dm: p.comorbidDm ? 1 : 0,
-      comorbid_htn: p.comorbidHtn ? 1 : 0,
-      comorbid_ckd: p.comorbidCkd ? 1 : 0,
-      comorbid_af: p.comorbidAf ? 1 : 0,
-      on_ace_arni: p.onAceArni ? 1 : 0,
-      on_bb: p.onBb ? 1 : 0,
-      on_mra: p.onMra ? 1 : 0,
-      on_sglt2i: p.onSglt2i ? 1 : 0,
-      gdmt_count: countGdmt(p),
-      created_at: p.createdAt,
-    }));
-
-    downloadCSV(toCSV(rows), `inh_patients_${new Date().toISOString().slice(0, 10)}.csv`);
+    try {
+      await downloadFromAPI(`registry_export_${new Date().toISOString().slice(0, 10)}.csv`);
+      setDone("patients");
+      setTimeout(() => setDone(null), 3000);
+    } catch { /* silent */ }
     setExporting(null);
-    setDone("patients");
-    setTimeout(() => setDone(null), 3000);
   };
-
-  const exportTriage = async () => {
-    setExporting("triage");
-    await new Promise((r) => setTimeout(r, 600));
-
-    const rows = logs.map((l) => ({
-      id: l.id,
-      patient_id: l.patientId,
-      score: l.score,
-      recommendation: l.recommendationGiven,
-      criteria_I: l.criteriaMet.I ? 1 : 0,
-      criteria_N: l.criteriaMet.N ? 1 : 0,
-      criteria_E1: l.criteriaMet.E1 ? 1 : 0,
-      criteria_E2: l.criteriaMet.E2 ? 1 : 0,
-      criteria_D: l.criteriaMet.D ? 1 : 0,
-      criteria_H: l.criteriaMet.H ? 1 : 0,
-      criteria_E3: l.criteriaMet.E3 ? 1 : 0,
-      criteria_L: l.criteriaMet.L ? 1 : 0,
-      criteria_P: l.criteriaMet.P ? 1 : 0,
-      created_at: l.createdAt,
-    }));
-
-    downloadCSV(toCSV(rows), `inh_triage_${new Date().toISOString().slice(0, 10)}.csv`);
-    setExporting(null);
-    setDone("triage");
-    setTimeout(() => setDone(null), 3000);
-  };
-
-  const exportOutcomes = async () => {
-    setExporting("outcomes");
-    await new Promise((r) => setTimeout(r, 600));
-
-    const rows = outcomes.map((o) => ({
-      id: o.id,
-      patient_id: o.patientId,
-      status: o.status,
-      follow_up_days: o.followUpDays,
-      recorded_at: o.recordedAt,
-      notes: o.notes ?? "",
-    }));
-
-    downloadCSV(toCSV(rows), `inh_outcomes_${new Date().toISOString().slice(0, 10)}.csv`);
-    setExporting(null);
-    setDone("outcomes");
-    setTimeout(() => setDone(null), 3000);
-  };
-
-  const exportAll = async () => {
-    setExporting("all");
-    await exportPatients();
-    await exportTriage();
-    await exportOutcomes();
-    setExporting(null);
-    setDone("all");
-    setTimeout(() => setDone(null), 3000);
-  };
+  const exportTriage = exportPatients;
+  const exportOutcomes = exportPatients;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -235,7 +156,7 @@ export default function ExportPage() {
                 key: "patients",
                 title: "Data Baseline Pasien",
                 desc: "Inisial, usia, gender, TTV, komorbiditas, lab, status GDMT",
-                rows: patients.length,
+                rows: stats.total,
                 columns: 20,
                 handler: exportPatients,
                 icon: Users,
@@ -244,7 +165,7 @@ export default function ExportPage() {
                 key: "triage",
                 title: "Data Skor Triase",
                 desc: "Skor I-NEED-HELP, kriteria terpenuhi, rekomendasi",
-                rows: logs.length,
+                rows: stats.referrals,
                 columns: 15,
                 handler: exportTriage,
                 icon: BarChart3,
@@ -253,7 +174,7 @@ export default function ExportPage() {
                 key: "outcomes",
                 title: "Data Clinical Outcomes",
                 desc: "Status 30-hari, hari follow-up, catatan klinis",
-                rows: outcomes.length,
+                rows: stats.withOutcome,
                 columns: 6,
                 handler: exportOutcomes,
                 icon: CheckCircle,
@@ -306,7 +227,7 @@ export default function ExportPage() {
             size="xl"
             className="w-full gap-2"
             onClick={exportAll}
-            disabled={!!exporting || patients.length === 0}
+            disabled={!!exporting || stats.total === 0}
           >
             {exporting === "all" ? (
               "Mengekspor semua dataset..."
@@ -323,7 +244,7 @@ export default function ExportPage() {
             )}
           </Button>
 
-          {patients.length === 0 && (
+          {stats.total === 0 && (
             <p className="text-center text-xs text-gray-400">
               Belum ada data pasien yang dapat diekspor.
             </p>

@@ -18,7 +18,6 @@ import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { store } from "@/lib/store";
 import { Patient, TriageLog } from "@/lib/types";
 import { TRIAGE_CRITERIA_LABELS } from "@/lib/triage";
 import { countGdmt } from "@/lib/triage";
@@ -84,14 +83,13 @@ export default function ResultPage() {
 
   useEffect(() => {
     if (!id) return;
-    const log = store.getTriageLog(id);
-    if (!log) {
-      router.replace("/dashboard");
-      return;
-    }
-    setTriageLog(log);
-    const p = store.getPatient(log.patientId);
-    setPatient(p || null);
+    fetch(`/api/triage/${id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) { router.replace("/dashboard"); return; }
+        setTriageLog(data.log);
+        setPatient(data.patient);
+      });
   }, [id, router]);
 
   if (isLoading || !doctor || !triageLog || !patient) return null;
