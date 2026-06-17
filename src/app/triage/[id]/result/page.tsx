@@ -157,7 +157,7 @@ export default function ResultPage() {
               </div>
 
               <div className="mt-3 pt-3 border-t border-gray-100">
-                <div className="flex items-center gap-3 text-xs text-gray-600">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600">
                   <div className="flex items-center gap-1">
                     <HeartPulse className="w-3.5 h-3.5 text-red-500" />
                     <span>TD: {patient.systolicBp}/{patient.diastolicBp} mmHg</span>

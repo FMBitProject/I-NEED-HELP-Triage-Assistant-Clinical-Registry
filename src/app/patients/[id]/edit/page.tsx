@@ -337,10 +337,10 @@ export default function EditPatientPage() {
                   <AlertCircle className="w-4 h-4 text-amber-600" />
                   <h3 className="text-sm font-semibold text-gray-900">Komorbiditas</h3>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <CheckboxField id="dm" label="Diabetes Melitus" checked={form.comorbidDm} onChange={(v) => update("comorbidDm", v)} />
                   <CheckboxField id="htn" label="Hipertensi" checked={form.comorbidHtn} onChange={(v) => update("comorbidHtn", v)} />
-                  <CheckboxField id="ckd" label="CKD (Gagal Ginjal)" checked={form.comorbidCkd} onChange={(v) => update("comorbidCkd", v)} />
+                  <CheckboxField id="ckd" label="CKD / Gagal Ginjal" checked={form.comorbidCkd} onChange={(v) => update("comorbidCkd", v)} />
                   <CheckboxField id="af" label="Atrial Fibrilasi" checked={form.comorbidAf} onChange={(v) => update("comorbidAf", v)} />
                 </div>
               </CardContent>

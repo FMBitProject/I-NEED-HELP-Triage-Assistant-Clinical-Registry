@@ -134,7 +134,7 @@ export default function DashboardPage() {
               <h1 className="text-xl font-bold text-gray-900">
                 Selamat datang, {doctor.name.split(",")[0]}
               </h1>
-              <p className="text-sm text-gray-500 mt-0.5">{doctor.institutionType}</p>
+              <p className="text-sm text-gray-500 mt-0.5 truncate max-w-[200px] sm:max-w-none">{doctor.institutionType}</p>
             </div>
             <Link href="/triage/new">
               <Button size="lg" className="shrink-0 gap-2">
@@ -156,7 +156,7 @@ export default function DashboardPage() {
                       <s.icon className={`w-4 h-4 ${s.color}`} />
                     </div>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">{s.value}</p>
                   <p className="text-xs text-gray-400 mt-0.5">{s.sub}</p>
                 </CardContent>
               </Card>

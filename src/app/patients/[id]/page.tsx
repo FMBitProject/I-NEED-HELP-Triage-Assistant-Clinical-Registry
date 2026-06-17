@@ -120,7 +120,7 @@ export default function PatientDetailPage() {
                   day: "numeric", month: "long", year: "numeric",
                 })}
               </p>
-              <div className="flex gap-2 mt-2">
+              <div className="flex flex-wrap gap-2 mt-2">
                 <Link href={`/patients/${patient.id}/edit`}>
                   <Button variant="outline" size="sm" className="gap-1.5">
                     <Pencil className="w-3.5 h-3.5" />
@@ -185,7 +185,7 @@ export default function PatientDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {[
                   { label: "Sistolik", value: `${patient.systolicBp}`, unit: "mmHg" },
                   { label: "Diastolik", value: `${patient.diastolicBp}`, unit: "mmHg" },
@@ -213,7 +213,7 @@ export default function PatientDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
                   { label: "Diabetes Melitus", active: patient.comorbidDm },
                   { label: "Hipertensi", active: patient.comorbidHtn },

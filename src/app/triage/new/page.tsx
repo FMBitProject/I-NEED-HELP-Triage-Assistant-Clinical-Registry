@@ -85,7 +85,7 @@ function StepIndicator({ step }: { step: Step }) {
         )}>
           {step > 1 ? "✓" : "1"}
         </div>
-        <span className={cn("text-sm font-medium", step === 1 ? "text-blue-700" : "text-blue-600")}>
+        <span className={cn("text-xs sm:text-sm font-medium", step === 1 ? "text-blue-700" : "text-blue-600")}>
           Profil Pasien
         </span>
       </div>
@@ -104,8 +104,8 @@ function StepIndicator({ step }: { step: Step }) {
         )}>
           2
         </div>
-        <span className={cn("text-sm font-medium", step === 2 ? "text-blue-700" : "text-gray-400")}>
-          Skor I-NEED-HELP
+        <span className={cn("text-xs sm:text-sm font-medium", step === 2 ? "text-blue-700" : "text-gray-400")}>
+          <span className="hidden sm:inline">Skor </span>I-NEED-HELP
         </span>
       </div>
     </div>
@@ -405,10 +405,10 @@ export default function NewTriagePage() {
                     <AlertCircle className="w-4 h-4 text-amber-600" />
                     <h3 className="text-sm font-semibold text-gray-900">Komorbiditas</h3>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <CheckboxField id="dm" label="Diabetes Melitus" checked={profile.comorbidDm} onChange={(v) => updateProfile("comorbidDm", v)} />
                     <CheckboxField id="htn" label="Hipertensi" checked={profile.comorbidHtn} onChange={(v) => updateProfile("comorbidHtn", v)} />
-                    <CheckboxField id="ckd" label="CKD (Gagal Ginjal)" checked={profile.comorbidCkd} onChange={(v) => updateProfile("comorbidCkd", v)} />
+                    <CheckboxField id="ckd" label="CKD / Gagal Ginjal" checked={profile.comorbidCkd} onChange={(v) => updateProfile("comorbidCkd", v)} />
                     <CheckboxField id="af" label="Atrial Fibrilasi" checked={profile.comorbidAf} onChange={(v) => updateProfile("comorbidAf", v)} />
                   </div>
                 </CardContent>

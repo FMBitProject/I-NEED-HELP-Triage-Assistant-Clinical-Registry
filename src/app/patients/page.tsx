@@ -183,7 +183,7 @@ export default function PatientsPage() {
                                 </Badge>
                               )}
                             </div>
-                            <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-xs text-gray-400">
                               <span>TD: {p.systolicBp}/{p.diastolicBp}</span>
                               <span>HR: {p.heartRate}</span>
                               {p.lvef && <span>EF: {p.lvef}%</span>}
