@@ -1,0 +1,55 @@
+import { db } from "@/lib/db";
+import { outcomes, patients } from "@/lib/db/schema";
+import { requireSession } from "@/lib/api-auth";
+import { and, eq } from "drizzle-orm";
+
+export async function GET(request: Request) {
+  const { session, error } = await requireSession();
+  if (error) return error;
+
+  const { searchParams } = new URL(request.url);
+  const patientId = searchParams.get("patientId");
+
+  if (!patientId) {
+    return Response.json({ error: "patientId required" }, { status: 400 });
+  }
+
+  const patient = await db.query.patients.findFirst({
+    where: and(eq(patients.id, patientId), eq(patients.doctorId, session.user.id)),
+  });
+
+  if (!patient) {
+    return Response.json({ error: "Patient not found" }, { status: 404 });
+  }
+
+  const rows = await db
+    .select()
+    .from(outcomes)
+    .where(eq(outcomes.patientId, patientId))
+    .orderBy(outcomes.recordedAt);
+
+  return Response.json(rows);
+}
+
+export async function POST(request: Request) {
+  const { session, error } = await requireSession();
+  if (error) return error;
+
+  const body = await request.json();
+  const { patientId, status, followUpDays, notes } = body;
+
+  const patient = await db.query.patients.findFirst({
+    where: and(eq(patients.id, patientId), eq(patients.doctorId, session.user.id)),
+  });
+
+  if (!patient) {
+    return Response.json({ error: "Patient not found" }, { status: 404 });
+  }
+
+  const [outcome] = await db
+    .insert(outcomes)
+    .values({ patientId, status, followUpDays: followUpDays ?? 30, notes: notes ?? null })
+    .returning();
+
+  return Response.json(outcome, { status: 201 });
+}
