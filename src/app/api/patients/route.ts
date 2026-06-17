@@ -67,6 +67,7 @@ export async function POST(request: Request) {
       onBb: body.onBb ?? false,
       onMra: body.onMra ?? false,
       onSglt2i: body.onSglt2i ?? false,
+      nyhaClass: body.nyhaClass ?? null,
     })
     .returning();
 

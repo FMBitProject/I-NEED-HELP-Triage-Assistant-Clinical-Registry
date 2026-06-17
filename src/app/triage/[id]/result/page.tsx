@@ -279,12 +279,18 @@ export default function ResultPage() {
             </Link>
           </div>
 
-          <Link href="/dashboard">
-            <Button variant="ghost" className="w-full gap-2 text-gray-500">
-              <Home className="w-4 h-4" />
-              Kembali ke Dashboard
+          <div className="grid grid-cols-2 gap-3">
+            <Link href="/dashboard">
+              <Button variant="ghost" className="w-full gap-2 text-gray-500">
+                <Home className="w-4 h-4" />
+                Kembali ke Dashboard
+              </Button>
+            </Link>
+            <Button variant="outline" className="w-full gap-2" onClick={() => window.print()}>
+              <Printer className="w-4 h-4" />
+              Cetak Hasil
             </Button>
-          </Link>
+          </div>
 
           <div className="text-center space-y-1">
             <p className="text-[10px] text-gray-400 leading-relaxed">

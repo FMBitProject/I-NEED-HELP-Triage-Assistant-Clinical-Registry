@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PatientWithDetails } from "@/lib/types";
 import { countGdmt } from "@/lib/triage";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("id-ID", {
@@ -75,6 +76,17 @@ export default function DashboardPage() {
   const pendingFollowup = patients.filter((p) => !p.outcome);
 
   const recentPatients = patients.slice(0, 5);
+
+  const monthlyData = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - (5 - i));
+    const label = d.toLocaleDateString("id-ID", { month: "short" });
+    const count = patients.filter(p => {
+      const pd = new Date(p.createdAt);
+      return pd.getMonth() === d.getMonth() && pd.getFullYear() === d.getFullYear();
+    }).length;
+    return { bulan: label, pasien: count };
+  });
 
   const stats = [
     {
@@ -150,6 +162,23 @@ export default function DashboardPage() {
               </Card>
             ))}
           </div>
+
+          {/* Monthly enrollment chart */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Tren Pendaftaran (6 Bulan Terakhir)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={160}>
+                <BarChart data={monthlyData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                  <XAxis dataKey="bulan" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip formatter={(v) => [`${v} pasien`, "Pendaftaran"]} />
+                  <Bar dataKey="pasien" radius={[4, 4, 0, 0]} fill="#3b82f6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
           {/* Pending followup alert */}
           {pendingFollowup.length > 0 && (

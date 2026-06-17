@@ -12,6 +12,8 @@ import {
   CheckCircle,
   Clock,
   Trash2,
+  Pencil,
+  RefreshCw,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Navbar } from "@/components/layout/navbar";
@@ -109,12 +111,29 @@ export default function PatientDetailPage() {
               <p className="text-sm text-gray-500">
                 {patient.age} tahun • {patient.gender === "M" ? "Laki-laki" : "Perempuan"}
               </p>
+              {patient.nyhaClass && (
+                <span className="text-xs text-gray-500">NYHA {patient.nyhaClass}</span>
+              )}
               <p className="text-xs text-gray-400 mt-0.5">
                 Triase:{" "}
                 {new Date(patient.createdAt).toLocaleDateString("id-ID", {
                   day: "numeric", month: "long", year: "numeric",
                 })}
               </p>
+              <div className="flex gap-2 mt-2">
+                <Link href={`/patients/${patient.id}/edit`}>
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <Pencil className="w-3.5 h-3.5" />
+                    Edit Data
+                  </Button>
+                </Link>
+                <Link href={`/patients/${patient.id}/retriage`}>
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Triase Ulang
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
 

@@ -27,6 +27,7 @@ export interface Patient {
   onBb: boolean;
   onMra: boolean;
   onSglt2i: boolean;
+  nyhaClass?: string | null;
   createdAt: string;
 }
 

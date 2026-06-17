@@ -5,10 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Search,
-  Filter,
   Activity,
   Plus,
-  ChevronRight,
   Clock,
   CheckCircle,
 } from "lucide-react";
@@ -43,7 +41,9 @@ export default function PatientsPage() {
   const router = useRouter();
   const [patients, setPatients] = useState<PatientWithDetails[]>([]);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "refer" | "continue" | "pending">("all");
+  const [filter, setFilter] = useState<"all" | "refer" | "continue" | "pending" | "gdmt">("all");
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 20;
 
   useEffect(() => {
     if (!isLoading && !doctor) router.replace("/login");
@@ -57,6 +57,8 @@ export default function PatientsPage() {
     }
   }, [doctor]);
 
+  useEffect(() => { setPage(0); }, [search, filter]);
+
   if (isLoading || !doctor) return null;
 
   const filtered = patients.filter((p) => {
@@ -65,8 +67,11 @@ export default function PatientsPage() {
     if (filter === "refer") return p.triage?.recommendationGiven === "REFER";
     if (filter === "continue") return p.triage?.recommendationGiven === "CONTINUE_GDMT";
     if (filter === "pending") return !p.outcome;
+    if (filter === "gdmt") return countGdmt(p) === 4;
     return true;
   });
+
+  const paginatedFiltered = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -104,6 +109,7 @@ export default function PatientsPage() {
               { key: "refer", label: "Rujukan" },
               { key: "continue", label: "Lanjut GDMT" },
               { key: "pending", label: "Perlu Follow-up" },
+              { key: "gdmt", label: "GDMT Lengkap" },
             ].map((f) => (
               <button
                 key={f.key}
@@ -133,7 +139,7 @@ export default function PatientsPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {filtered.map((p) => {
+              {paginatedFiltered.map((p) => {
                 const log = p.triage;
                 const outcome = p.outcome;
                 const gdmt = countGdmt(p);
@@ -200,6 +206,21 @@ export default function PatientsPage() {
                   </Link>
                 );
               })}
+              {filtered.length > PAGE_SIZE && (
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-xs text-gray-500">
+                    {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filtered.length)} dari {filtered.length}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+                      ‹ Prev
+                    </Button>
+                    <Button variant="outline" size="sm" disabled={(page + 1) * PAGE_SIZE >= filtered.length} onClick={() => setPage(p => p + 1)}>
+                      Next ›
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -45,6 +45,7 @@ interface ProfileData {
   onBb: boolean;
   onMra: boolean;
   onSglt2i: boolean;
+  nyhaClass: "" | "I" | "II" | "III" | "IV";
 }
 
 const defaultProfile: ProfileData = {
@@ -65,6 +66,7 @@ const defaultProfile: ProfileData = {
   onBb: false,
   onMra: false,
   onSglt2i: false,
+  nyhaClass: "",
 };
 
 const defaultCriteria: TriageCriteria = {
@@ -203,6 +205,7 @@ export default function NewTriagePage() {
           onBb: profile.onBb,
           onMra: profile.onMra,
           onSglt2i: profile.onSglt2i,
+          nyhaClass: profile.nyhaClass || null,
         }),
       });
       if (!patientRes.ok) throw new Error("Gagal menyimpan data pasien");
@@ -309,6 +312,31 @@ export default function NewTriagePage() {
                           )}
                         >
                           {g === "M" ? "Laki-laki (L)" : "Perempuan (P)"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>
+                      Kelas Fungsional NYHA{" "}
+                      <span className="text-gray-400 font-normal">(opsional)</span>
+                    </Label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {(["I", "II", "III", "IV"] as const).map((cls) => (
+                        <button
+                          key={cls}
+                          type="button"
+                          onClick={() =>
+                            updateProfile("nyhaClass", profile.nyhaClass === cls ? "" : cls)
+                          }
+                          className={cn(
+                            "py-2.5 rounded-lg border-2 text-sm font-medium transition-all",
+                            profile.nyhaClass === cls
+                              ? "border-blue-500 bg-blue-50 text-blue-700"
+                              : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                          )}
+                        >
+                          {cls}
                         </button>
                       ))}
                     </div>

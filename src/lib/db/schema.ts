@@ -101,6 +101,7 @@ export const patients = pgTable("patients", {
   lvef: integer("lvef"),
   egfr: numeric("egfr", { precision: 6, scale: 2 }),
   ntProbnp: integer("nt_probnp"),
+  nyhaClass: text("nyha_class"),
   comorbidDm: boolean("comorbid_dm").notNull().default(false),
   comorbidHtn: boolean("comorbid_htn").notNull().default(false),
   comorbidCkd: boolean("comorbid_ckd").notNull().default(false),
