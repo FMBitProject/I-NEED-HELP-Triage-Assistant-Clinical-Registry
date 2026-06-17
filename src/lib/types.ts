@@ -29,6 +29,7 @@ export interface Patient {
   onSglt2i: boolean;
   nyhaClass?: string | null;
   createdAt: string;
+  finalizedAt?: string | null;
 }
 
 export interface TriageCriteria {
@@ -75,6 +76,18 @@ export interface Doctor {
 export interface PatientWithDetails extends Patient {
   triage: TriageLog | null;
   outcome: Outcome | null;
+}
+
+export interface AuditLog {
+  id: string;
+  patientId: string;
+  userId: string | null;
+  userName: string | null;
+  action: string;
+  changedField: string | null;
+  oldValue: string | null;
+  newValue: string | null;
+  createdAt: string;
 }
 
 export interface DashboardStats {

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { patients, triageLogs, outcomes } from "@/lib/db/schema";
+import { auditLogs, patients, triageLogs, outcomes } from "@/lib/db/schema";
 import { requireSession } from "@/lib/api-auth";
 import { and, eq } from "drizzle-orm";
 
@@ -50,6 +50,16 @@ export async function PATCH(
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 
+  if (existing.finalizedAt) {
+    const isAdmin = (session.user as { role?: string }).role === "ADMIN";
+    if (!isAdmin) {
+      return Response.json(
+        { error: "Data sudah difinalisasi. Hubungi developer untuk membuka kunci." },
+        { status: 423 }
+      );
+    }
+  }
+
   const body = await req.json();
   const allowedFields = [
     "patientInitial", "age", "gender", "systolicBp", "diastolicBp",
@@ -76,6 +86,25 @@ export async function PATCH(
     .where(eq(patients.id, id))
     .returning();
 
+  // Log each changed field to audit trail
+  const auditEntries = Object.entries(updates)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .filter(([field, newVal]) => String((existing as any)[field] ?? "") !== String(newVal ?? ""))
+    .map(([field, newVal]) => ({
+      patientId: id,
+      userId: session.user.id,
+      userName: session.user.name,
+      action: "update",
+      changedField: field,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      oldValue: String((existing as any)[field] ?? ""),
+      newValue: String(newVal ?? ""),
+    }));
+
+  if (auditEntries.length > 0) {
+    await db.insert(auditLogs).values(auditEntries);
+  }
+
   return Response.json(updated);
 }
 
@@ -94,6 +123,16 @@ export async function DELETE(
 
   if (!patient) {
     return Response.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (patient.finalizedAt) {
+    const isAdmin = (session.user as { role?: string }).role === "ADMIN";
+    if (!isAdmin) {
+      return Response.json(
+        { error: "Data sudah difinalisasi dan tidak dapat dihapus. Hubungi developer." },
+        { status: 423 }
+      );
+    }
   }
 
   await db.delete(patients).where(eq(patients.id, id));

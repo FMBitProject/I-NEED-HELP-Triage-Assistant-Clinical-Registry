@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
 import { PwaRegister } from "@/components/pwa-register";
+import { FeedbackButton } from "@/components/feedback-button";
 
 export const metadata: Metadata = {
   title: "I-NEED-HELP Triage Assistant",
@@ -29,7 +30,10 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body className="min-h-screen bg-slate-50 antialiased">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <FeedbackButton />
+        </AuthProvider>
         <PwaRegister />
       </body>
     </html>

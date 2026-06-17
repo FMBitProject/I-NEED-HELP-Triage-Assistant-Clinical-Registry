@@ -113,6 +113,7 @@ export const patients = pgTable("patients", {
   onMra: boolean("on_mra").notNull().default(false),
   onSglt2i: boolean("on_sglt2i").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  finalizedAt: timestamp("finalized_at"),
 });
 
 export const triageLogs = pgTable("triage_logs", {
@@ -139,4 +140,20 @@ export const outcomes = pgTable("outcomes", {
   followUpDays: integer("follow_up_days").notNull().default(30),
   notes: text("notes"),
   recordedAt: timestamp("recorded_at").notNull().defaultNow(),
+});
+
+export const auditLogs = pgTable("audit_logs", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  patientId: text("patient_id")
+    .notNull()
+    .references(() => patients.id, { onDelete: "cascade" }),
+  userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+  userName: text("user_name"),
+  action: text("action").notNull(), // 'create' | 'update' | 'finalize' | 'unlock_request' | 'delete'
+  changedField: text("changed_field"),
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
