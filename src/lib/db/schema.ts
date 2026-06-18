@@ -1,5 +1,6 @@
 import {
   boolean,
+  date,
   integer,
   json,
   numeric,
@@ -139,6 +140,9 @@ export const outcomes = pgTable("outcomes", {
   status: outcomeStatusEnum("status").notNull(),
   followUpDays: integer("follow_up_days").notNull().default(30),
   notes: text("notes"),
+  admissionDate: date("admission_date"),
+  dischargeDate: date("discharge_date"),
+  notReferredReason: text("not_referred_reason"),
   recordedAt: timestamp("recorded_at").notNull().defaultNow(),
 });
 

@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   if (error) return error;
 
   const body = await request.json();
-  const { patientId, status, followUpDays, notes } = body;
+  const { patientId, status, followUpDays, notes, admissionDate, dischargeDate, notReferredReason } = body;
 
   const patient = await db.query.patients.findFirst({
     where: and(eq(patients.id, patientId), eq(patients.doctorId, session.user.id)),
@@ -48,7 +48,15 @@ export async function POST(request: Request) {
 
   const [outcome] = await db
     .insert(outcomes)
-    .values({ patientId, status, followUpDays: followUpDays ?? 30, notes: notes ?? null })
+    .values({
+      patientId,
+      status,
+      followUpDays: followUpDays ?? 30,
+      notes: notes ?? null,
+      admissionDate: admissionDate ?? null,
+      dischargeDate: dischargeDate ?? null,
+      notReferredReason: notReferredReason ?? null,
+    })
     .returning();
 
   return Response.json(outcome, { status: 201 });

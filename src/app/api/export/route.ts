@@ -45,6 +45,9 @@ export async function GET() {
       outcomeStatus: outcomes.status,
       outcomeFollowUpDays: outcomes.followUpDays,
       outcomeNotes: outcomes.notes,
+      outcomeAdmissionDate: outcomes.admissionDate,
+      outcomeDischargeDate: outcomes.dischargeDate,
+      outcomeNotReferredReason: outcomes.notReferredReason,
       outcomeRecordedAt: outcomes.recordedAt,
     })
     .from(patients)
@@ -62,7 +65,9 @@ export async function GET() {
     "onAceArni","onBb","onMra","onSglt2i",
     "patientCreatedAt",
     "triageId","triageScore","triageCriteriaMet","triageRecommendation","triageCreatedAt",
-    "outcomeStatus","outcomeFollowUpDays","outcomeNotes","outcomeRecordedAt",
+    "outcomeStatus","outcomeFollowUpDays","outcomeNotes",
+    "outcomeAdmissionDate","outcomeDischargeDate","outcomeNotReferredReason",
+    "outcomeRecordedAt",
   ];
 
   const csvRows = [

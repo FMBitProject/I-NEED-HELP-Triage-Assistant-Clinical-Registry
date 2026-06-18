@@ -264,6 +264,19 @@ export default function PatientDetailPage() {
                       Dicatat: {new Date(outcome.recordedAt).toLocaleDateString("id-ID")} •{" "}
                       {outcome.followUpDays} hari setelah triase
                     </p>
+                    {outcome.admissionDate && (
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        Rawat inap: {new Date(outcome.admissionDate).toLocaleDateString("id-ID")}
+                        {outcome.dischargeDate
+                          ? ` — ${new Date(outcome.dischargeDate).toLocaleDateString("id-ID")} (LOS ${Math.round((new Date(outcome.dischargeDate).getTime() - new Date(outcome.admissionDate).getTime()) / 86400000)} hari)`
+                          : " — masih dirawat"}
+                      </p>
+                    )}
+                    {outcome.notReferredReason && (
+                      <p className="text-xs text-amber-600 mt-0.5">
+                        Tidak dirujuk: {outcome.notReferredReason}
+                      </p>
+                    )}
                   </div>
                   {!isFinalized && (
                     <Link href={`/patients/${patient.id}/followup`} className="ml-auto">

@@ -176,9 +176,9 @@ export default function ExportPage() {
               {
                 key: "outcomes",
                 title: "Data Clinical Outcomes",
-                desc: "Status 30-hari, hari follow-up, catatan klinis",
+                desc: "Status 30-hari, tanggal masuk/keluar (LOS), alasan tidak dirujuk, catatan klinis",
                 rows: stats.withOutcome,
-                columns: 6,
+                columns: 9,
                 handler: exportOutcomes,
                 icon: CheckCircle,
               },

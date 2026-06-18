@@ -40,6 +40,9 @@ export async function PATCH(
       status: body.status ?? outcome.status,
       followUpDays: body.followUpDays ?? outcome.followUpDays,
       notes: body.notes ?? outcome.notes,
+      admissionDate: "admissionDate" in body ? body.admissionDate : outcome.admissionDate,
+      dischargeDate: "dischargeDate" in body ? body.dischargeDate : outcome.dischargeDate,
+      notReferredReason: "notReferredReason" in body ? body.notReferredReason : outcome.notReferredReason,
     })
     .where(eq(outcomes.id, id))
     .returning();

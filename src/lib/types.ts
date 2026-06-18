@@ -60,6 +60,9 @@ export interface Outcome {
   followUpDays: number;
   recordedAt: string;
   notes?: string;
+  admissionDate?: string | null;
+  dischargeDate?: string | null;
+  notReferredReason?: string | null;
 }
 
 export interface Doctor {
