@@ -46,6 +46,16 @@ export async function POST(request: Request) {
     return Response.json({ error: "Patient not found" }, { status: 404 });
   }
 
+  if (patient.finalizedAt) {
+    const isAdmin = (session.user as { role?: string }).role === "ADMIN";
+    if (!isAdmin) {
+      return Response.json(
+        { error: "Data sudah difinalisasi. Hubungi developer untuk membuka kunci." },
+        { status: 423 }
+      );
+    }
+  }
+
   const [outcome] = await db
     .insert(outcomes)
     .values({

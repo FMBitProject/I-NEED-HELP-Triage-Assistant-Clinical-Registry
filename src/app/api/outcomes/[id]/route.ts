@@ -32,6 +32,16 @@ export async function PATCH(
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  if (patient.finalizedAt) {
+    const isAdmin = (session.user as { role?: string }).role === "ADMIN";
+    if (!isAdmin) {
+      return Response.json(
+        { error: "Data sudah difinalisasi. Hubungi developer untuk membuka kunci." },
+        { status: 423 }
+      );
+    }
+  }
+
   const body = await request.json();
 
   const [updated] = await db
