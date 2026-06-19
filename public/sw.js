@@ -38,7 +38,7 @@ self.addEventListener("fetch", (event) => {
           cached ||
           fetch(request).then((res) => {
             const resClone = res.clone();
-            caches.open(CACHE).then((c) => c.put(request, resClone));
+            caches.open(CACHE).then((c) => c.put(request, resClone)).catch(() => {});
             return res;
           })
       )
@@ -52,7 +52,7 @@ self.addEventListener("fetch", (event) => {
       .then((res) => {
         if (res.ok && request.method === "GET") {
           const resClone = res.clone();
-          caches.open(CACHE).then((c) => c.put(request, resClone));
+          caches.open(CACHE).then((c) => c.put(request, resClone)).catch(() => {});
         }
         return res;
       })
