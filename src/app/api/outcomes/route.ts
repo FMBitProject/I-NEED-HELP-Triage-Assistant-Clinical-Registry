@@ -38,6 +38,13 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { patientId, status, followUpDays, notes, admissionDate, dischargeDate, notReferredReason } = body;
 
+  if (admissionDate && dischargeDate && dischargeDate < admissionDate) {
+    return Response.json(
+      { error: "Tanggal keluar tidak boleh sebelum tanggal masuk" },
+      { status: 400 }
+    );
+  }
+
   const patient = await db.query.patients.findFirst({
     where: and(eq(patients.id, patientId), eq(patients.doctorId, session.user.id)),
   });

@@ -114,6 +114,7 @@ export default function FollowUpPage() {
           (new Date(dischargeDate).getTime() - new Date(admissionDate).getTime()) / 86400000
         )
       : null;
+  const hasInvalidStayDates = lengthOfStay !== null && lengthOfStay < 0;
 
   const handleSave = async () => {
     if (!status) return;
@@ -218,13 +219,16 @@ export default function FollowUpPage() {
                     <Input
                       id="discharge-date"
                       type="date"
+                      min={admissionDate || undefined}
                       value={dischargeDate}
                       onChange={(e) => setDischargeDate(e.target.value)}
                     />
                   </div>
                 </div>
-                <p className="text-xs text-gray-400">
-                  {lengthOfStay !== null
+                <p className={cn("text-xs", hasInvalidStayDates ? "text-red-600 font-medium" : "text-gray-400")}>
+                  {hasInvalidStayDates
+                    ? "Tanggal keluar tidak boleh sebelum tanggal masuk."
+                    : lengthOfStay !== null
                     ? `Length of stay: ${lengthOfStay} hari`
                     : "Kosongkan tanggal keluar jika pasien masih dirawat."}
                 </p>
@@ -293,7 +297,7 @@ export default function FollowUpPage() {
           <Button
             size="xl"
             className="w-full"
-            disabled={!status || saving || saved}
+            disabled={!status || saving || saved || hasInvalidStayDates}
             onClick={handleSave}
           >
             {saving ? "Menyimpan..." : saved ? "Tersimpan ✓" : "Simpan Status Follow-up"}

@@ -44,14 +44,24 @@ export async function PATCH(
 
   const body = await request.json();
 
+  const nextAdmissionDate = "admissionDate" in body ? body.admissionDate : outcome.admissionDate;
+  const nextDischargeDate = "dischargeDate" in body ? body.dischargeDate : outcome.dischargeDate;
+
+  if (nextAdmissionDate && nextDischargeDate && nextDischargeDate < nextAdmissionDate) {
+    return Response.json(
+      { error: "Tanggal keluar tidak boleh sebelum tanggal masuk" },
+      { status: 400 }
+    );
+  }
+
   const [updated] = await db
     .update(outcomes)
     .set({
       status: body.status ?? outcome.status,
       followUpDays: body.followUpDays ?? outcome.followUpDays,
       notes: body.notes ?? outcome.notes,
-      admissionDate: "admissionDate" in body ? body.admissionDate : outcome.admissionDate,
-      dischargeDate: "dischargeDate" in body ? body.dischargeDate : outcome.dischargeDate,
+      admissionDate: nextAdmissionDate,
+      dischargeDate: nextDischargeDate,
       notReferredReason: "notReferredReason" in body ? body.notReferredReason : outcome.notReferredReason,
     })
     .where(eq(outcomes.id, id))
