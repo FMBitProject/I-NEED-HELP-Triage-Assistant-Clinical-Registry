@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { HeartPulse, AlertCircle, CheckCircle, Shield, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/auth-context";
 
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { doctor, register } = useAuth();
+  const router = useRouter();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -24,6 +26,12 @@ export default function RegisterPage() {
   const [consentExpanded, setConsentExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Navigate only once the session has actually propagated to `doctor`, instead of
+  // right after the sign-up call resolves (see auth-context.tsx for why).
+  useEffect(() => {
+    if (doctor) router.replace("/dashboard");
+  }, [doctor, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

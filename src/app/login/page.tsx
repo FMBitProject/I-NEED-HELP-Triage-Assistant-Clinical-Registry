@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { HeartPulse, Eye, EyeOff, AlertCircle, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,12 +11,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth-context";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { doctor, login } = useAuth();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Navigate only once the session has actually propagated to `doctor`, instead of
+  // right after the sign-in call resolves (see auth-context.tsx for why).
+  useEffect(() => {
+    if (doctor) router.replace("/dashboard");
+  }, [doctor, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

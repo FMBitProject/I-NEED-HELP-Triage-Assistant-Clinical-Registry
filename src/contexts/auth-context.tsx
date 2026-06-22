@@ -47,10 +47,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     : null;
 
+  // Don't navigate to /dashboard here: better-auth's client delays propagating the
+  // new session to useSession() by ~10ms after sign-in/sign-up resolves (it debounces
+  // the session-refetch signal). Navigating immediately races that delay — the
+  // dashboard mounts, still sees the pre-login session, and bounces back to /login.
+  // Callers should navigate once `doctor` actually becomes truthy instead.
   const login = async (email: string, password: string) => {
     const { error } = await authClient.signIn.email({ email, password });
     if (error) return { success: false, error: error.message || "Email atau password salah." };
-    router.push("/dashboard");
     return { success: true };
   };
 
@@ -66,7 +70,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       researchConsent: true,
     });
     if (error) return { success: false, error: error.message || "Pendaftaran gagal." };
-    router.push("/dashboard");
     return { success: true };
   };
 
