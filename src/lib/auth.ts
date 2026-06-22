@@ -20,10 +20,42 @@ const trustedOrigins: string[] = [
   ...(process.env.WEB_HOST ? [`https://*-${process.env.WEB_HOST}`] : []),
 ].filter((v, i, a) => a.indexOf(v) === i); // deduplicate
 
+// Same set of hosts as trustedOrigins, but without the protocol — lets better-auth
+// build correct links/redirects for whichever preview host made the request,
+// instead of always using the (possibly stale) BETTER_AUTH_URL.
+const allowedHosts: string[] = trustedOrigins
+  .map((origin) => {
+    try {
+      return new URL(origin).host;
+    } catch {
+      return null;
+    }
+  })
+  .filter((host): host is string => !!host)
+  .filter((v, i, a) => a.indexOf(v) === i);
+
 export const auth = betterAuth({
-  baseURL: appUrl,
+  baseURL: {
+    allowedHosts,
+    fallback: appUrl,
+    protocol: "auto",
+  },
   secret: process.env.BETTER_AUTH_SECRET,
   trustedOrigins,
+  advanced: {
+    // Decide the cookie's Secure flag from how the app is actually running, not
+    // from whatever URL happens to be in BETTER_AUTH_URL. With a static `baseURL`
+    // string, the old code derived secure from `BETTER_AUTH_URL.startsWith("https://")`:
+    // when that env var pointed at a stale/wrong host (e.g. a cached Cloud
+    // Workstations preview URL after the port changed), the cookie could end up
+    // `Secure` while the page was actually served over plain http — the browser
+    // then silently drops the cookie. Sign-in still returns 200 with no error, the
+    // session just never sticks and the user bounces back to /login. Tying it to
+    // NODE_ENV instead is correct for both dev (always plain/non-secure, works
+    // over the https preview tunnel too) and Vercel (NODE_ENV=production, always
+    // https).
+    useSecureCookies: process.env.NODE_ENV === "production",
+  },
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
