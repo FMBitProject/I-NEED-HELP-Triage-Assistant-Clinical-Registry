@@ -15,6 +15,9 @@ const trustedOrigins: string[] = [
   ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
   ...(process.env.VERCEL_PROJECT_PRODUCTION_URL ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`] : []),
   ...(process.env.NEXT_PUBLIC_APP_URL ? [process.env.NEXT_PUBLIC_APP_URL] : []),
+  // Cloud Workstations / Firebase Studio preview URLs are "{port}-{WEB_HOST}" and the
+  // port changes across restarts, so match it with a wildcard instead of a fixed BETTER_AUTH_URL.
+  ...(process.env.WEB_HOST ? [`https://*-${process.env.WEB_HOST}`] : []),
 ].filter((v, i, a) => a.indexOf(v) === i); // deduplicate
 
 export const auth = betterAuth({
