@@ -14,6 +14,7 @@ import {
   HeartPulse,
   Bell,
   FileText,
+  UserCog,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -91,6 +92,20 @@ export function Navbar() {
                 Export Data
               </Link>
             )}
+            {doctor?.role === "ADMIN" && (
+              <Link
+                href="/admin/users"
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  pathname === "/admin/users"
+                    ? "bg-blue-50 text-blue-700"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                )}
+              >
+                <UserCog className="w-4 h-4" />
+                Kelola Dokter
+              </Link>
+            )}
           </div>
 
           <div className="hidden md:flex items-center gap-2">
@@ -156,6 +171,16 @@ export function Navbar() {
               >
                 <Download className="w-4 h-4" />
                 Export Data Riset
+              </Link>
+            )}
+            {doctor?.role === "ADMIN" && (
+              <Link
+                href="/admin/users"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100"
+              >
+                <UserCog className="w-4 h-4" />
+                Kelola Akun Dokter
               </Link>
             )}
             <div className="border-t border-gray-100 pt-3 mt-3">

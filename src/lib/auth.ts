@@ -42,6 +42,13 @@ export const auth = betterAuth({
   },
   secret: process.env.BETTER_AUTH_SECRET,
   trustedOrigins,
+  // Explicit rather than relying on the NODE_ENV-based default, so brute-force
+  // protection on sign-in/sign-up/change-password (built into better-auth:
+  // 3 attempts per 10s per IP+path) is guaranteed on regardless of how the
+  // environment is configured.
+  rateLimit: {
+    enabled: true,
+  },
   advanced: {
     // Decide the cookie's Secure flag from how the app is actually running, not
     // from whatever URL happens to be in BETTER_AUTH_URL. With a static `baseURL`
@@ -79,6 +86,15 @@ export const auth = betterAuth({
         type: "string",
         defaultValue: "DOCTOR",
         fieldName: "role",
+      },
+      // New sign-ups start unapproved; an ADMIN must approve them from
+      // /admin/users before they can access patient data. `input: false`
+      // stops sign-up payloads from setting this themselves.
+      approved: {
+        type: "boolean",
+        defaultValue: false,
+        input: false,
+        fieldName: "approved",
       },
       researchConsent: {
         type: "boolean",

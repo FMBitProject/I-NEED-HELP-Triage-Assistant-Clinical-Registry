@@ -1,7 +1,5 @@
 "use client";
 
-"use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -15,8 +13,10 @@ import {
   ExternalLink,
   ClipboardCheck,
   CheckCircle,
+  KeyRound,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
+import { authClient } from "@/lib/auth-client";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +34,14 @@ export default function SettingsPage() {
   const [ecDate, setEcDate] = useState(doctor?.ethicalClearanceDate ?? "");
   const [ecSaving, setEcSaving] = useState(false);
   const [ecSaved, setEcSaved] = useState(false);
+
+  // Change password state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwSaved, setPwSaved] = useState(false);
+  const [pwError, setPwError] = useState<string | null>(null);
 
   if (!doctor) {
     router.replace("/login");
@@ -53,6 +61,34 @@ export default function SettingsPage() {
     setEcSaving(false);
     setEcSaved(true);
     setTimeout(() => setEcSaved(false), 3000);
+  };
+
+  const handleChangePassword = async () => {
+    setPwError(null);
+    if (newPassword.length < 8) {
+      setPwError("Password baru minimal 8 karakter.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPwError("Konfirmasi password tidak cocok.");
+      return;
+    }
+    setPwSaving(true);
+    const { error } = await authClient.changePassword({
+      currentPassword,
+      newPassword,
+      revokeOtherSessions: true,
+    });
+    setPwSaving(false);
+    if (error) {
+      setPwError(error.message || "Password saat ini salah.");
+      return;
+    }
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setPwSaved(true);
+    setTimeout(() => setPwSaved(false), 3000);
   };
 
   const handleDeleteAccount = async () => {
@@ -105,6 +141,69 @@ export default function SettingsPage() {
               <div>
                 <p className="text-xs text-gray-500">Peran</p>
                 <p className="text-sm text-gray-700">{doctor.role}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Change password */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <KeyRound className="w-4 h-4 text-gray-500" />
+                Ubah Password
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="current-password">Password Saat Ini</Label>
+                <Input
+                  id="current-password"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => { setCurrentPassword(e.target.value); setPwError(null); }}
+                  autoComplete="current-password"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="new-password">Password Baru</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  placeholder="Minimal 8 karakter"
+                  value={newPassword}
+                  onChange={(e) => { setNewPassword(e.target.value); setPwError(null); }}
+                  autoComplete="new-password"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="confirm-new-password">Konfirmasi Password Baru</Label>
+                <Input
+                  id="confirm-new-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => { setConfirmPassword(e.target.value); setPwError(null); }}
+                  autoComplete="new-password"
+                />
+              </div>
+
+              {pwError && (
+                <p className="text-xs text-red-600">{pwError}</p>
+              )}
+
+              <div className="flex items-center gap-3">
+                <Button
+                  size="sm"
+                  onClick={handleChangePassword}
+                  disabled={pwSaving || !currentPassword || !newPassword || !confirmPassword}
+                >
+                  {pwSaving ? "Menyimpan..." : "Simpan Password Baru"}
+                </Button>
+                {pwSaved && (
+                  <span className="flex items-center gap-1 text-xs text-green-700 font-medium">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    Password berhasil diubah
+                  </span>
+                )}
               </div>
             </CardContent>
           </Card>

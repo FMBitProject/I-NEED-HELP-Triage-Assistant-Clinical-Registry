@@ -1,11 +1,11 @@
 import { db } from "@/lib/db";
 import { patients, triageLogs } from "@/lib/db/schema";
-import { requireSession } from "@/lib/api-auth";
+import { requireApprovedSession } from "@/lib/api-auth";
 import { getTriageResult } from "@/lib/triage";
 import { and, eq } from "drizzle-orm";
 
 export async function POST(request: Request) {
-  const { session, error } = await requireSession();
+  const { session, error } = await requireApprovedSession();
   if (error) return error;
 
   const body = await request.json();

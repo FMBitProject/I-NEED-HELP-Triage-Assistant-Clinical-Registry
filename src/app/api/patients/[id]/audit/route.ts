@@ -1,13 +1,13 @@
 import { db } from "@/lib/db";
 import { auditLogs, patients } from "@/lib/db/schema";
-import { requireSession } from "@/lib/api-auth";
+import { requireApprovedSession } from "@/lib/api-auth";
 import { and, asc, eq } from "drizzle-orm";
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { session, error } = await requireSession();
+  const { session, error } = await requireApprovedSession();
   if (error) return error;
 
   const { id } = await params;

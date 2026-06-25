@@ -1,10 +1,10 @@
 import { db } from "@/lib/db";
 import { outcomes, patients, triageLogs } from "@/lib/db/schema";
-import { requireSession } from "@/lib/api-auth";
+import { requireApprovedSession } from "@/lib/api-auth";
 import { and, eq, gte, isNull, sql } from "drizzle-orm";
 
 export async function GET() {
-  const { session, error } = await requireSession();
+  const { session, error } = await requireApprovedSession();
   if (error) return error;
 
   const doctorId = session.user.id;

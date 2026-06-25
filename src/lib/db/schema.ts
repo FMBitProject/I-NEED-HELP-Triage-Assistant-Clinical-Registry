@@ -24,6 +24,10 @@ export const user = pgTable("user", {
   // Custom app fields
   institutionType: text("institution_type"),
   role: text("role").notNull().default("DOCTOR"),
+  // Defaults to true at the DB level so accounts that existed before this
+  // column was introduced are grandfathered in as approved. New sign-ups are
+  // explicitly created with approved=false via auth.ts additionalFields.
+  approved: boolean("approved").notNull().default(true),
   researchConsent: boolean("research_consent").notNull().default(false),
   ethicalClearanceNo: text("ethical_clearance_no"),
   ethicalClearanceDate: text("ethical_clearance_date"),

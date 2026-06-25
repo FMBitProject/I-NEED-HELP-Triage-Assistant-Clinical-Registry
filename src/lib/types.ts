@@ -72,6 +72,7 @@ export interface Doctor {
   institutionType: string;
   createdAt: string;
   role: "DOCTOR" | "ADMIN";
+  approved: boolean;
   ethicalClearanceNo?: string | null;
   ethicalClearanceDate?: string | null;
 }

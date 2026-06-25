@@ -1,10 +1,10 @@
 import { db } from "@/lib/db";
 import { outcomes, patients } from "@/lib/db/schema";
-import { requireSession } from "@/lib/api-auth";
+import { requireApprovedSession } from "@/lib/api-auth";
 import { and, eq } from "drizzle-orm";
 
 export async function GET(request: Request) {
-  const { session, error } = await requireSession();
+  const { session, error } = await requireApprovedSession();
   if (error) return error;
 
   const { searchParams } = new URL(request.url);
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { session, error } = await requireSession();
+  const { session, error } = await requireApprovedSession();
   if (error) return error;
 
   const body = await request.json();
