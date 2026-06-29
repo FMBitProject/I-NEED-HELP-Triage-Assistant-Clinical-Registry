@@ -1,0 +1,2292 @@
+[
+  {
+    "id": "TC001",
+    "title": "Create a new triage and receive a recommendation",
+    "description": "A signed-in doctor can complete the two-step triage wizard and reach a result page with a score and clinical recommendation.",
+    "category": "New Patient Triage Wizard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /triage/new"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the patient profile and baseline clinical data with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Proceed to the I-NEED-HELP checklist step"
+      },
+      {
+        "type": "action",
+        "description": "Select the relevant triage criteria to complete the assessment"
+      },
+      {
+        "type": "action",
+        "description": "Submit the triage"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the triage result page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a score and recommendation are visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Complete a new triage and receive a recommendation",
+    "description": "This verifies that a doctor can enter baseline patient data, score the I-NEED-HELP criteria, submit the triage, and see a final score and recommendation.",
+    "category": "I-NEED-HELP Triage Wizard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /triage/new"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the patient initials field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in a valid age into the age field"
+      },
+      {
+        "type": "action",
+        "description": "Select a gender value"
+      },
+      {
+        "type": "action",
+        "description": "Fill in valid systolic blood pressure, diastolic blood pressure, heart rate, and LVEF values"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the required baseline comorbidity and GDMT fields"
+      },
+      {
+        "type": "action",
+        "description": "Continue to the I-NEED-HELP scoring step"
+      },
+      {
+        "type": "action",
+        "description": "Select at least one I-NEED-HELP criterion"
+      },
+      {
+        "type": "action",
+        "description": "Submit the triage form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the triage result is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a final score and recommendation are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Log in and reach the dashboard",
+    "description": "A registered doctor can sign in successfully and land on the personal dashboard.",
+    "category": "Doctor Login",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify personal registry summary content is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Block progression when required triage fields are missing",
+    "description": "This verifies that incomplete baseline triage data is rejected and inline validation errors are shown instead of advancing to scoring.",
+    "category": "I-NEED-HELP Triage Wizard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /triage/new"
+      },
+      {
+        "type": "action",
+        "description": "Leave the required baseline fields empty"
+      },
+      {
+        "type": "action",
+        "description": "Continue to the I-NEED-HELP scoring step"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify inline validation errors are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the scoring step is not shown"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Delete the signed-in account from settings",
+    "description": "A signed-in doctor can permanently delete their own account after typing the required confirmation phrase.",
+    "category": "Settings - Profile, Change Password, Ethical Clearance, Delete Account",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open settings"
+      },
+      {
+        "type": "action",
+        "description": "Choose to delete the account"
+      },
+      {
+        "type": "action",
+        "description": "Type the required account deletion confirmation phrase"
+      },
+      {
+        "type": "action",
+        "description": "Confirm account deletion"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the account is deleted and patient data is removed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Refer a patient when high-risk triage criteria are selected",
+    "description": "A completed triage with high-risk criteria shows a referral recommendation on the result page.",
+    "category": "New Patient Triage Wizard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /triage/new"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the patient profile and baseline clinical data with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Proceed to the I-NEED-HELP checklist step"
+      },
+      {
+        "type": "action",
+        "description": "Select enough triage criteria to trigger referral"
+      },
+      {
+        "type": "action",
+        "description": "Submit the triage"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the referral recommendation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the triage score is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Approve a pending doctor account",
+    "description": "This verifies that an admin can review a pending doctor account and approve it for access.",
+    "category": "Admin User Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /admin/users"
+      },
+      {
+        "type": "action",
+        "description": "Approve a pending doctor account"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the doctor account is marked as approved"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the pending account is removed from the pending list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Record a 30-day outcome for a patient",
+    "description": "This verifies that a doctor can enter follow-up outcome information for a patient and save it successfully.",
+    "category": "Patient Follow-up & Outcomes",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing patient record"
+      },
+      {
+        "type": "action",
+        "description": "Open the follow-up outcome form"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid 30-day outcome"
+      },
+      {
+        "type": "action",
+        "description": "Fill in valid admission and discharge dates if required"
+      },
+      {
+        "type": "action",
+        "description": "Save the follow-up outcome"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the follow-up outcome is displayed on the patient record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the patient is no longer marked as pending follow-up"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Create a new triage event for an existing patient",
+    "description": "A doctor can retriage an existing patient and see a new I-NEED-HELP assessment added to the record.",
+    "category": "Patient Detail, Edit, Delete, Finalize, Retriage",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the patient registry"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient record"
+      },
+      {
+        "type": "action",
+        "description": "Choose to retriage the patient"
+      },
+      {
+        "type": "action",
+        "description": "Complete the I-NEED-HELP assessment for the patient"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a new triage event is added to the record"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Keep triage on GDMT when no referral criteria are met",
+    "description": "A completed triage with no high-risk criteria shows a continue-GDMT recommendation on the result page.",
+    "category": "New Patient Triage Wizard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /triage/new"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the patient profile and baseline clinical data with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Proceed to the I-NEED-HELP checklist step"
+      },
+      {
+        "type": "action",
+        "description": "Leave all triage criteria unselected"
+      },
+      {
+        "type": "action",
+        "description": "Submit the triage"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the continue GDMT recommendation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the criteria summary reflects a low-risk assessment"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Update the live triage score as criteria are selected",
+    "description": "This verifies that selecting I-NEED-HELP criteria updates the live score before submission and that the score reflects the selected criteria.",
+    "category": "I-NEED-HELP Triage Wizard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /triage/new"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the required baseline patient data"
+      },
+      {
+        "type": "action",
+        "description": "Continue to the I-NEED-HELP scoring step"
+      },
+      {
+        "type": "action",
+        "description": "Select one I-NEED-HELP criterion"
+      },
+      {
+        "type": "action",
+        "description": "Select another I-NEED-HELP criterion"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the live triage score updates"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected criteria are reflected in the scoring step"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Record a valid 30-day follow-up outcome",
+    "description": "A signed-in doctor can submit a follow-up outcome with valid admission and discharge dates and see the saved outcome.",
+    "category": "Patient Follow-Up Outcome Update",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /followup"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient needing follow-up"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid 30-day outcome"
+      },
+      {
+        "type": "action",
+        "description": "Fill in valid admission and discharge dates"
+      },
+      {
+        "type": "action",
+        "description": "Save the follow-up outcome"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the follow-up outcome is saved"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the patient moves to the completed follow-up state"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "Lock a patient record by finalizing it",
+    "description": "A doctor can finalize a patient record and the record becomes locked against further baseline edits.",
+    "category": "Patient Detail, Edit, Delete, Finalize, Retriage",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the patient registry"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient record"
+      },
+      {
+        "type": "action",
+        "description": "Choose to finalize the record"
+      },
+      {
+        "type": "action",
+        "description": "Confirm finalization"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the record is locked from further edits"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Generate a referral recommendation when criteria are met",
+    "description": "This verifies that selecting qualifying I-NEED-HELP criteria produces a referral recommendation on the result page.",
+    "category": "I-NEED-HELP Triage Wizard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /triage/new"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the required baseline patient data"
+      },
+      {
+        "type": "action",
+        "description": "Continue to the I-NEED-HELP scoring step"
+      },
+      {
+        "type": "action",
+        "description": "Select qualifying I-NEED-HELP criteria"
+      },
+      {
+        "type": "action",
+        "description": "Submit the triage form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the triage result is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a referral recommendation is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC015",
+    "title": "View a patient record with full clinical history",
+    "description": "A doctor can open a patient from the registry and review the triage result, outcome, and audit trail on the detail page.",
+    "category": "Patient Detail, Edit, Delete, Finalize, Retriage",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the patient registry"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the triage result, outcome, and audit trail are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC016",
+    "title": "Save a follow-up outcome for a patient",
+    "description": "A doctor can record a 30-day outcome for a patient and see it saved in the follow-up workflow.",
+    "category": "Follow-up / Outcome Tracking",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open follow-up tracking"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient follow-up update flow"
+      },
+      {
+        "type": "action",
+        "description": "Select an outcome status"
+      },
+      {
+        "type": "action",
+        "description": "Save the outcome"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the outcome is saved for the patient"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC017",
+    "title": "Finalize a patient record and lock further editing",
+    "description": "A signed-in doctor can finalize a patient record and the record becomes locked from further baseline edits.",
+    "category": "Patient Detail Actions",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /patients"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient record"
+      },
+      {
+        "type": "action",
+        "description": "Finalize the record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the record is marked as finalized"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify editing is no longer available"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC018",
+    "title": "Change the account password from settings",
+    "description": "A signed-in doctor can change their own password from settings and complete the update successfully.",
+    "category": "Settings - Profile, Change Password, Ethical Clearance, Delete Account",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open settings"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the current password field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the new password field with a valid password"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password confirmation field with the same password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the password change"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the password change succeeds"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC019",
+    "title": "Generate a continue-GDMT recommendation for a zero score triage",
+    "description": "This verifies that a triage with no criteria met produces a zero score and a continue-GDMT recommendation.",
+    "category": "I-NEED-HELP Triage Wizard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /triage/new"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the required baseline patient data"
+      },
+      {
+        "type": "action",
+        "description": "Continue to the I-NEED-HELP scoring step"
+      },
+      {
+        "type": "action",
+        "description": "Leave all I-NEED-HELP criteria unselected"
+      },
+      {
+        "type": "action",
+        "description": "Submit the triage form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the triage result is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a zero score and continue-GDMT recommendation are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC020",
+    "title": "Register a new doctor account with consent",
+    "description": "A new doctor can complete registration with required identity and consent details and reach an account created pending approval state.",
+    "category": "Doctor Registration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /register"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the name field with a valid full name"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with a valid email address"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with a valid password"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid institution type"
+      },
+      {
+        "type": "action",
+        "description": "Optionally fill in the institution name field"
+      },
+      {
+        "type": "action",
+        "description": "Check the consent checkbox"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the account creation confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the pending approval state is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC021",
+    "title": "Reset another doctor's password as an admin",
+    "description": "This verifies that an admin can generate a temporary password for another doctor account and see the reset confirmation in the interface.",
+    "category": "Admin User Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /admin/users"
+      },
+      {
+        "type": "action",
+        "description": "Reset another doctor's password"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a temporary password confirmation is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected doctor remains listed in account management"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC022",
+    "title": "Update a patient baseline record before finalization",
+    "description": "A doctor can edit a patient's baseline information and save the revised record before it is locked.",
+    "category": "Patient Detail, Edit, Delete, Finalize, Retriage",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the patient registry"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient record"
+      },
+      {
+        "type": "action",
+        "description": "Choose to edit the patient baseline data"
+      },
+      {
+        "type": "action",
+        "description": "Change one or more editable baseline fields"
+      },
+      {
+        "type": "action",
+        "description": "Save the updated patient record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the patient record reflects the saved updates"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC023",
+    "title": "Search and filter the patient registry",
+    "description": "A signed-in doctor can search and filter the patient list to find matching records.",
+    "category": "Patient Registry Search and Filter",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /patients"
+      },
+      {
+        "type": "action",
+        "description": "Search for a patient using a likely matching term"
+      },
+      {
+        "type": "action",
+        "description": "Apply a registry filter"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the filtered patient list is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify matching patient results remain visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC024",
+    "title": "Delete a patient record from the registry",
+    "description": "A doctor can permanently delete a patient record after confirming the deletion flow.",
+    "category": "Patient Detail, Edit, Delete, Finalize, Retriage",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the patient registry"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient record"
+      },
+      {
+        "type": "action",
+        "description": "Choose to delete the patient"
+      },
+      {
+        "type": "action",
+        "description": "Confirm deletion"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the patient no longer appears in the registry"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC025",
+    "title": "Reset another doctor’s password and reveal the temporary password",
+    "description": "An admin can reset another doctor's password from the doctor management page and the temporary password is revealed once for sharing out of band.",
+    "category": "Admin - Approve Doctors & Reset Passwords",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the doctor management page"
+      },
+      {
+        "type": "action",
+        "description": "Click the password reset control for another doctor account"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the password reset"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a temporary password is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the reset action is reflected for that account"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC026",
+    "title": "Review dashboard metrics and go to the patient list",
+    "description": "A signed-in doctor can view dashboard analytics and open the full patient registry from the dashboard.",
+    "category": "Personal Dashboard & GDMT Audit",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to view all patients"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the patient list is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard analytics were accessible before navigation"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC027",
+    "title": "Open the patient list and narrow it by search and filter",
+    "description": "This verifies that a doctor can search the registry by patient initial and refine the results with a triage-status filter.",
+    "category": "Patient List, Search & Filter",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /patients"
+      },
+      {
+        "type": "action",
+        "description": "Fill in a patient initial into the search field"
+      },
+      {
+        "type": "action",
+        "description": "Select a triage-status filter"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the patient list is narrowed to matching results"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected filter is applied"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC028",
+    "title": "View a patient record and review the audit trail",
+    "description": "A signed-in doctor can open a patient detail page and review the recorded triage and audit history.",
+    "category": "Patient Detail Actions",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /patients"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the patient detail view is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify audit trail content is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC029",
+    "title": "Export the registry as CSV",
+    "description": "This verifies that an admin can access the export page and trigger the registry CSV export action.",
+    "category": "Registry CSV Export",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /export"
+      },
+      {
+        "type": "action",
+        "description": "Trigger the registry export action"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the export interface is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the registry export action is available"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC030",
+    "title": "Update ethical clearance information in settings",
+    "description": "A signed-in doctor can update ethical clearance details and save them in settings.",
+    "category": "Settings - Profile, Change Password, Ethical Clearance, Delete Account",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open settings"
+      },
+      {
+        "type": "action",
+        "description": "Update the ethical clearance number"
+      },
+      {
+        "type": "action",
+        "description": "Update the ethical clearance date"
+      },
+      {
+        "type": "action",
+        "description": "Save the profile changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the ethical clearance information is saved"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC031",
+    "title": "Prevent editing after a patient record is finalized",
+    "description": "A doctor cannot modify baseline data once a patient record has been finalized and locked.",
+    "category": "Patient Detail, Edit, Delete, Finalize, Retriage",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the patient registry"
+      },
+      {
+        "type": "action",
+        "description": "Open a finalized patient record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify editing controls are unavailable"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC032",
+    "title": "Update a patient baseline record",
+    "description": "A signed-in doctor can edit an existing patient record and see the updated detail view afterward.",
+    "category": "Patient Detail Actions",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /patients"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient record"
+      },
+      {
+        "type": "action",
+        "description": "Start editing the patient record"
+      },
+      {
+        "type": "action",
+        "description": "Update a baseline field with a new valid value"
+      },
+      {
+        "type": "action",
+        "description": "Save the changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the patient detail view shows the updated record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the edit action remains available for an unfinalized record"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC033",
+    "title": "Open a patient record from the registry",
+    "description": "This verifies that a doctor can open a patient from the list and reach the patient detail page.",
+    "category": "Patient List, Search & Filter",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /patients"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient card"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the patient detail page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify patient triage details are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC034",
+    "title": "Open pending follow-up tracking from the dashboard",
+    "description": "A signed-in doctor can use the dashboard shortcut to open the follow-up tracker for pending cases.",
+    "category": "Personal Dashboard & GDMT Audit",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to update pending follow-ups"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the follow-up tracker is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify pending and completed follow-up content is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC035",
+    "title": "Flag that a recommended referral was not followed",
+    "description": "This verifies that a doctor can document a non-adherence follow-up outcome when a referral recommendation was not followed.",
+    "category": "Patient Follow-up & Outcomes",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing patient record with a referral recommendation"
+      },
+      {
+        "type": "action",
+        "description": "Open the follow-up outcome form"
+      },
+      {
+        "type": "action",
+        "description": "Select the outcome indicating the referral was not followed"
+      },
+      {
+        "type": "action",
+        "description": "Save the follow-up outcome"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the non-followed referral outcome is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the follow-up record is saved"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC036",
+    "title": "Record when a recommended referral was not followed",
+    "description": "A doctor can provide a reason when a REFER recommendation was not actually followed and save the follow-up outcome.",
+    "category": "Follow-up / Outcome Tracking",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open follow-up tracking"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient follow-up update flow"
+      },
+      {
+        "type": "action",
+        "description": "Select the option for referral not followed"
+      },
+      {
+        "type": "action",
+        "description": "Provide a reason for the missed referral"
+      },
+      {
+        "type": "action",
+        "description": "Save the outcome"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the follow-up outcome is saved with the referral-not-followed reason"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC037",
+    "title": "Create a new triage from an existing patient record",
+    "description": "A signed-in doctor can retriage an existing patient and produce a new triage result for that record.",
+    "category": "Patient Detail Actions",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /patients"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient record"
+      },
+      {
+        "type": "action",
+        "description": "Start retriage for the patient"
+      },
+      {
+        "type": "action",
+        "description": "Complete the retriage checklist with valid selections"
+      },
+      {
+        "type": "action",
+        "description": "Submit the retriage"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new triage result is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the patient record reflects a new triage event"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC038",
+    "title": "Move through paginated patient results",
+    "description": "This verifies that a doctor can move between pages in the patient registry and see a different set of patients.",
+    "category": "Patient List, Search & Filter",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /patients"
+      },
+      {
+        "type": "action",
+        "description": "Move to the next page of patients"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a different set of patients is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify pagination remains available"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC039",
+    "title": "Mark that a recommended referral was not followed",
+    "description": "A signed-in doctor can record a follow-up outcome indicating that a referral recommendation was not followed and save it successfully.",
+    "category": "Patient Follow-Up Outcome Update",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /followup"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient needing follow-up"
+      },
+      {
+        "type": "action",
+        "description": "Select an outcome indicating the referral was not followed"
+      },
+      {
+        "type": "action",
+        "description": "Provide the required reason text"
+      },
+      {
+        "type": "action",
+        "description": "Save the follow-up outcome"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the follow-up outcome is saved"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the referral-not-followed note is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC040",
+    "title": "View the follow-up tracking queue",
+    "description": "This verifies that a doctor can open the follow-up queue and see pending and completed follow-ups in their respective tabs.",
+    "category": "Patient Follow-up & Outcomes",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /followup"
+      },
+      {
+        "type": "action",
+        "description": "Switch between the pending and done follow-up views"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify follow-up patients are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify both pending and completed follow-up states are represented"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC041",
+    "title": "Review the triage result details for a patient",
+    "description": "This verifies that a doctor can inspect a patient's triage outcome, criteria met, and GDMT status from the patient detail flow.",
+    "category": "Triage Result & Recommendation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing patient record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the triage result summary is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify criteria met and GDMT status are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC042",
+    "title": "Require valid date ordering for follow-up outcomes",
+    "description": "The follow-up form shows validation feedback when discharge occurs before admission or the dates are otherwise invalid.",
+    "category": "Patient Follow-Up Outcome Update",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /patients"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient follow-up form"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid outcome that requires dates"
+      },
+      {
+        "type": "action",
+        "description": "Fill in an invalid pair of admission and discharge dates"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to save the follow-up outcome"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify date validation errors are visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC043",
+    "title": "Review the patient audit trail history",
+    "description": "A doctor can expand the audit trail and review the create, update, and finalize history for a patient.",
+    "category": "Patient Detail, Edit, Delete, Finalize, Retriage",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to view the patient registry"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient record"
+      },
+      {
+        "type": "action",
+        "description": "Expand the audit trail"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the create, update, and finalize history is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC044",
+    "title": "Validate follow-up admission and discharge date order",
+    "description": "A doctor can enter follow-up admission and discharge dates and the form blocks an invalid date order.",
+    "category": "Follow-up / Outcome Tracking",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open follow-up tracking"
+      },
+      {
+        "type": "action",
+        "description": "Open a patient follow-up update flow"
+      },
+      {
+        "type": "action",
+        "description": "Enter an admission date"
+      },
+      {
+        "type": "action",
+        "description": "Enter a discharge date earlier than the admission date"
+      },
+      {
+        "type": "action",
+        "description": "Save the outcome"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a date validation error is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC045",
+    "title": "Prevent triage submission until required baseline information is provided",
+    "description": "The triage wizard shows validation feedback when required baseline patient data is missing.",
+    "category": "New Patient Triage Wizard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /triage/new"
+      },
+      {
+        "type": "action",
+        "description": "Leave the required baseline patient fields empty"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to continue the triage wizard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify baseline validation errors are visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC046",
+    "title": "Start a new triage from a prior result",
+    "description": "This verifies that a doctor can move from a completed result back into the new triage intake flow.",
+    "category": "Triage Result & Recommendation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing triage result page"
+      },
+      {
+        "type": "action",
+        "description": "Click the action to start a new triage"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new triage intake screen is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the triage form is ready for a new patient"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC047",
+    "title": "View registry export summary on the export page",
+    "description": "An admin can open the export page and review registry summary counts before downloading data.",
+    "category": "Admin - Research Data Export",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill in {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to the export page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify registry summary statistics are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify dataset export controls are available"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC048",
+    "title": "Reject an invalid 30-day outcome date order",
+    "description": "This verifies that the follow-up form prevents saving when the admission and discharge dates are in the wrong order.",
+    "category": "Patient Follow-up & Outcomes",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing patient record"
+      },
+      {
+        "type": "action",
+        "description": "Open the follow-up outcome form"
+      },
+      {
+        "type": "action",
+        "description": "Select an outcome that requires dates"
+      },
+      {
+        "type": "action",
+        "description": "Fill in a discharge date earlier than the admission date"
+      },
+      {
+        "type": "action",
+        "description": "Save the follow-up outcome"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a date validation error is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the follow-up outcome is not saved"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC049",
+    "title": "Switch between pending and completed follow-up lists",
+    "description": "A doctor can move between follow-up tabs and review patients needing follow-up versus those already completed.",
+    "category": "Follow-up / Outcome Tracking",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open follow-up tracking"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the completed follow-up tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the completed follow-up list is displayed"
+      },
+      {
+        "type": "action",
+        "description": "Switch back to the pending follow-up tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the pending follow-up list is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC050",
+    "title": "Move through patient list pages",
+    "description": "A signed-in doctor can paginate the registry and continue browsing patient records across pages.",
+    "category": "Patient Registry Search and Filter",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /patients"
+      },
+      {
+        "type": "action",
+        "description": "Advance to the next page of patient results"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a different page of patient results is displayed"
+      }
+    ],
+    "priority": "Medium"
+  }
+]

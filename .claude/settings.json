@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__TestSprite__testsprite_generate_code_summary"
+    ]
+  }
+}
