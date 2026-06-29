@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { AlertTriangle, RotateCcw, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { reportClientError } from "@/lib/report-client-error";
 
 export default function ErrorPage({
   error,
@@ -13,16 +14,12 @@ export default function ErrorPage({
 }) {
   useEffect(() => {
     console.error(error);
-    fetch("/api/log-client-error", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: error.message,
-        stack: error.stack,
-        digest: error.digest,
-        url: typeof window !== "undefined" ? window.location.href : undefined,
-      }),
-    }).catch(() => {});
+    reportClientError({
+      message: error.message,
+      stack: error.stack,
+      digest: error.digest,
+      url: typeof window !== "undefined" ? window.location.href : undefined,
+    });
   }, [error]);
 
   return (

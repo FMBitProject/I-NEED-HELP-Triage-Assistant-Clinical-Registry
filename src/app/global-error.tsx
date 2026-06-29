@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { reportClientError } from "@/lib/report-client-error";
 
 // Catches errors that happen in the root layout itself (outside any
 // route segment's error.tsx). Must render its own <html>/<body> since it
@@ -14,16 +15,12 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error(error);
-    fetch("/api/log-client-error", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: error.message,
-        stack: error.stack,
-        digest: error.digest,
-        url: typeof window !== "undefined" ? window.location.href : undefined,
-      }),
-    }).catch(() => {});
+    reportClientError({
+      message: error.message,
+      stack: error.stack,
+      digest: error.digest,
+      url: typeof window !== "undefined" ? window.location.href : undefined,
+    });
   }, [error]);
 
   return (

@@ -159,7 +159,7 @@ export default function AdminUsersPage() {
                             {approvingId === d.id ? "Menyetujui..." : "Setujui"}
                           </Button>
                         )}
-                        {state.phase === "idle" && (
+                        {state.phase === "idle" && d.id !== doctor.id && (
                           <Button
                             variant="outline"
                             size="sm"

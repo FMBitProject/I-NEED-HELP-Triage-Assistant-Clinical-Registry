@@ -14,7 +14,7 @@ export function PendingApprovalGate({ children }: { children: React.ReactNode })
   const pathname = usePathname();
 
   const isPending = !isLoading && doctor && doctor.role !== "ADMIN" && !doctor.approved;
-  const isAllowedPath = ALLOWED_PATHS.some((p) => pathname.startsWith(p));
+  const isAllowedPath = ALLOWED_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   if (isPending && !isAllowedPath) {
     return (

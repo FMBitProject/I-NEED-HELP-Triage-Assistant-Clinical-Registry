@@ -44,8 +44,12 @@ export const auth = betterAuth({
   trustedOrigins,
   // Explicit rather than relying on the NODE_ENV-based default, so brute-force
   // protection on sign-in/sign-up/change-password (built into better-auth:
-  // 3 attempts per 10s per IP+path) is guaranteed on regardless of how the
-  // environment is configured.
+  // 3 attempts per 10s per IP+path) stays on regardless of how the environment
+  // is configured. Storage defaults to in-memory (no secondaryStorage set
+  // below), which is per-instance on Vercel serverless — a real speed bump
+  // against quick bursts from one IP, but not a hard global cap under
+  // sustained/distributed load. Move to `storage: "database"` if that
+  // becomes a real threat at this app's scale.
   rateLimit: {
     enabled: true,
   },
