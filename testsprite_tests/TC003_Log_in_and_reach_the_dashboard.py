@@ -40,19 +40,26 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Fill the 'Email' field with testsprite-runner@example.com, fill the 'Password' field with TestSprite123!, then click the 'Masuk' button to submit the login form.
+        # -> Open the Login page by navigating to the application's 'Login' page so the login form becomes visible.
+        await page.goto("http://localhost:9002/login")
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=5000)
+        except Exception:
+            pass
+        
+        # -> Fill the Email field with 'testsprite-runner@example.com', fill the Password field with 'TestSprite123!', then click the 'Masuk' button to submit the login form.
         # dokter@puskesmas.id email field
         elem = page.locator('[id="email"]')
         await elem.wait_for(state="visible", timeout=10000)
         await elem.fill("testsprite-runner@example.com")
         
-        # -> Fill the 'Email' field with testsprite-runner@example.com, fill the 'Password' field with TestSprite123!, then click the 'Masuk' button to submit the login form.
+        # -> Fill the Email field with 'testsprite-runner@example.com', fill the Password field with 'TestSprite123!', then click the 'Masuk' button to submit the login form.
         # •••••••• password field
         elem = page.locator('[id="password"]')
         await elem.wait_for(state="visible", timeout=10000)
         await elem.fill("TestSprite123!")
         
-        # -> Fill the 'Email' field with testsprite-runner@example.com, fill the 'Password' field with TestSprite123!, then click the 'Masuk' button to submit the login form.
+        # -> Fill the Email field with 'testsprite-runner@example.com', fill the Password field with 'TestSprite123!', then click the 'Masuk' button to submit the login form.
         # Masuk button
         elem = page.get_by_role('button', name='Masuk', exact=True)
         await elem.click(timeout=10000)
@@ -60,14 +67,28 @@ async def run_test():
         # --> Assertions to verify final state
         
         # --> Verify the dashboard is displayed
-        # Assert: Expected URL to contain "/dashboard" to show the dashboard is displayed.
-        await expect(page).to_have_url(re.compile("/dashboard"), timeout=15000), "Expected URL to contain \"/dashboard\" to show the dashboard is displayed."
-        # Assert: Verify personal registry summary content is visible
-        assert False, "Expected: Verify personal registry summary content is visible (could not be verified on the page)"
+        # Assert: The URL contains '/dashboard', confirming the dashboard is displayed.
+        await expect(page).to_have_url(re.compile("/dashboard"), timeout=15000), "The URL contains '/dashboard', confirming the dashboard is displayed."
+        await page.locator("xpath=/html/body/div[3]/nav/div/div[1]/a[1]").nth(0).scroll_into_view_if_needed()
+        # Assert: The top navigation shows the 'Dashboard' link, confirming the dashboard is displayed.
+        await expect(page.locator("xpath=/html/body/div[3]/nav/div/div[1]/a[1]").nth(0)).to_be_visible(timeout=15000), "The top navigation shows the 'Dashboard' link, confirming the dashboard is displayed."
         
-        # --> Test blocked by environment/access constraints during agent run
-        # Reason: TEST BLOCKED The sign-in flow could not be completed because the application rejects the request origin, preventing successful login and access to the dashboard. Observations: - A red error banner with the message 'Invalid origin' is visible on the login page above the email field. - The credentials were entered and the 'Masuk' (submit) button was clicked, but the dashboard was not reached.
-        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The sign-in flow could not be completed because the application rejects the request origin, preventing successful login and access to the dashboard. Observations: - A red error banner with the message 'Invalid origin' is visible on the login page above the email field. - The credentials were entered and the 'Masuk' (submit) button was clicked, but the dashboard was not reached." + " — the exported script cannot reproduce a PASS in this environment.")
+        # --> Verify personal registry summary content is visible
+        await page.locator("xpath=/html/body/div[3]/main/div/div[2]/div[1]/div/div/div").nth(0).scroll_into_view_if_needed()
+        # Assert: The 'Total Pasien' summary card is visible.
+        await expect(page.locator("xpath=/html/body/div[3]/main/div/div[2]/div[1]/div/div/div").nth(0)).to_be_visible(timeout=15000), "The 'Total Pasien' summary card is visible."
+        await page.locator("xpath=/html/body/div[3]/main/div/div[2]/div[2]/div/div/div").nth(0).scroll_into_view_if_needed()
+        # Assert: The 'Tingkat Rujukan' summary card is visible.
+        await expect(page.locator("xpath=/html/body/div[3]/main/div/div[2]/div[2]/div/div/div").nth(0)).to_be_visible(timeout=15000), "The 'Tingkat Rujukan' summary card is visible."
+        await page.locator("xpath=/html/body/div[3]/main/div/div[2]/div[3]/div/div/div").nth(0).scroll_into_view_if_needed()
+        # Assert: The 'GDMT Lengkap' summary card is visible.
+        await expect(page.locator("xpath=/html/body/div[3]/main/div/div[2]/div[3]/div/div/div").nth(0)).to_be_visible(timeout=15000), "The 'GDMT Lengkap' summary card is visible."
+        await page.locator("xpath=/html/body/div[3]/main/div/div[2]/div[4]/div/div/div").nth(0).scroll_into_view_if_needed()
+        # Assert: The 'Perlu Follow-up' summary card is visible.
+        await expect(page.locator("xpath=/html/body/div[3]/main/div/div[2]/div[4]/div/div/div").nth(0)).to_be_visible(timeout=15000), "The 'Perlu Follow-up' summary card is visible."
+        await page.locator("xpath=/html/body/div[3]/main/div/div[5]/div[1]/div[2]/ul/li/a").nth(0).scroll_into_view_if_needed()
+        # Assert: A recent patient entry in the 'Pasien Terbaru' list (e.g., TS) is visible.
+        await expect(page.locator("xpath=/html/body/div[3]/main/div/div[5]/div[1]/div[2]/ul/li/a").nth(0)).to_be_visible(timeout=15000), "A recent patient entry in the 'Pasien Terbaru' list (e.g., TS) is visible."
         await asyncio.sleep(5)
 
     finally:

@@ -40,47 +40,80 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Fill the Email field with 'testsprite-runner@example.com', fill the Password field with 'TestSprite123!', then click the 'Masuk' button to submit the login form.
+        # -> Navigate to the login page and load the login form so the email and password fields become visible.
+        await page.goto("http://localhost:9002/login")
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=5000)
+        except Exception:
+            pass
+        
+        # -> Fill the 'Email' field with testsprite-runner@example.com, fill the 'Password' field with TestSprite123!, then click the 'Masuk' (Login) button to sign in.
         # dokter@puskesmas.id email field
         elem = page.locator('[id="email"]')
         await elem.wait_for(state="visible", timeout=10000)
         await elem.fill("testsprite-runner@example.com")
         
-        # -> Fill the Email field with 'testsprite-runner@example.com', fill the Password field with 'TestSprite123!', then click the 'Masuk' button to submit the login form.
+        # -> Fill the 'Email' field with testsprite-runner@example.com, fill the 'Password' field with TestSprite123!, then click the 'Masuk' (Login) button to sign in.
         # •••••••• password field
         elem = page.locator('[id="password"]')
         await elem.wait_for(state="visible", timeout=10000)
         await elem.fill("TestSprite123!")
         
-        # -> Fill the Email field with 'testsprite-runner@example.com', fill the Password field with 'TestSprite123!', then click the 'Masuk' button to submit the login form.
+        # -> Fill the 'Email' field with testsprite-runner@example.com, fill the 'Password' field with TestSprite123!, then click the 'Masuk' (Login) button to sign in.
         # Masuk button
         elem = page.get_by_role('button', name='Masuk', exact=True)
         await elem.click(timeout=10000)
         
-        # -> Submit the login form by clicking the 'Masuk' button and observe whether authentication succeeds or the 'Invalid origin' error persists.
-        # Masuk button
-        elem = page.get_by_role('button', name='Masuk', exact=True)
+        # -> Click the 'Triase Baru' (New Triage) link or button to open the new triage form so baseline fields are displayed.
+        # Triase Baru link
+        elem = page.get_by_role('link', name='Triase Baru', exact=True)
         await elem.click(timeout=10000)
         
-        # -> Click the 'Masuk' button to re-submit the login form and confirm whether the 'Invalid origin' inline error persists (verify blocking state).
-        # Masuk button
-        elem = page.get_by_role('button', name='Masuk', exact=True)
-        await elem.click(timeout=10000)
+        # -> Clear the required baseline inputs (Initial, Age, Sistolik, Diastolik) and click the 'Lanjut ke Skor I-NEED-HELP' button to attempt progression and trigger inline validation messages.
+        # misal: BW text field
+        elem = page.locator('[id="initial"]')
+        await elem.wait_for(state="visible", timeout=10000)
+        await elem.fill("")
         
-        # -> Click the 'Masuk' button on the login form to re-submit credentials and verify whether the 'Invalid origin' inline error persists (if it persists, report the test as BLOCKED).
-        # Masuk button
-        elem = page.get_by_role('button', name='Masuk', exact=True)
+        # -> Clear the required baseline inputs (Initial, Age, Sistolik, Diastolik) and click the 'Lanjut ke Skor I-NEED-HELP' button to attempt progression and trigger inline validation messages.
+        # 65 number field
+        elem = page.locator('[id="age"]')
+        await elem.wait_for(state="visible", timeout=10000)
+        await elem.fill("")
+        
+        # -> Clear the required baseline inputs (Initial, Age, Sistolik, Diastolik) and click the 'Lanjut ke Skor I-NEED-HELP' button to attempt progression and trigger inline validation messages.
+        # 120 number field
+        elem = page.locator('[id="sbp"]')
+        await elem.wait_for(state="visible", timeout=10000)
+        await elem.fill("")
+        
+        # -> Clear the required baseline inputs (Initial, Age, Sistolik, Diastolik) and click the 'Lanjut ke Skor I-NEED-HELP' button to attempt progression and trigger inline validation messages.
+        # 80 number field
+        elem = page.locator('[id="dbp"]')
+        await elem.wait_for(state="visible", timeout=10000)
+        await elem.fill("")
+        
+        # -> Clear the required baseline inputs (Initial, Age, Sistolik, Diastolik) and click the 'Lanjut ke Skor I-NEED-HELP' button to attempt progression and trigger inline validation messages.
+        # Lanjut ke Skor I-NEED-HELP button
+        elem = page.get_by_role('button', name='Lanjut ke Skor I-NEED-HELP', exact=True)
         await elem.click(timeout=10000)
         
         # --> Assertions to verify final state
-        # Assert: Verify inline validation errors are displayed
-        assert False, "Expected: Verify inline validation errors are displayed (could not be verified on the page)"
-        # Assert: Verify the scoring step is not shown
-        assert False, "Expected: Verify the scoring step is not shown (could not be verified on the page)"
         
-        # --> Test blocked by environment/access constraints during agent run
-        # Reason: TEST BLOCKED The test could not be run — the UI prevents reaching the triage flow because login is blocked by an 'Invalid origin' error. Observations: - The login page displays an 'Invalid origin' inline error above the login form. - Repeated login attempts using the provided ADMIN credentials (testsprite-runner@example.com / TestSprite123!) did not advance to the application; /triage/new could...
-        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the UI prevents reaching the triage flow because login is blocked by an 'Invalid origin' error. Observations: - The login page displays an 'Invalid origin' inline error above the login form. - Repeated login attempts using the provided ADMIN credentials (testsprite-runner@example.com / TestSprite123!) did not advance to the application; /triage/new could..." + " — the exported script cannot reproduce a PASS in this environment.")
+        # --> Verify inline validation errors are displayed
+        # Assert: Validation header 'Mohon lengkapi data berikut:' is visible.
+        await expect(page.locator("xpath=/html/body/div[3]").nth(0)).to_contain_text("Mohon lengkapi data berikut:", timeout=15000), "Validation header 'Mohon lengkapi data berikut:' is visible."
+        # Assert: Inline error 'Inisial pasien wajib diisi' is shown.
+        await expect(page.locator("xpath=/html/body/div[3]").nth(0)).to_contain_text("Inisial pasien wajib diisi", timeout=15000), "Inline error 'Inisial pasien wajib diisi' is shown."
+        # Assert: Inline error 'Usia wajib diisi' is shown.
+        await expect(page.locator("xpath=/html/body/div[3]").nth(0)).to_contain_text("Usia wajib diisi", timeout=15000), "Inline error 'Usia wajib diisi' is shown."
+        # Assert: Inline error 'Jenis kelamin wajib dipilih' is shown.
+        await expect(page.locator("xpath=/html/body/div[3]").nth(0)).to_contain_text("Jenis kelamin wajib dipilih", timeout=15000), "Inline error 'Jenis kelamin wajib dipilih' is shown."
+        
+        # --> Verify the scoring step is not shown
+        await page.locator("xpath=/html/body/div[2]/main/div/div[4]/button").nth(0).scroll_into_view_if_needed()
+        # Assert: The 'Lanjut ke Skor I-NEED-HELP' button is visible, so the scoring step did not appear.
+        await expect(page.locator("xpath=/html/body/div[2]/main/div/div[4]/button").nth(0)).to_be_visible(timeout=15000), "The 'Lanjut ke Skor I-NEED-HELP' button is visible, so the scoring step did not appear."
         await asyncio.sleep(5)
 
     finally:

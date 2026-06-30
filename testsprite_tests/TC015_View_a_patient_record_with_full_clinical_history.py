@@ -40,35 +40,46 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Fill the email field with testsprite-runner@example.com, fill the password field with TestSprite123!, then click the 'Masuk' button to sign in.
+        # -> Fill the email field with testsprite-runner@example.com, fill the password field with TestSprite123!, and click the 'Masuk' (Login) button to sign in.
         # dokter@puskesmas.id email field
         elem = page.locator('[id="email"]')
         await elem.wait_for(state="visible", timeout=10000)
         await elem.fill("testsprite-runner@example.com")
         
-        # -> Fill the email field with testsprite-runner@example.com, fill the password field with TestSprite123!, then click the 'Masuk' button to sign in.
+        # -> Fill the email field with testsprite-runner@example.com, fill the password field with TestSprite123!, and click the 'Masuk' (Login) button to sign in.
         # •••••••• password field
         elem = page.locator('[id="password"]')
         await elem.wait_for(state="visible", timeout=10000)
         await elem.fill("TestSprite123!")
         
-        # -> Fill the email field with testsprite-runner@example.com, fill the password field with TestSprite123!, then click the 'Masuk' button to sign in.
+        # -> Fill the email field with testsprite-runner@example.com, fill the password field with TestSprite123!, and click the 'Masuk' (Login) button to sign in.
         # Masuk button
         elem = page.get_by_role('button', name='Masuk', exact=True)
         await elem.click(timeout=10000)
         
-        # -> Click the 'Masuk' button to submit the login form and observe whether the app navigates to the patient registry or shows an error.
-        # Masuk button
-        elem = page.get_by_role('button', name='Masuk', exact=True)
+        # -> Click the 'Pasien' link in the top navigation to open the patient registry page.
+        # Pasien link
+        elem = page.get_by_role('link', name='Pasien', exact=True)
+        await elem.click(timeout=10000)
+        
+        # -> Open the patient detail page by clicking the 'TS' patient card in the patient list.
+        # TS TS 67 th • L Rujuk TD: 100 / 65 HR: 98 EF: 32... link
+        elem = page.get_by_role('link', name='TS TS 67th • L Rujuk TD: 100/65 HR: 98 EF: 32% GDMT: 2/4 29 Jun 2026', exact=True)
+        await elem.click(timeout=10000)
+        
+        # -> Click the 'Riwayat Perubahan (Audit Trail)' button to open the audit trail, after first confirming the triage result text 'RUJUK' and the outcome text 'Belum Ada Follow-up' are present on the page.
+        # Riwayat Perubahan (Audit Trail) button
+        elem = page.get_by_role('button', name='Riwayat Perubahan (Audit Trail)', exact=True)
         await elem.click(timeout=10000)
         
         # --> Assertions to verify final state
-        # Assert: Verify the triage result, outcome, and audit trail are displayed
-        assert False, "Expected: Verify the triage result, outcome, and audit trail are displayed (could not be verified on the page)"
         
-        # --> Test blocked by environment/access constraints during agent run
-        # Reason: TEST BLOCKED The test could not be run — the UI provides no way to complete login because the application rejects the request origin. Observations: - The login page displays an 'Invalid origin' error banner - Multiple login submissions were attempted but the app did not navigate away from the login page
-        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 the UI provides no way to complete login because the application rejects the request origin. Observations: - The login page displays an 'Invalid origin' error banner - Multiple login submissions were attempted but the app did not navigate away from the login page" + " — the exported script cannot reproduce a PASS in this environment.")
+        # --> Verify the triage result, outcome, and audit trail are displayed
+        await page.locator("xpath=/html/body/div[2]/main/div/div[8]/button").nth(0).scroll_into_view_if_needed()
+        # Assert: The 'Riwayat Perubahan (Audit Trail)' button is visible on the patient detail page.
+        await expect(page.locator("xpath=/html/body/div[2]/main/div/div[8]/button").nth(0)).to_be_visible(timeout=15000), "The 'Riwayat Perubahan (Audit Trail)' button is visible on the patient detail page."
+        # Assert: The audit trail panel displays 'Belum ada riwayat perubahan' indicating no audit entries.
+        await expect(page.locator("xpath=/html/body/div[3]").nth(0)).to_contain_text("Belum ada riwayat perubahan", timeout=15000), "The audit trail panel displays 'Belum ada riwayat perubahan' indicating no audit entries."
         await asyncio.sleep(5)
 
     finally:

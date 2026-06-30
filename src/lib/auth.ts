@@ -10,6 +10,8 @@ const appUrl = process.env.BETTER_AUTH_URL || "http://localhost:3000";
 // Vercel preview URLs) don't get rejected with 403.
 const trustedOrigins: string[] = [
   "http://localhost:3000",
+  // This IDE's preview/dev server runs on 9002, not Next's default 3000.
+  "http://localhost:9002",
   appUrl,
   // Vercel auto-injects these: VERCEL_URL = deployment URL, VERCEL_PROJECT_PRODUCTION_URL = production URL
   ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
@@ -52,6 +54,13 @@ export const auth = betterAuth({
   // becomes a real threat at this app's scale.
   rateLimit: {
     enabled: true,
+    // The 3-per-10s default is too tight for automated test suites (e.g.
+    // TestSprite) that sign in fresh for every single test case against the
+    // same dev server. Only loosened outside production.
+    customRules: process.env.NODE_ENV !== "production" ? {
+      "/sign-in/email": { window: 60, max: 100 },
+      "/sign-up/email": { window: 60, max: 100 },
+    } : undefined,
   },
   advanced: {
     // Decide the cookie's Secure flag from how the app is actually running, not

@@ -40,68 +40,96 @@ async def run_test():
         except Exception:
             pass
         
-        # -> Open the application's Login page by navigating to the 'Login' route and allow the page to finish loading so the login form becomes visible.
-        await page.goto("http://localhost:9002/login")
-        try:
-            await page.wait_for_load_state("domcontentloaded", timeout=5000)
-        except Exception:
-            pass
-        
-        # -> Fill the Email field with testsprite-runner@example.com, fill the Password field with TestSprite123!, then click the 'Masuk' button to submit the login form.
+        # -> Fill the Email field with 'testsprite-runner@example.com', fill the Password field with 'TestSprite123!', then click the 'Masuk' button to log in.
         # dokter@puskesmas.id email field
         elem = page.locator('[id="email"]')
         await elem.wait_for(state="visible", timeout=10000)
         await elem.fill("testsprite-runner@example.com")
         
-        # -> Fill the Email field with testsprite-runner@example.com, fill the Password field with TestSprite123!, then click the 'Masuk' button to submit the login form.
+        # -> Fill the Email field with 'testsprite-runner@example.com', fill the Password field with 'TestSprite123!', then click the 'Masuk' button to log in.
         # •••••••• password field
         elem = page.locator('[id="password"]')
         await elem.wait_for(state="visible", timeout=10000)
         await elem.fill("TestSprite123!")
         
-        # -> Fill the Email field with testsprite-runner@example.com, fill the Password field with TestSprite123!, then click the 'Masuk' button to submit the login form.
+        # -> Fill the Email field with 'testsprite-runner@example.com', fill the Password field with 'TestSprite123!', then click the 'Masuk' button to log in.
         # Masuk button
         elem = page.get_by_role('button', name='Masuk', exact=True)
         await elem.click(timeout=10000)
         
-        # -> Wait briefly and then click the 'Masuk' button to retry submitting the login form.
-        # Masuk button
-        elem = page.get_by_role('button', name='Masuk', exact=True)
+        # -> click
+        # Triase Baru link
+        elem = page.get_by_role('link', name='Triase Baru', exact=True)
         await elem.click(timeout=10000)
         
-        # -> Navigate to the 'Create new triage' page (visit the /triage/new route) to see whether the triage UI is accessible or whether the login/origin error blocks access.
-        await page.goto("http://localhost:9002/triage/new")
-        try:
-            await page.wait_for_load_state("domcontentloaded", timeout=5000)
-        except Exception:
-            pass
-        
-        # -> Fill the Email field with testsprite-runner@example.com, fill the Password field with TestSprite123!, then click the 'Masuk' button to submit the login form.
-        # dokter@puskesmas.id email field
-        elem = page.locator('[id="email"]')
+        # -> Fill the patient initial with 'TS', select the 'Laki-laki (L)' gender option, and click the 'Lanjut ke Skor I-NEED-HELP' button to proceed to the scoring step.
+        # misal: BW text field
+        elem = page.locator('[id="initial"]')
         await elem.wait_for(state="visible", timeout=10000)
-        await elem.fill("testsprite-runner@example.com")
+        await elem.fill("TS")
         
-        # -> Fill the Email field with testsprite-runner@example.com, fill the Password field with TestSprite123!, then click the 'Masuk' button to submit the login form.
-        # •••••••• password field
-        elem = page.locator('[id="password"]')
+        # -> Fill the patient initial with 'TS', select the 'Laki-laki (L)' gender option, and click the 'Lanjut ke Skor I-NEED-HELP' button to proceed to the scoring step.
+        # Laki-laki (L) button
+        elem = page.get_by_role('button', name='Laki-laki (L)', exact=True)
+        await elem.click(timeout=10000)
+        
+        # -> Fill the patient initial with 'TS', select the 'Laki-laki (L)' gender option, and click the 'Lanjut ke Skor I-NEED-HELP' button to proceed to the scoring step.
+        # Lanjut ke Skor I-NEED-HELP button
+        elem = page.get_by_role('button', name='Lanjut ke Skor I-NEED-HELP', exact=True)
+        await elem.click(timeout=10000)
+        
+        # -> Fill the required baseline fields: 'Usia (tahun)', 'Sistolik (mmHg)', 'Diastolik (mmHg)', and 'Detak Jantung (bpm)' with valid numbers, then click the 'Lanjut ke Skor I-NEED-HELP' button to proceed to the scoring step.
+        # 65 number field
+        elem = page.locator('[id="dbp"]')
         await elem.wait_for(state="visible", timeout=10000)
-        await elem.fill("TestSprite123!")
+        await elem.fill("65")
         
-        # -> Fill the Email field with testsprite-runner@example.com, fill the Password field with TestSprite123!, then click the 'Masuk' button to submit the login form.
-        # Masuk button
-        elem = page.get_by_role('button', name='Masuk', exact=True)
+        # -> Fill the required baseline fields: 'Usia (tahun)', 'Sistolik (mmHg)', 'Diastolik (mmHg)', and 'Detak Jantung (bpm)' with valid numbers, then click the 'Lanjut ke Skor I-NEED-HELP' button to proceed to the scoring step.
+        # 120 number field
+        elem = page.locator('[id="sbp"]')
+        await elem.wait_for(state="visible", timeout=10000)
+        await elem.fill("120")
+        
+        # -> Fill the required baseline fields: 'Usia (tahun)', 'Sistolik (mmHg)', 'Diastolik (mmHg)', and 'Detak Jantung (bpm)' with valid numbers, then click the 'Lanjut ke Skor I-NEED-HELP' button to proceed to the scoring step.
+        # 80 number field
+        elem = page.locator('[id="dbp"]')
+        await elem.wait_for(state="visible", timeout=10000)
+        await elem.fill("80")
+        
+        # -> Fill the required baseline fields: 'Usia (tahun)', 'Sistolik (mmHg)', 'Diastolik (mmHg)', and 'Detak Jantung (bpm)' with valid numbers, then click the 'Lanjut ke Skor I-NEED-HELP' button to proceed to the scoring step.
+        # 72 number field
+        elem = page.locator('[id="hr"]')
+        await elem.wait_for(state="visible", timeout=10000)
+        await elem.fill("72")
+        
+        # -> Fill the required baseline fields: 'Usia (tahun)', 'Sistolik (mmHg)', 'Diastolik (mmHg)', and 'Detak Jantung (bpm)' with valid numbers, then click the 'Lanjut ke Skor I-NEED-HELP' button to proceed to the scoring step.
+        # Lanjut ke Skor I-NEED-HELP button
+        elem = page.get_by_role('button', name='Lanjut ke Skor I-NEED-HELP', exact=True)
+        await elem.click(timeout=10000)
+        
+        # -> Click the 'Inotropik IV' checkbox, then click the 'NYHA / Natriuretic Peptide' checkbox, and verify the displayed 'Skor saat ini' updates from 0 to 1 then to 2.
+        # button
+        elem = page.locator('[id="criteria-I"]')
+        await elem.click(timeout=10000)
+        
+        # -> Click the 'Inotropik IV' checkbox, then click the 'NYHA / Natriuretic Peptide' checkbox, and verify the displayed 'Skor saat ini' updates from 0 to 1 then to 2.
+        # button
+        elem = page.locator('[id="criteria-N"]')
         await elem.click(timeout=10000)
         
         # --> Assertions to verify final state
-        # Assert: Verify the live triage score updates
-        assert False, "Expected: Verify the live triage score updates (could not be verified on the page)"
-        # Assert: Verify the selected criteria are reflected in the scoring step
-        assert False, "Expected: Verify the selected criteria are reflected in the scoring step (could not be verified on the page)"
         
-        # --> Test blocked by environment/access constraints during agent run
-        # Reason: TEST BLOCKED The test could not be run — authentication is blocked by an 'Invalid origin' error on the login page. Observations: - The login screen shows a red 'Invalid origin' error banner. - Submitting valid credentials did not authenticate; previous attempts also produced a 'Too many requests' rate-limit error. - The /triage/new page cannot be accessed because login is blocked.
-        raise AssertionError("Test blocked during agent run: " + "TEST BLOCKED The test could not be run \u2014 authentication is blocked by an 'Invalid origin' error on the login page. Observations: - The login screen shows a red 'Invalid origin' error banner. - Submitting valid credentials did not authenticate; previous attempts also produced a 'Too many requests' rate-limit error. - The /triage/new page cannot be accessed because login is blocked." + " — the exported script cannot reproduce a PASS in this environment.")
+        # --> Verify the live triage score updates
+        # Assert: The live triage score displays 2 after selecting the criteria.
+        await expect(page.locator("xpath=/html/body/div[2]/main/div/div[4]/div[1]/div/div/div[1]/div/span[1]").nth(0)).to_have_text("2", timeout=15000), "The live triage score displays 2 after selecting the criteria."
+        
+        # --> Verify the selected criteria are reflected in the scoring step
+        # Assert: The 'Inotropik IV' criterion is shown as selected.
+        await expect(page.locator("xpath=/html/body/div[2]/main/div/div[4]/div[2]/label[1]/button").nth(0)).to_have_attribute("value", "on", timeout=15000), "The 'Inotropik IV' criterion is shown as selected."
+        # Assert: The 'NYHA / Natriuretic Peptide' criterion is shown as selected.
+        await expect(page.locator("xpath=/html/body/div[2]/main/div/div[4]/div[2]/label[2]/button").nth(0)).to_have_attribute("value", "on", timeout=15000), "The 'NYHA / Natriuretic Peptide' criterion is shown as selected."
+        # Assert: The live score displays '2', reflecting two selected criteria.
+        await expect(page.locator("xpath=/html/body/div[2]/main/div/div[4]/div[1]/div/div/div[1]/div/span[1]").nth(0)).to_have_text("2", timeout=15000), "The live score displays '2', reflecting two selected criteria."
         await asyncio.sleep(5)
 
     finally:
