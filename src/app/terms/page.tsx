@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HeartPulse, FileText, ArrowLeft } from "lucide-react";
+import { FileText, ArrowLeft } from "lucide-react";
 
 export default function TermsPage() {
   return (

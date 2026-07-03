@@ -15,6 +15,7 @@ export function OfflineSync() {
   const [justSynced, setJustSynced] = useState<number | null>(null);
   const [needsLogin, setNeedsLogin] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
   const syncingRef = useRef(false);
 
   const refresh = useCallback(async () => {
@@ -50,22 +51,29 @@ export function OfflineSync() {
   useEffect(() => {
     // Ditunda satu tick agar tidak setState sinkron di dalam effect
     const initial = setTimeout(() => {
+      setIsOffline(!navigator.onLine);
       refresh();
       attemptSync();
     }, 0);
 
-    const onOnline = () => attemptSync();
+    const onOnline = () => {
+      setIsOffline(false);
+      attemptSync();
+    };
+    const onOffline = () => setIsOffline(true);
     const onQueueChanged = () => refresh();
     const onVisible = () => {
       if (document.visibilityState === "visible") attemptSync();
     };
 
     window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
     window.addEventListener(QUEUE_CHANGED_EVENT, onQueueChanged);
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       clearTimeout(initial);
       window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
       window.removeEventListener(QUEUE_CHANGED_EVENT, onQueueChanged);
       document.removeEventListener("visibilitychange", onVisible);
     };
@@ -78,6 +86,21 @@ export function OfflineSync() {
           <span className="text-green-600 font-bold">✓</span>
           <p className="text-xs text-green-800 font-medium">
             {justSynced} triase offline berhasil dikirim ke registri.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Offline tanpa antrean: cukup info bahwa data yang tampil salinan terakhir
+  if (pendingCount === 0 && isOffline) {
+    return (
+      <div className="fixed bottom-4 left-4 right-4 z-50 max-w-xl mx-auto">
+        <div className="bg-slate-100 border border-slate-200 rounded-xl shadow-lg p-3 flex items-center gap-2">
+          <span className="shrink-0">📡</span>
+          <p className="text-xs text-slate-600 font-medium">
+            Offline — data yang tampil adalah salinan terakhir. Triase baru tetap
+            bisa dibuat.
           </p>
         </div>
       </div>
@@ -100,13 +123,15 @@ export function OfflineSync() {
               : "Akan terkirim otomatis saat ada koneksi."}
           </p>
         </div>
-        <button
-          onClick={attemptSync}
-          disabled={syncing}
-          className="shrink-0 text-xs font-semibold text-amber-800 bg-amber-100 hover:bg-amber-200 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors"
-        >
-          {syncing ? "Mengirim..." : "Kirim Sekarang"}
-        </button>
+        {!isOffline && (
+          <button
+            onClick={attemptSync}
+            disabled={syncing}
+            className="shrink-0 text-xs font-semibold text-amber-800 bg-amber-100 hover:bg-amber-200 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            {syncing ? "Mengirim..." : "Kirim Sekarang"}
+          </button>
+        )}
       </div>
     </div>
   );

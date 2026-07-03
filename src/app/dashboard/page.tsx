@@ -12,7 +12,6 @@ import {
   Plus,
   ArrowRight,
   CheckCircle,
-  XCircle,
   Clock,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
@@ -24,14 +23,6 @@ import { PatientWithDetails } from "@/lib/types";
 import { countGdmt } from "@/lib/triage";
 import { FOLLOW_UP_DAYS, daysSinceTriage, isFollowUpDue, isInObservation } from "@/lib/followup";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 function getDaysAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();

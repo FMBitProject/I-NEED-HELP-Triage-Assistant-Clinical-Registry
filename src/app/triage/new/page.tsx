@@ -24,6 +24,7 @@ import { TriageCriteria } from "@/lib/types";
 import { TRIAGE_CRITERIA_LABELS, calculateTriageScore, getTriageResult } from "@/lib/triage";
 import { REFER_RECOMMENDATIONS, CONTINUE_RECOMMENDATIONS } from "@/lib/recommendations";
 import { enqueuePendingTriage, isNetworkError, PendingPatientPayload } from "@/lib/offline-queue";
+import { getVitalsWarnings } from "@/lib/vitals";
 import { cn } from "@/lib/utils";
 
 type Step = 1 | 2;
@@ -649,6 +650,34 @@ export default function NewTriagePage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {(() => {
+                const warnings = getVitalsWarnings({
+                  age: Number(profile.age) || null,
+                  systolicBp: Number(profile.systolicBp) || null,
+                  diastolicBp: Number(profile.diastolicBp) || null,
+                  heartRate: Number(profile.heartRate) || null,
+                  lvef: Number(profile.lvef) || null,
+                  egfr: Number(profile.egfr) || null,
+                  ntProbnp: Number(profile.ntProbnp) || null,
+                });
+                if (warnings.length === 0) return null;
+                return (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <p className="text-sm font-semibold text-amber-800 mb-1">
+                      ⚠️ Periksa kembali — nilai di luar rentang wajar:
+                    </p>
+                    <ul className="text-xs text-amber-700 list-disc list-inside space-y-0.5">
+                      {warnings.map((w, i) => (
+                        <li key={i}>{w}</li>
+                      ))}
+                    </ul>
+                    <p className="text-[11px] text-amber-600 mt-1.5">
+                      Jika nilai memang benar, Anda tetap bisa melanjutkan.
+                    </p>
+                  </div>
+                );
+              })()}
 
               <Button onClick={handleNext} size="xl" className="w-full">
                 Lanjut ke Skor I-NEED-HELP

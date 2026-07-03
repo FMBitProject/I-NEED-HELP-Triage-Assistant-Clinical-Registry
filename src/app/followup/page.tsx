@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Clock, CheckCircle, AlertTriangle, Filter } from "lucide-react";
+import { Clock, CheckCircle, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";

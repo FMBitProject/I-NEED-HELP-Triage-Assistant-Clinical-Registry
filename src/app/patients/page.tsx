@@ -57,8 +57,6 @@ export default function PatientsPage() {
     }
   }, [doctor]);
 
-  useEffect(() => { setPage(0); }, [search, filter]);
-
   if (isLoading || !doctor) return null;
 
   const filtered = patients.filter((p) => {
@@ -97,7 +95,7 @@ export default function PatientsPage() {
             <Input
               placeholder="Cari inisial pasien..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(0); }}
               className="pl-9"
             />
           </div>
@@ -113,7 +111,7 @@ export default function PatientsPage() {
             ].map((f) => (
               <button
                 key={f.key}
-                onClick={() => setFilter(f.key as typeof filter)}
+                onClick={() => { setFilter(f.key as typeof filter); setPage(0); }}
                 className={cn(
                   "px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors shrink-0",
                   filter === f.key

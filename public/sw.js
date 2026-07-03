@@ -1,6 +1,6 @@
-const CACHE = "ineedhelp-v1";
+const CACHE = "ineedhelp-v2";
 
-const PRECACHE = ["/dashboard", "/patients", "/triage/new"];
+const PRECACHE = ["/dashboard", "/patients", "/triage/new", "/followup"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -24,8 +24,32 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Never cache API routes — always go to network
+  // API routes: umumnya network-only. Kecuali GET /api/patients — simpan
+  // salinan terakhir supaya daftar pasien & follow-up tetap terbaca offline.
   if (url.pathname.startsWith("/api/")) {
+    if (request.method === "GET" && url.pathname === "/api/patients") {
+      event.respondWith(
+        fetch(request)
+          .then((res) => {
+            if (res.ok) {
+              const resClone = res.clone();
+              caches.open(CACHE).then((c) => c.put(request, resClone)).catch(() => {});
+            }
+            return res;
+          })
+          .catch(() =>
+            caches.match(request).then(
+              (cached) =>
+                cached ||
+                new Response("[]", {
+                  status: 503,
+                  headers: { "Content-Type": "application/json" },
+                })
+            )
+          )
+      );
+      return;
+    }
     event.respondWith(fetch(request));
     return;
   }

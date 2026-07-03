@@ -64,7 +64,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const combined = data.institutionName?.trim()
       ? `${data.institutionType} – ${data.institutionName.trim()}`
       : data.institutionType;
-    const { error } = await (authClient.signUp.email as Function)({
+    // Cast diperlukan karena field kustom (institutionType, researchConsent)
+    // tidak ada di tipe bawaan better-auth
+    const signUpEmail = authClient.signUp.email as (payload: {
+      email: string;
+      password: string;
+      name: string;
+      institutionType: string;
+      researchConsent: boolean;
+    }) => Promise<{ error: { message?: string } | null }>;
+    const { error } = await signUpEmail({
       email: data.email,
       password: data.password,
       name: data.name,

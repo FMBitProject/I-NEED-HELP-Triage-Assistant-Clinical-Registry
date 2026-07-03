@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function SettingsPage() {
-  const { doctor, logout } = useAuth();
+  const { doctor, logout, isLoading } = useAuth();
   const router = useRouter();
   const [deletePhase, setDeletePhase] = useState<"idle" | "confirm" | "typing" | "deleting">("idle");
   const [confirmText, setConfirmText] = useState("");
@@ -43,10 +43,30 @@ export default function SettingsPage() {
   const [pwSaved, setPwSaved] = useState(false);
   const [pwError, setPwError] = useState<string | null>(null);
 
-  if (!doctor) {
-    router.replace("/login");
-    return null;
-  }
+  // Redirect di effect (bukan saat render) — redirect saat render membuat
+  // prerender build error ("location is not defined") dan bisa melempar
+  // pengguna ke /login selagi sesi masih dimuat.
+  useEffect(() => {
+    if (!isLoading && !doctor) router.replace("/login");
+  }, [doctor, isLoading, router]);
+
+  // Isi ulang field ethical clearance begitu data dokter selesai dimuat
+  // (saat halaman dibuka langsung, doctor masih null pada render pertama).
+  // Ditunda satu tick agar tidak setState sinkron di dalam effect.
+  const doctorId = doctor?.id;
+  const ecFromDoctor = doctor?.ethicalClearanceNo ?? "";
+  const ecDateFromDoctor = doctor?.ethicalClearanceDate ?? "";
+  useEffect(() => {
+    if (!doctorId) return;
+    const t = setTimeout(() => {
+      setEcNo(ecFromDoctor);
+      setEcDate(ecDateFromDoctor);
+    }, 0);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doctorId]);
+
+  if (isLoading || !doctor) return null;
 
   const handleSaveEc = async () => {
     setEcSaving(true);
