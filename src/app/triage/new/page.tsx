@@ -21,7 +21,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { TriageCriteria } from "@/lib/types";
-import { TRIAGE_CRITERIA_LABELS, calculateTriageScore } from "@/lib/triage";
+import { TRIAGE_CRITERIA_LABELS, calculateTriageScore, getTriageResult } from "@/lib/triage";
+import { REFER_RECOMMENDATIONS, CONTINUE_RECOMMENDATIONS } from "@/lib/recommendations";
+import { enqueuePendingTriage, isNetworkError, PendingPatientPayload } from "@/lib/offline-queue";
 import { cn } from "@/lib/utils";
 
 type Step = 1 | 2;
@@ -153,6 +155,8 @@ export default function NewTriagePage() {
   const [criteria, setCriteria] = useState<TriageCriteria>(defaultCriteria);
   const [errors, setErrors] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [savedOffline, setSavedOffline] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !doctor) router.replace("/login");
@@ -187,35 +191,43 @@ export default function NewTriagePage() {
     }
   };
 
+  const buildPatientPayload = (): PendingPatientPayload => ({
+    patientInitial: profile.patientInitial.toUpperCase().trim(),
+    age: Number(profile.age),
+    gender: profile.gender as "M" | "F",
+    systolicBp: Number(profile.systolicBp),
+    diastolicBp: Number(profile.diastolicBp),
+    heartRate: Number(profile.heartRate),
+    lvef: profile.lvef ? Number(profile.lvef) : null,
+    egfr: profile.egfr ? Number(profile.egfr) : null,
+    ntProbnp: profile.ntProbnp ? Number(profile.ntProbnp) : null,
+    comorbidDm: profile.comorbidDm,
+    comorbidHtn: profile.comorbidHtn,
+    comorbidCkd: profile.comorbidCkd,
+    comorbidAf: profile.comorbidAf,
+    onAceArni: profile.onAceArni,
+    onBb: profile.onBb,
+    onMra: profile.onMra,
+    onSglt2i: profile.onSglt2i,
+    nyhaClass: profile.nyhaClass || null,
+  });
+
   const handleSubmit = async () => {
     setSubmitting(true);
+    setSubmitError(null);
+    const payload = buildPatientPayload();
+    // Kalau koneksi putus di antara dua request, pasien mungkin sudah
+    // tersimpan — catat id-nya supaya antrean offline tidak membuat dobel.
+    let createdPatientId: string | null = null;
     try {
       const patientRes = await fetch("/api/patients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          patientInitial: profile.patientInitial.toUpperCase().trim(),
-          age: Number(profile.age),
-          gender: profile.gender,
-          systolicBp: Number(profile.systolicBp),
-          diastolicBp: Number(profile.diastolicBp),
-          heartRate: Number(profile.heartRate),
-          lvef: profile.lvef ? Number(profile.lvef) : null,
-          egfr: profile.egfr ? Number(profile.egfr) : null,
-          ntProbnp: profile.ntProbnp ? Number(profile.ntProbnp) : null,
-          comorbidDm: profile.comorbidDm,
-          comorbidHtn: profile.comorbidHtn,
-          comorbidCkd: profile.comorbidCkd,
-          comorbidAf: profile.comorbidAf,
-          onAceArni: profile.onAceArni,
-          onBb: profile.onBb,
-          onMra: profile.onMra,
-          onSglt2i: profile.onSglt2i,
-          nyhaClass: profile.nyhaClass || null,
-        }),
+        body: JSON.stringify(payload),
       });
       if (!patientRes.ok) throw new Error("Gagal menyimpan data pasien");
       const patient = await patientRes.json();
+      createdPatientId = patient.id;
 
       const triageRes = await fetch("/api/triage", {
         method: "POST",
@@ -226,12 +238,177 @@ export default function NewTriagePage() {
       const triage = await triageRes.json();
 
       router.push(`/triage/${triage.id}/result`);
-    } catch {
+    } catch (err) {
+      if (isNetworkError(err)) {
+        // Tidak ada sinyal: antre di perangkat, hasil skoring tetap tampil.
+        try {
+          await enqueuePendingTriage({
+            patient: createdPatientId ? null : payload,
+            patientId: createdPatientId,
+            criteria,
+          });
+          setSavedOffline(true);
+        } catch {
+          setSubmitError(
+            "Tidak ada koneksi dan penyimpanan offline gagal. Catat hasil secara manual, lalu coba lagi."
+          );
+        }
+      } else {
+        setSubmitError("Gagal menyimpan ke server. Silakan coba lagi.");
+      }
       setSubmitting(false);
     }
   };
 
+  const resetForm = () => {
+    setProfile(defaultProfile);
+    setCriteria(defaultCriteria);
+    setSavedOffline(false);
+    setSubmitError(null);
+    setStep(1);
+    window.scrollTo(0, 0);
+  };
+
   const score = calculateTriageScore(criteria);
+
+  // Hasil offline: skoring dihitung di perangkat (logika sama dengan server),
+  // data menunggu sinkronisasi. Keputusan klinis tetap keluar <1 menit.
+  if (savedOffline) {
+    const result = getTriageResult(criteria);
+    const isRefer = result.isUrgent;
+    const metKeys = (
+      Object.entries(criteria) as [keyof TriageCriteria, boolean][]
+    )
+      .filter(([, v]) => v)
+      .map(([k]) => k);
+
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Navbar />
+        <main className="pt-14">
+          <div className="max-w-xl mx-auto px-4 py-6 space-y-4">
+            <Card className="border-amber-200 bg-amber-50 shadow-sm border-0 ring-1 ring-amber-200">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <span className="text-xl">📡</span>
+                  <div>
+                    <p className="text-sm font-semibold text-amber-900">
+                      Tersimpan di perangkat — menunggu sinkronisasi
+                    </p>
+                    <p className="text-xs text-amber-700 mt-0.5">
+                      Tidak ada koneksi internet. Data triase ini aman tersimpan di
+                      perangkat dan akan terkirim otomatis ke registri begitu sinyal
+                      kembali. Tidak perlu mengisi ulang.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card
+              className={cn(
+                "border-0 shadow-lg overflow-hidden",
+                isRefer ? "ring-2 ring-red-400" : "ring-2 ring-green-400"
+              )}
+            >
+              <div
+                className={cn(
+                  "p-6 text-center",
+                  isRefer
+                    ? "bg-gradient-to-br from-red-500 to-red-700"
+                    : "bg-gradient-to-br from-green-500 to-green-700"
+                )}
+              >
+                <p className="text-white/80 text-sm font-medium mb-1">
+                  Rekomendasi Klinis
+                </p>
+                <h1 className="text-2xl font-black text-white mb-2">
+                  {isRefer ? "RUJUK KE FASKES LANJUT" : "LANJUTKAN GDMT"}
+                </h1>
+                <p className="text-white/90 text-sm max-w-xs mx-auto">
+                  {isRefer
+                    ? "Pasien menunjukkan tanda perburukan gagal jantung. Evaluasi spesialis diperlukan."
+                    : "Kondisi pasien stabil. Optimalkan terapi medikamentosa sesuai panduan PERKI."}
+                </p>
+              </div>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-500">Skor I-NEED-HELP</p>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-black text-gray-900">
+                        {result.score}
+                      </span>
+                      <span className="text-sm text-gray-400">/ 9</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-500">Pasien</p>
+                    <p className="text-lg font-bold text-gray-900">
+                      {profile.patientInitial.toUpperCase()}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {profile.age}th • {profile.gender === "M" ? "Laki-laki" : "Perempuan"}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {metKeys.length > 0 && (
+              <Card className="border-0 shadow-sm">
+                <CardContent className="p-4">
+                  <p className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-500" />
+                    Kriteria Perburukan yang Terpenuhi ({metKeys.length})
+                  </p>
+                  <div className="space-y-2">
+                    {metKeys.map((k) => {
+                      const info = TRIAGE_CRITERIA_LABELS[k];
+                      return (
+                        <div key={k} className="flex items-start gap-2 p-2.5 bg-red-50 rounded-lg">
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-[10px] font-black shrink-0 mt-0.5">
+                            {info.key}
+                          </span>
+                          <div>
+                            <p className="text-xs font-semibold text-red-800">{info.label}</p>
+                            <p className="text-xs text-red-600 mt-0.5">{info.description}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4">
+                <p className="text-sm font-semibold text-gray-900 mb-3">
+                  Anjuran Klinis (Berdasarkan Panduan PERKI)
+                </p>
+                <div className="space-y-2.5">
+                  {(isRefer ? REFER_RECOMMENDATIONS : CONTINUE_RECOMMENDATIONS).map((r, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <span className="text-lg">{r.icon}</span>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-900">{r.title}</p>
+                        <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{r.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Button size="xl" className="w-full" onClick={resetForm}>
+              Triase Baru
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -546,6 +723,13 @@ export default function NewTriagePage() {
                   )
                 )}
               </div>
+
+              {submitError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                  <p className="text-xs text-red-700 font-medium">{submitError}</p>
+                </div>
+              )}
 
               <div className="flex gap-3 pt-2">
                 <Button

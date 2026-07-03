@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
 import { PendingApprovalGate } from "@/components/pending-approval-gate";
 import { PwaRegister } from "@/components/pwa-register";
+import { OfflineSync } from "@/components/offline-sync";
 import { FeedbackButton } from "@/components/feedback-button";
 import { ErrorReporter } from "@/components/error-reporter";
 
@@ -39,6 +40,7 @@ export default function RootLayout({
           </PendingApprovalGate>
         </AuthProvider>
         <PwaRegister />
+        <OfflineSync />
         <ErrorReporter />
       </body>
     </html>
