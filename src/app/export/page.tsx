@@ -72,17 +72,6 @@ export default function ExportPage() {
     setExporting(null);
   };
 
-  const exportPatients = async () => {
-    setExporting("patients");
-    try {
-      await downloadFromAPI(`registry_export_${new Date().toISOString().slice(0, 10)}.csv`);
-      setDone("patients");
-      setTimeout(() => setDone(null), 3000);
-    } catch { /* silent */ }
-    setExporting(null);
-  };
-  const exportTriage = exportPatients;
-  const exportOutcomes = exportPatients;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -150,80 +139,33 @@ export default function ExportPage() {
             </CardContent>
           </Card>
 
-          {/* Export Options */}
-          <div className="space-y-3">
-            <p className="text-sm font-semibold text-gray-700">Pilih Dataset untuk Diunduh:</p>
-
-            {[
-              {
-                key: "patients",
-                title: "Data Baseline Pasien",
-                desc: "Inisial, usia, gender, TTV, komorbiditas, lab, status GDMT",
-                rows: stats.total,
-                columns: 20,
-                handler: exportPatients,
-                icon: Users,
-              },
-              {
-                key: "triage",
-                title: "Data Skor Triase",
-                desc: "Skor I-NEED-HELP, kriteria terpenuhi, rekomendasi",
-                rows: stats.referrals,
-                columns: 15,
-                handler: exportTriage,
-                icon: BarChart3,
-              },
-              {
-                key: "outcomes",
-                title: "Data Clinical Outcomes",
-                desc: "Status 30-hari, tanggal masuk/keluar (LOS), alasan tidak dirujuk, catatan klinis",
-                rows: stats.withOutcome,
-                columns: 9,
-                handler: exportOutcomes,
-                icon: CheckCircle,
-              },
-            ].map((item) => (
-              <Card key={item.key} className="border-0 shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gray-100 rounded-lg shrink-0">
-                      <item.icon className="w-4 h-4 text-gray-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900">{item.title}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{item.desc}</p>
-                      <div className="flex gap-3 mt-1.5">
-                        <span className="text-xs text-blue-600 font-medium">{item.rows} baris</span>
-                        <span className="text-xs text-gray-400">{item.columns} kolom</span>
-                        <span className="text-xs text-gray-400">.csv</span>
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={item.handler}
-                      disabled={!!exporting}
-                      className="shrink-0 gap-1.5"
-                    >
-                      {exporting === item.key ? (
-                        "Memproses..."
-                      ) : done === item.key ? (
-                        <>
-                          <CheckCircle className="w-3.5 h-3.5 text-green-500" />
-                          Selesai
-                        </>
-                      ) : (
-                        <>
-                          <Download className="w-3.5 h-3.5" />
-                          Unduh
-                        </>
-                      )}
-                    </Button>
+          {/* Dataset description */}
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-gray-100 rounded-lg shrink-0">
+                  <FileSpreadsheet className="w-4 h-4 text-gray-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900">
+                    Dataset Registri Lengkap (Long Format)
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Satu baris per event triase: baseline pasien (TTV, komorbiditas, lab,
+                    GDMT), 9 kriteria I-NEED-HELP sebagai kolom terpisah (crit_I …
+                    crit_P), rekomendasi, dan outcome 30-hari terakhir.
+                  </p>
+                  <div className="flex gap-3 mt-1.5">
+                    <span className="text-xs text-blue-600 font-medium">
+                      {stats.total} pasien
+                    </span>
+                    <span className="text-xs text-gray-400">45 kolom</span>
+                    <span className="text-xs text-gray-400">.csv</span>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Export All */}
           <Button
@@ -233,16 +175,16 @@ export default function ExportPage() {
             disabled={!!exporting || stats.total === 0}
           >
             {exporting === "all" ? (
-              "Mengekspor semua dataset..."
+              "Mengekspor database..."
             ) : done === "all" ? (
               <>
                 <CheckCircle className="w-5 h-5" />
-                Semua File Berhasil Diunduh!
+                File Berhasil Diunduh!
               </>
             ) : (
               <>
-                <FileSpreadsheet className="w-5 h-5" />
-                Unduh Semua Dataset Sekaligus
+                <Download className="w-5 h-5" />
+                Unduh Seluruh Database (.csv)
               </>
             )}
           </Button>

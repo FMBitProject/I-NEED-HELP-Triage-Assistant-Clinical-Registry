@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PatientWithDetails } from "@/lib/types";
 import { countGdmt } from "@/lib/triage";
+import { FOLLOW_UP_DAYS, daysSinceTriage, isFollowUpDue, isInObservation } from "@/lib/followup";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 function formatDate(iso: string) {
@@ -73,7 +74,10 @@ export default function DashboardPage() {
   const gdmtFull = patients.filter((p) => countGdmt(p) === 4).length;
   const gdmtRate = totalPatients > 0 ? Math.round((gdmtFull / totalPatients) * 100) : 0;
 
-  const pendingFollowup = patients.filter((p) => !p.outcome);
+  // PRD: notifikasi hanya untuk pasien yang sudah melewati masa triase
+  // (30 hari) tanpa outcome — bukan pasien yang baru ditriase.
+  const dueFollowup = patients.filter((p) => isFollowUpDue(p));
+  const inObservation = patients.filter((p) => isInObservation(p));
 
   const recentPatients = patients.slice(0, 5);
 
@@ -115,8 +119,8 @@ export default function DashboardPage() {
     },
     {
       label: "Perlu Follow-up",
-      value: pendingFollowup.length,
-      sub: "belum diupdate",
+      value: dueFollowup.length,
+      sub: `${inObservation.length} masih observasi`,
       icon: Clock,
       color: "text-amber-600",
       bg: "bg-amber-50",
@@ -204,15 +208,16 @@ export default function DashboardPage() {
             </Card>
           )}
 
-          {/* Pending followup alert */}
-          {pendingFollowup.length > 0 && (
+          {/* Pending followup alert — hanya untuk yang sudah jatuh tempo */}
+          {dueFollowup.length > 0 && (
             <Card className="border-amber-200 bg-amber-50 shadow-sm border-0 ring-1 ring-amber-200">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-amber-900">
-                      {pendingFollowup.length} pasien belum diupdate status follow-up-nya
+                      {dueFollowup.length} pasien sudah melewati {FOLLOW_UP_DAYS} hari
+                      tanpa update outcome
                     </p>
                     <p className="text-xs text-amber-700 mt-0.5">
                       Update outcome pasien untuk melengkapi data registri riset.
@@ -350,8 +355,8 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* Pending Follow-up list */}
-          {pendingFollowup.length > 0 && (
+          {/* Pending Follow-up list — jatuh tempo dulu, lalu observasi */}
+          {(dueFollowup.length > 0 || inObservation.length > 0) && (
             <Card className="border-0 shadow-sm">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
@@ -368,11 +373,10 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="p-0">
                 <ul className="divide-y divide-gray-100">
-                  {pendingFollowup.slice(0, 3).map((p) => {
+                  {[...dueFollowup, ...inObservation].slice(0, 3).map((p) => {
                     const log = p.triage;
-                    const daysWaiting = Math.floor(
-                      (Date.now() - new Date(p.createdAt).getTime()) / 86400000
-                    );
+                    const daysWaiting = daysSinceTriage(p);
+                    const due = isFollowUpDue(p);
                     return (
                       <li key={p.id} className="flex items-center gap-3 px-5 py-3">
                         <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
@@ -391,7 +395,15 @@ export default function DashboardPage() {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-xs text-amber-600">{daysWaiting} hari sejak triase</p>
+                          {due ? (
+                            <p className="text-xs text-amber-600 font-medium">
+                              {daysWaiting} hari sejak triase — jatuh tempo
+                            </p>
+                          ) : (
+                            <p className="text-xs text-gray-400">
+                              Hari ke-{daysWaiting} dari {FOLLOW_UP_DAYS} — masa observasi
+                            </p>
+                          )}
                         </div>
                         <Link href={`/patients/${p.id}/followup`}>
                           <Button variant="outline" size="sm" className="shrink-0 text-xs">

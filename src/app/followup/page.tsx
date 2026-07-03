@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { PatientWithDetails } from "@/lib/types";
+import { FOLLOW_UP_DAYS, daysSinceTriage, isFollowUpDue } from "@/lib/followup";
 import { cn } from "@/lib/utils";
 
 const OUTCOME_LABELS: Record<string, { label: string; icon: string; color: string }> = {
@@ -40,9 +41,17 @@ export default function FollowUpListPage() {
 
   if (isLoading || !doctor) return null;
 
+  // Jatuh tempo (≥30 hari sejak triase) di atas, lalu sisanya berdasarkan
+  // yang paling lama menunggu.
   const pending = patients
     .filter((p) => !p.outcome)
-    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    .sort((a, b) => {
+      const dueA = isFollowUpDue(a);
+      const dueB = isFollowUpDue(b);
+      if (dueA !== dueB) return dueA ? -1 : 1;
+      return daysSinceTriage(b) - daysSinceTriage(a);
+    });
+  const dueCount = pending.filter((p) => isFollowUpDue(p)).length;
 
   const done = patients
     .filter((p) => !!p.outcome)
@@ -58,18 +67,18 @@ export default function FollowUpListPage() {
           <div>
             <h1 className="text-xl font-bold text-gray-900">Follow-up Pasien</h1>
             <p className="text-sm text-gray-500">
-              {pending.length} pasien menunggu update outcome
+              {dueCount} jatuh tempo · {pending.length - dueCount} masa observasi
             </p>
           </div>
 
-          {pending.length > 0 && (
+          {dueCount > 0 && (
             <Card className="border-amber-200 ring-1 ring-amber-200 border-0 shadow-sm bg-amber-50">
               <CardContent className="p-3">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                   <p className="text-xs text-amber-800 font-medium">
-                    {pending.length} pasien belum diupdate. Update outcome membantu kualitas data
-                    registri riset.
+                    {dueCount} pasien sudah melewati {FOLLOW_UP_DAYS} hari tanpa update
+                    outcome. Update untuk melengkapi data registri riset.
                   </p>
                 </div>
               </CardContent>
@@ -89,10 +98,14 @@ export default function FollowUpListPage() {
             >
               <Clock className="w-3.5 h-3.5" />
               Belum Follow-up
-              {pending.length > 0 && (
+              {dueCount > 0 ? (
                 <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold">
-                  {pending.length}
+                  {dueCount}
                 </span>
+              ) : (
+                pending.length > 0 && (
+                  <span className="text-xs text-gray-400">({pending.length})</span>
+                )
               )}
             </button>
             <button
@@ -130,9 +143,8 @@ export default function FollowUpListPage() {
               {list.map((p) => {
                 const log = p.triage;
                 const outcome = p.outcome;
-                const daysWaiting = Math.floor(
-                  (Date.now() - new Date(p.createdAt).getTime()) / 86400000
-                );
+                const daysWaiting = daysSinceTriage(p);
+                const due = isFollowUpDue(p);
                 const isRefer = log?.recommendationGiven === "REFER";
 
                 return (
@@ -172,9 +184,13 @@ export default function FollowUpListPage() {
                                 • {outcome.followUpDays} hari follow-up
                               </span>
                             </div>
+                          ) : due ? (
+                            <p className="text-xs text-amber-600 mt-1 font-medium">
+                              Sudah {daysWaiting} hari sejak triase — jatuh tempo follow-up
+                            </p>
                           ) : (
-                            <p className="text-xs text-amber-600 mt-1">
-                              Sudah {daysWaiting} hari sejak triase — belum diupdate
+                            <p className="text-xs text-gray-400 mt-1">
+                              Hari ke-{daysWaiting} dari {FOLLOW_UP_DAYS} — masa observasi
                             </p>
                           )}
                         </div>

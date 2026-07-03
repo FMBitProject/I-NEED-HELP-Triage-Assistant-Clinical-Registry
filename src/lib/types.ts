@@ -93,11 +93,3 @@ export interface AuditLog {
   newValue: string | null;
   createdAt: string;
 }
-
-export interface DashboardStats {
-  totalPatients: number;
-  totalThisMonth: number;
-  referralRate: number;
-  gdmtComplianceRate: number;
-  pendingFollowup: number;
-}
