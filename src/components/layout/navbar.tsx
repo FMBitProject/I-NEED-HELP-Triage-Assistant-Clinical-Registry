@@ -15,6 +15,7 @@ import {
   Bell,
   FileText,
   UserCog,
+  Database,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -78,6 +79,20 @@ export function Navbar() {
                 )}
               </Link>
             ))}
+            {doctor?.role === "ADMIN" && (
+              <Link
+                href="/admin/registry"
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  pathname === "/admin/registry"
+                    ? "bg-blue-50 text-blue-700"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                )}
+              >
+                <Database className="w-4 h-4" />
+                Registry
+              </Link>
+            )}
             {doctor?.role === "ADMIN" && (
               <Link
                 href="/export"
@@ -163,6 +178,16 @@ export function Navbar() {
                 )}
               </Link>
             ))}
+            {doctor?.role === "ADMIN" && (
+              <Link
+                href="/admin/registry"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100"
+              >
+                <Database className="w-4 h-4" />
+                Registry Semua Dokter
+              </Link>
+            )}
             {doctor?.role === "ADMIN" && (
               <Link
                 href="/export"
