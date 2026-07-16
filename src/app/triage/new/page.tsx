@@ -653,7 +653,7 @@ export default function NewTriagePage() {
                     dari IGD untuk rawat inap.
                   </p>
                   <div className="grid grid-cols-1 gap-2">
-                    <CheckboxField id="ace" label="ACE-I / ARB / ARNI" hint="ACE-I: kaptopril, ramipril, lisinopril · ARB: telmisartan, kandesartan, valsartan · ARNI: sacubitril/valsartan" checked={profile.onAceArni} onChange={(v) => updateProfile("onAceArni", v)} />
+                    <CheckboxField id="ace" label="ACE-I / ARB / ARNI" hint="ACE-I: captopril, ramipril, lisinopril · ARB: telmisartan, candesartan, valsartan · ARNI: sacubitril/valsartan" checked={profile.onAceArni} onChange={(v) => updateProfile("onAceArni", v)} />
                     <CheckboxField id="bb" label="Beta-Blocker" hint="Contoh: bisoprolol, carvedilol, metoprolol suksinat" checked={profile.onBb} onChange={(v) => updateProfile("onBb", v)} />
                     <CheckboxField id="mra" label="MRA / Aldosterone Antagonist" hint="Contoh: spironolakton" checked={profile.onMra} onChange={(v) => updateProfile("onMra", v)} />
                     <CheckboxField id="sglt2" label="SGLT2 Inhibitor" hint="Contoh: dapagliflozin, empagliflozin" checked={profile.onSglt2i} onChange={(v) => updateProfile("onSglt2i", v)} />

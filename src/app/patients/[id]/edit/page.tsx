@@ -408,7 +408,7 @@ export default function EditPatientPage() {
                   dari IGD untuk rawat inap.
                 </p>
                 <div className="grid grid-cols-1 gap-2">
-                  <CheckboxField id="ace" label="ACE-I / ARB / ARNI" hint="ACE-I: kaptopril, ramipril, lisinopril · ARB: telmisartan, kandesartan, valsartan · ARNI: sacubitril/valsartan" checked={form.onAceArni} onChange={(v) => update("onAceArni", v)} />
+                  <CheckboxField id="ace" label="ACE-I / ARB / ARNI" hint="ACE-I: captopril, ramipril, lisinopril · ARB: telmisartan, candesartan, valsartan · ARNI: sacubitril/valsartan" checked={form.onAceArni} onChange={(v) => update("onAceArni", v)} />
                   <CheckboxField id="bb" label="Beta-Blocker" hint="Contoh: bisoprolol, carvedilol, metoprolol suksinat" checked={form.onBb} onChange={(v) => update("onBb", v)} />
                   <CheckboxField id="mra" label="MRA / Aldosterone Antagonist" hint="Contoh: spironolakton" checked={form.onMra} onChange={(v) => update("onMra", v)} />
                   <CheckboxField id="sglt2" label="SGLT2 Inhibitor" hint="Contoh: dapagliflozin, empagliflozin" checked={form.onSglt2i} onChange={(v) => update("onSglt2i", v)} />

@@ -401,7 +401,7 @@ export default function PatientDetailPage() {
             <CardContent className="p-4 pt-0">
               <div className="space-y-1.5">
                 {[
-                  { label: "ACE-I / ARB / ARNI", hint: "ACE-I: kaptopril, ramipril, lisinopril · ARB: telmisartan, kandesartan, valsartan · ARNI: sacubitril/valsartan", active: patient.onAceArni },
+                  { label: "ACE-I / ARB / ARNI", hint: "ACE-I: captopril, ramipril, lisinopril · ARB: telmisartan, candesartan, valsartan · ARNI: sacubitril/valsartan", active: patient.onAceArni },
                   { label: "Beta-Blocker", hint: "Contoh: bisoprolol, carvedilol, metoprolol suksinat", active: patient.onBb },
                   { label: "MRA / Aldosterone Antagonist", hint: "Contoh: spironolakton", active: patient.onMra },
                   { label: "SGLT2 Inhibitor", hint: "Contoh: dapagliflozin, empagliflozin", active: patient.onSglt2i },
