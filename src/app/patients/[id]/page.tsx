@@ -392,30 +392,40 @@ export default function PatientDetailPage() {
                 <Pill className="w-4 h-4 text-green-500" />
                 Status GDMT ({gdmtCount}/4)
               </CardTitle>
+              <p className="text-xs text-gray-400 leading-relaxed mt-1">
+                Terapi GDMT yang tercatat saat triase — mencakup terapi yang diinisiasi selama
+                perawatan di IGD maupun yang diberikan atas advis konsultasi dari IGD untuk
+                rawat inap.
+              </p>
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <div className="space-y-1.5">
                 {[
-                  { label: "ACE-I / ARB / ARNI", active: patient.onAceArni },
-                  { label: "Beta-Blocker", active: patient.onBb },
-                  { label: "MRA (Spironolakton)", active: patient.onMra },
-                  { label: "SGLT2 Inhibitor", active: patient.onSglt2i },
+                  { label: "ACE-I / ARB / ARNI", hint: "ACE-I: kaptopril, ramipril, lisinopril · ARB: telmisartan, kandesartan, valsartan · ARNI: sacubitril/valsartan", active: patient.onAceArni },
+                  { label: "Beta-Blocker", hint: "Contoh: bisoprolol, carvedilol, metoprolol suksinat", active: patient.onBb },
+                  { label: "MRA / Aldosterone Antagonist", hint: "Contoh: spironolakton", active: patient.onMra },
+                  { label: "SGLT2 Inhibitor", hint: "Contoh: dapagliflozin, empagliflozin", active: patient.onSglt2i },
                 ].map((d) => (
                   <div
                     key={d.label}
                     className={cn(
-                      "flex items-center gap-2 p-2.5 rounded-lg text-xs font-medium",
+                      "flex items-start gap-2 p-2.5 rounded-lg text-xs font-medium",
                       d.active ? "bg-green-50 text-green-700" : "bg-gray-50 text-gray-500"
                     )}
                   >
                     {d.active ? (
-                      <CheckCircle className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                      <CheckCircle className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
                     ) : (
-                      <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-300 shrink-0" />
+                      <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-300 shrink-0 mt-0.5" />
                     )}
-                    {d.label}
+                    <div className="flex-1 min-w-0">
+                      <p>{d.label}</p>
+                      <p className={cn("font-normal mt-0.5", d.active ? "text-green-600" : "text-gray-400")}>
+                        {d.hint}
+                      </p>
+                    </div>
                     {!d.active && (
-                      <span className="ml-auto text-gray-400">Tidak diresepkan</span>
+                      <span className="ml-auto text-gray-400 shrink-0">Tidak diresepkan</span>
                     )}
                   </div>
                 ))}

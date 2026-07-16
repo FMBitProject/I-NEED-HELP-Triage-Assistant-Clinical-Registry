@@ -50,11 +50,13 @@ const NYHA_OPTIONS = [
 function CheckboxField({
   id,
   label,
+  hint,
   checked,
   onChange,
 }: {
   id: string;
   label: string;
+  hint?: string;
   checked: boolean;
   onChange: (v: boolean) => void;
 }) {
@@ -69,7 +71,10 @@ function CheckboxField({
       )}
     >
       <Checkbox id={id} checked={checked} onCheckedChange={(v) => onChange(!!v)} />
-      <span className="text-sm font-medium text-gray-800">{label}</span>
+      <span className="flex flex-col">
+        <span className="text-sm font-medium text-gray-800">{label}</span>
+        {hint && <span className="text-xs text-gray-500 mt-0.5">{hint}</span>}
+      </span>
     </label>
   );
 }
@@ -397,11 +402,16 @@ export default function EditPatientPage() {
                   <Pill className="w-4 h-4 text-green-600" />
                   <h3 className="text-sm font-semibold text-gray-900">Status GDMT Saat Ini</h3>
                 </div>
+                <p className="text-xs text-gray-500 leading-relaxed -mt-1">
+                  Centang seluruh terapi GDMT yang sedang diterima pasien — termasuk yang
+                  diinisiasi selama perawatan di IGD maupun yang diberikan atas advis konsultasi
+                  dari IGD untuk rawat inap.
+                </p>
                 <div className="grid grid-cols-1 gap-2">
-                  <CheckboxField id="ace" label="ACE-I / ARB / ARNI (Ramipril, Valsartan, Sacubitril)" checked={form.onAceArni} onChange={(v) => update("onAceArni", v)} />
-                  <CheckboxField id="bb" label="Beta-Blocker (Bisoprolol, Carvedilol, Metoprolol)" checked={form.onBb} onChange={(v) => update("onBb", v)} />
-                  <CheckboxField id="mra" label="MRA / Aldosterone Antagonist (Spironolacton)" checked={form.onMra} onChange={(v) => update("onMra", v)} />
-                  <CheckboxField id="sglt2" label="SGLT2 Inhibitor (Empagliflozin, Dapagliflozin)" checked={form.onSglt2i} onChange={(v) => update("onSglt2i", v)} />
+                  <CheckboxField id="ace" label="ACE-I / ARB / ARNI" hint="ACE-I: kaptopril, ramipril, lisinopril · ARB: telmisartan, kandesartan, valsartan · ARNI: sacubitril/valsartan" checked={form.onAceArni} onChange={(v) => update("onAceArni", v)} />
+                  <CheckboxField id="bb" label="Beta-Blocker" hint="Contoh: bisoprolol, carvedilol, metoprolol suksinat" checked={form.onBb} onChange={(v) => update("onBb", v)} />
+                  <CheckboxField id="mra" label="MRA / Aldosterone Antagonist" hint="Contoh: spironolakton" checked={form.onMra} onChange={(v) => update("onMra", v)} />
+                  <CheckboxField id="sglt2" label="SGLT2 Inhibitor" hint="Contoh: dapagliflozin, empagliflozin" checked={form.onSglt2i} onChange={(v) => update("onSglt2i", v)} />
                 </div>
               </CardContent>
             </Card>
