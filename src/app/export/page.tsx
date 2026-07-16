@@ -161,7 +161,7 @@ export default function ExportPage() {
                     <span className="text-xs text-blue-600 font-medium">
                       {stats.total} pasien
                     </span>
-                    <span className="text-xs text-gray-400">45 kolom</span>
+                    <span className="text-xs text-gray-400">46 kolom</span>
                     <span className="text-xs text-gray-400">.csv</span>
                   </div>
                 </div>

@@ -199,7 +199,7 @@ export default function DashboardPage() {
             </Card>
           )}
 
-          {/* Pending followup alert — hanya untuk yang sudah jatuh tempo */}
+          {/* Pending followup alert — hanya jatuh tempo aktif (30–60 hari) */}
           {dueFollowup.length > 0 && (
             <Card className="border-amber-200 bg-amber-50 shadow-sm border-0 ring-1 ring-amber-200">
               <CardContent className="p-4">
@@ -207,16 +207,17 @@ export default function DashboardPage() {
                   <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-amber-900">
-                      {dueFollowup.length} pasien sudah melewati {FOLLOW_UP_DAYS} hari
-                      tanpa update outcome
+                      {dueFollowup.length} pasien melewati {FOLLOW_UP_DAYS} hari — ada
+                      kabar outcome-nya?
                     </p>
                     <p className="text-xs text-amber-700 mt-0.5">
-                      Update outcome pasien untuk melengkapi data registri riset.
+                      Catat bila pasien sempat datang kembali, atau tandai &quot;Tanpa
+                      Kabar&quot; satu ketukan. Tidak perlu menghubungi pasien.
                     </p>
                   </div>
                   <Link href="/followup">
                     <Button variant="warning" size="sm" className="shrink-0">
-                      Update Sekarang
+                      Lihat Daftar
                     </Button>
                   </Link>
                 </div>

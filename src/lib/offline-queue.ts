@@ -25,6 +25,9 @@ export interface PendingPatientPayload {
   onMra: boolean;
   onSglt2i: boolean;
   nyhaClass: string | null;
+  // Opsional agar antrean lama di IndexedDB (tersimpan sebelum field ini ada)
+  // tetap valid saat disinkronkan.
+  edDisposition?: string | null;
 }
 
 export interface PendingTriage {

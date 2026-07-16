@@ -52,6 +52,7 @@ export async function GET() {
         onBb: patients.onBb,
         onMra: patients.onMra,
         onSglt2i: patients.onSglt2i,
+        edDisposition: patients.edDisposition,
         patientCreatedAt: patients.createdAt,
       })
       .from(patients)
@@ -124,6 +125,7 @@ export async function GET() {
     "lvef","egfr","ntProbnp","nyhaClass",
     "comorbidDm","comorbidHtn","comorbidCkd","comorbidAf",
     "onAceArni","onBb","onMra","onSglt2i",
+    "edDisposition",
     "patientCreatedAt",
     "triageId","triageScore",
     ...CRITERIA_KEYS.map((k) => `crit_${k}`),

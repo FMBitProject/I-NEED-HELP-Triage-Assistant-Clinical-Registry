@@ -7,6 +7,9 @@ export type OutcomeStatus =
   | "DECEASED"
   | "LOST_TO_FOLLOWUP";
 
+/** Disposisi akhir kunjungan IGD — diketahui hari itu juga, tanpa follow-up. */
+export type EdDisposition = "DISCHARGED" | "ADMITTED" | "REFERRED" | "DECEASED_ED";
+
 export interface Patient {
   id: string;
   doctorId: string;
@@ -28,6 +31,7 @@ export interface Patient {
   onMra: boolean;
   onSglt2i: boolean;
   nyhaClass?: string | null;
+  edDisposition?: EdDisposition | null;
   createdAt: string;
   finalizedAt?: string | null;
 }

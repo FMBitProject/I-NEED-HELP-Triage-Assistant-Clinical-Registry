@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Patient, TriageLog, Outcome, AuditLog } from "@/lib/types";
+import { ED_DISPOSITION_LABELS } from "@/lib/disposition";
 import { TRIAGE_CRITERIA_LABELS, countGdmt } from "@/lib/triage";
 import { cn } from "@/lib/utils";
 
@@ -59,7 +60,7 @@ const FIELD_LABELS: Record<string, string> = {
   lvef: "LVEF", egfr: "eGFR", ntProbnp: "NT-proBNP", nyhaClass: "NYHA",
   comorbidDm: "Komorbid DM", comorbidHtn: "Komorbid HTN", comorbidCkd: "Komorbid CKD",
   comorbidAf: "Komorbid AF", onAceArni: "ACE-I/ARB/ARNI", onBb: "Beta-Blocker",
-  onMra: "MRA", onSglt2i: "SGLT2i",
+  onMra: "MRA", onSglt2i: "SGLT2i", edDisposition: "Disposisi IGD",
 };
 
 export default function PatientDetailPage() {
@@ -239,6 +240,14 @@ export default function PatientDetailPage() {
                   day: "numeric", month: "long", year: "numeric",
                 })}
               </p>
+              {patient.edDisposition && ED_DISPOSITION_LABELS[patient.edDisposition] && (
+                <p className="text-xs text-gray-600 mt-0.5">
+                  {ED_DISPOSITION_LABELS[patient.edDisposition].icon} Disposisi IGD:{" "}
+                  <span className="font-medium">
+                    {ED_DISPOSITION_LABELS[patient.edDisposition].label}
+                  </span>
+                </p>
+              )}
 
               {isOwner && (isFinalized ? (
                 <div className="flex flex-wrap gap-2 mt-2">

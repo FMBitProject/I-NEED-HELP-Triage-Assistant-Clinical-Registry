@@ -109,6 +109,10 @@ export const patients = pgTable("patients", {
   egfr: numeric("egfr", { precision: 6, scale: 2 }),
   ntProbnp: integer("nt_probnp"),
   nyhaClass: text("nyha_class"),
+  // Disposisi akhir kunjungan IGD — endpoint minimal yang diketahui dokter
+  // hari itu juga, tanpa perlu follow-up: DISCHARGED | ADMITTED | REFERRED |
+  // DECEASED_ED. Nullable agar data lama tetap valid.
+  edDisposition: text("ed_disposition"),
   comorbidDm: boolean("comorbid_dm").notNull().default(false),
   comorbidHtn: boolean("comorbid_htn").notNull().default(false),
   comorbidCkd: boolean("comorbid_ckd").notNull().default(false),

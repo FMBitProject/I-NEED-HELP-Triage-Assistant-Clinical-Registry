@@ -20,7 +20,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { TriageCriteria } from "@/lib/types";
+import { TriageCriteria, EdDisposition } from "@/lib/types";
+import { ED_DISPOSITION_OPTIONS } from "@/lib/disposition";
 import { TRIAGE_CRITERIA_LABELS, calculateTriageScore, getTriageResult } from "@/lib/triage";
 import { REFER_RECOMMENDATIONS, CONTINUE_RECOMMENDATIONS } from "@/lib/recommendations";
 import { enqueuePendingTriage, isNetworkError, PendingPatientPayload } from "@/lib/offline-queue";
@@ -48,6 +49,7 @@ interface ProfileData {
   onMra: boolean;
   onSglt2i: boolean;
   nyhaClass: "" | "I" | "II" | "III" | "IV";
+  edDisposition: "" | EdDisposition;
 }
 
 const defaultProfile: ProfileData = {
@@ -69,6 +71,7 @@ const defaultProfile: ProfileData = {
   onMra: false,
   onSglt2i: false,
   nyhaClass: "",
+  edDisposition: "",
 };
 
 const defaultCriteria: TriageCriteria = {
@@ -216,6 +219,7 @@ export default function NewTriagePage() {
     onMra: profile.onMra,
     onSglt2i: profile.onSglt2i,
     nyhaClass: profile.nyhaClass || null,
+    edDisposition: profile.edDisposition || null,
   });
 
   const handleSubmit = async () => {
@@ -762,6 +766,45 @@ export default function NewTriagePage() {
                   )
                 )}
               </div>
+
+              {/* Disposisi akhir IGD — opsional, nol beban follow-up */}
+              <Card className="border-0 shadow-sm">
+                <CardContent className="p-4 space-y-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      Disposisi Akhir IGD{" "}
+                      <span className="font-normal text-gray-400">(opsional)</span>
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                      Apa yang terjadi pada pasien di akhir kunjungan IGD ini? Dapat diisi
+                      sekarang atau dilengkapi kemudian melalui Edit Data.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {ED_DISPOSITION_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() =>
+                          updateProfile(
+                            "edDisposition",
+                            profile.edDisposition === opt.value ? "" : opt.value
+                          )
+                        }
+                        className={cn(
+                          "flex items-center gap-2 p-3 rounded-lg border-2 text-left text-xs font-medium transition-all",
+                          profile.edDisposition === opt.value
+                            ? "border-blue-500 bg-blue-50 text-blue-800"
+                            : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                        )}
+                      >
+                        <span className="text-base">{opt.icon}</span>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
 
               {submitError && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">

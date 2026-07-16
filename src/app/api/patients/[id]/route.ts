@@ -70,7 +70,7 @@ export async function PATCH(
     "patientInitial", "age", "gender", "systolicBp", "diastolicBp",
     "heartRate", "lvef", "egfr", "ntProbnp", "comorbidDm", "comorbidHtn",
     "comorbidCkd", "comorbidAf", "onAceArni", "onBb", "onMra", "onSglt2i",
-    "nyhaClass",
+    "nyhaClass", "edDisposition",
   ];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

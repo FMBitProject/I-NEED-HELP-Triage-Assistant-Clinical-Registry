@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   FOLLOW_UP_DAYS,
+  QUIET_DAYS,
   daysSinceTriage,
   isFollowUpDue,
   isInObservation,
+  isPastQuietPeriod,
 } from "./followup";
 
 const NOW = new Date("2026-07-03T12:00:00Z").getTime();
@@ -52,5 +54,23 @@ describe("isFollowUpDue", () => {
     // Terdaftar 60 hari lalu tapi baru ditriase ulang 5 hari lalu → observasi
     expect(isFollowUpDue(patient(60, { triageDaysAgo: 5 }), NOW)).toBe(false);
     expect(isInObservation(patient(60, { triageDaysAgo: 5 }), NOW)).toBe(true);
+  });
+});
+
+describe("masa senyap (quiet period)", () => {
+  it(`pasien ${QUIET_DAYS - 1} hari masih dihitung jatuh tempo`, () => {
+    expect(isFollowUpDue(patient(QUIET_DAYS - 1), NOW)).toBe(true);
+    expect(isPastQuietPeriod(patient(QUIET_DAYS - 1), NOW)).toBe(false);
+  });
+
+  it(`pasien >= ${QUIET_DAYS} hari keluar dari badge dan masuk masa senyap`, () => {
+    expect(isFollowUpDue(patient(QUIET_DAYS), NOW)).toBe(false);
+    expect(isPastQuietPeriod(patient(QUIET_DAYS), NOW)).toBe(true);
+    expect(isFollowUpDue(patient(90), NOW)).toBe(false);
+    expect(isPastQuietPeriod(patient(90), NOW)).toBe(true);
+  });
+
+  it("pasien dengan outcome tidak pernah masuk masa senyap", () => {
+    expect(isPastQuietPeriod(patient(90, { outcome: true }), NOW)).toBe(false);
   });
 });

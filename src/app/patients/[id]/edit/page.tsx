@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { EdDisposition } from "@/lib/types";
+import { ED_DISPOSITION_OPTIONS } from "@/lib/disposition";
 import { cn } from "@/lib/utils";
 
 interface EditFormData {
@@ -38,6 +40,7 @@ interface EditFormData {
   onMra: boolean;
   onSglt2i: boolean;
   nyhaClass: "" | "I" | "II" | "III" | "IV";
+  edDisposition: "" | EdDisposition;
 }
 
 const NYHA_OPTIONS = [
@@ -117,6 +120,7 @@ export default function EditPatientPage() {
           onMra: p.onMra ?? false,
           onSglt2i: p.onSglt2i ?? false,
           nyhaClass: (p.nyhaClass as "" | "I" | "II" | "III" | "IV") ?? "",
+          edDisposition: (p.edDisposition as EdDisposition) ?? "",
         });
       });
   }, [id, doctor, router]);
@@ -169,6 +173,7 @@ export default function EditPatientPage() {
           onMra: form.onMra,
           onSglt2i: form.onSglt2i,
           nyhaClass: form.nyhaClass || null,
+          edDisposition: form.edDisposition || null,
         }),
       });
       if (!res.ok) throw new Error("Gagal menyimpan");
@@ -412,6 +417,42 @@ export default function EditPatientPage() {
                   <CheckboxField id="bb" label="Beta-Blocker" hint="Contoh: bisoprolol, carvedilol, metoprolol suksinat" checked={form.onBb} onChange={(v) => update("onBb", v)} />
                   <CheckboxField id="mra" label="MRA / Aldosterone Antagonist" hint="Contoh: spironolakton" checked={form.onMra} onChange={(v) => update("onMra", v)} />
                   <CheckboxField id="sglt2" label="SGLT2 Inhibitor" hint="Contoh: dapagliflozin, empagliflozin" checked={form.onSglt2i} onChange={(v) => update("onSglt2i", v)} />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Disposisi akhir IGD */}
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4 space-y-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    Disposisi Akhir IGD{" "}
+                    <span className="font-normal text-gray-400">(opsional)</span>
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                    Apa yang terjadi pada pasien di akhir kunjungan IGD — dapat dilengkapi
+                    kapan saja tanpa perlu follow-up.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {ED_DISPOSITION_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() =>
+                        update("edDisposition", form.edDisposition === opt.value ? "" : opt.value)
+                      }
+                      className={cn(
+                        "flex items-center gap-2 p-3 rounded-lg border-2 text-left text-xs font-medium transition-all",
+                        form.edDisposition === opt.value
+                          ? "border-blue-500 bg-blue-50 text-blue-800"
+                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                      )}
+                    >
+                      <span className="text-base">{opt.icon}</span>
+                      {opt.label}
+                    </button>
+                  ))}
                 </div>
               </CardContent>
             </Card>

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { isFollowUpDue } from "@/lib/followup";
 import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,8 +41,10 @@ export function Navbar() {
     if (!doctor) return;
     fetch("/api/patients")
       .then((r) => r.json())
-      .then((patients: { outcome?: unknown }[]) => {
-        setPendingCount(patients.filter((p) => !p.outcome).length);
+      // Badge hanya menghitung yang jatuh tempo aktif (30–60 hari) — pasien
+      // observasi atau yang sudah lama tanpa kabar tidak ikut menekan dokter.
+      .then((patients: Parameters<typeof isFollowUpDue>[0][]) => {
+        setPendingCount(patients.filter((p) => isFollowUpDue(p)).length);
       })
       .catch(() => {});
   }, [doctor]);
