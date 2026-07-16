@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Users,
   Stethoscope,
@@ -242,7 +243,11 @@ export default function AdminRegistryPage() {
               ) : (
                 <ul className="divide-y divide-gray-100">
                   {patients.map((p) => (
-                    <li key={p.id} className="flex items-center gap-3 px-5 py-3">
+                    <li key={p.id}>
+                    <Link
+                      href={`/patients/${p.id}`}
+                      className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors"
+                    >
                       <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
                         <span className="text-xs font-bold text-purple-700">{p.patientInitial}</span>
                       </div>
@@ -275,6 +280,7 @@ export default function AdminRegistryPage() {
                       ) : (
                         <Clock className="w-4 h-4 text-amber-400 shrink-0" />
                       )}
+                    </Link>
                     </li>
                   ))}
                 </ul>

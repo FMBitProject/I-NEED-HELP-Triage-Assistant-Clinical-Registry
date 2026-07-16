@@ -12,8 +12,13 @@ export async function GET(
 
   const { id } = await params;
 
+  // ADMIN boleh membaca pasien dokter manapun (read-only, untuk registry);
+  // PATCH/DELETE di bawah tetap khusus dokter pemilik.
+  const isAdmin = (session.user as { role?: string }).role === "ADMIN";
   const patient = await db.query.patients.findFirst({
-    where: and(eq(patients.id, id), eq(patients.doctorId, session.user.id)),
+    where: isAdmin
+      ? eq(patients.id, id)
+      : and(eq(patients.id, id), eq(patients.doctorId, session.user.id)),
   });
 
   if (!patient) {

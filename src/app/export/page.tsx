@@ -45,7 +45,9 @@ export default function ExportPage() {
 
   useEffect(() => {
     if (doctor?.role === "ADMIN") {
-      fetch("/api/patients")
+      // Ringkasan harus mencakup seluruh registri (semua dokter), sama seperti
+      // isi CSV-nya — bukan hanya pasien milik akun admin sendiri.
+      fetch("/api/admin/registry")
         .then((r) => r.ok ? r.json() : [])
         .then((patients) => {
           setStats({

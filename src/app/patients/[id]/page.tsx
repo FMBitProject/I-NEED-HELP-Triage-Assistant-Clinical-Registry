@@ -102,6 +102,9 @@ export default function PatientDetailPage() {
   if (isLoading || !doctor || !patient) return null;
 
   const isFinalized = !!patient.finalizedAt;
+  // Admin dapat membuka pasien dokter lain dari Registry, tapi hanya untuk
+  // melihat — semua aksi ubah/hapus/finalisasi disembunyikan.
+  const isOwner = patient.doctorId === doctor.id;
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -154,6 +157,20 @@ export default function PatientDetailPage() {
             Kembali
           </button>
 
+          {/* Read-only banner untuk admin yang melihat pasien dokter lain */}
+          {!isOwner && (
+            <div className="bg-purple-50 border border-purple-200 rounded-xl px-4 py-3 flex items-start gap-3">
+              <Lock className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-purple-900">Mode Lihat Saja (Admin)</p>
+                <p className="text-xs text-purple-700 leading-relaxed">
+                  Data ini milik dokter lain. Anda dapat melihat isinya, tetapi hanya dokter
+                  pengisi yang dapat mengubah atau menghapusnya.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Finalized banner */}
           {isFinalized && (
             <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 space-y-2">
@@ -169,12 +186,14 @@ export default function PatientDetailPage() {
                   </p>
                 </div>
               </div>
-              <a href={unlockMailto} className="block sm:inline-block sm:ml-7">
-                <Button variant="outline" size="sm" className="gap-1.5 border-green-300 text-green-700 hover:bg-green-100 text-xs w-full sm:w-auto">
-                  <Mail className="w-3 h-3" />
-                  Buka Kunci
-                </Button>
-              </a>
+              {isOwner && (
+                <a href={unlockMailto} className="block sm:inline-block sm:ml-7">
+                  <Button variant="outline" size="sm" className="gap-1.5 border-green-300 text-green-700 hover:bg-green-100 text-xs w-full sm:w-auto">
+                    <Mail className="w-3 h-3" />
+                    Buka Kunci
+                  </Button>
+                </a>
+              )}
             </div>
           )}
 
@@ -221,7 +240,7 @@ export default function PatientDetailPage() {
                 })}
               </p>
 
-              {isFinalized ? (
+              {isOwner && (isFinalized ? (
                 <div className="flex flex-wrap gap-2 mt-2">
                   <a href={unlockMailto}>
                     <Button variant="outline" size="sm" className="gap-1.5 text-orange-600 border-orange-200 hover:bg-orange-50">
@@ -245,7 +264,7 @@ export default function PatientDetailPage() {
                     </Button>
                   </Link>
                 </div>
-              )}
+              ))}
             </div>
           </div>
 
@@ -278,7 +297,7 @@ export default function PatientDetailPage() {
                       </p>
                     )}
                   </div>
-                  {!isFinalized && (
+                  {isOwner && !isFinalized && (
                     <Link href={`/patients/${patient.id}/followup`} className="ml-auto">
                       <Button variant="outline" size="sm">Edit</Button>
                     </Link>
@@ -295,7 +314,7 @@ export default function PatientDetailPage() {
                     <p className="text-sm font-semibold text-amber-900">Belum Ada Follow-up</p>
                     <p className="text-xs text-amber-700">Update status outcome untuk melengkapi data registri.</p>
                   </div>
-                  {!isFinalized && (
+                  {isOwner && !isFinalized && (
                     <Link href={`/patients/${patient.id}/followup`}>
                       <Button variant="warning" size="sm">Update</Button>
                     </Link>
@@ -448,7 +467,7 @@ export default function PatientDetailPage() {
           )}
 
           {/* Finalize section */}
-          {!isFinalized && (
+          {isOwner && !isFinalized && (
             <Card className="border-0 shadow-sm ring-1 ring-gray-200">
               <CardContent className="p-4">
                 {!finalizeConfirm ? (
@@ -562,7 +581,7 @@ export default function PatientDetailPage() {
           </div>
 
           {/* Delete — only when not finalized */}
-          {!isFinalized && (
+          {isOwner && !isFinalized && (
             <div className="pb-4">
               {!deleteConfirm ? (
                 <button
