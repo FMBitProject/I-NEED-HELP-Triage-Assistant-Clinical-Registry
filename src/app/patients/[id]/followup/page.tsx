@@ -158,6 +158,12 @@ export default function FollowUpPage() {
               Pasien: <strong>{patient.patientInitial}</strong> • {patient.age} th •{" "}
               {patient.gender === "M" ? "L" : "P"}
             </p>
+            <p className="text-xs text-gray-500 mt-1.5 bg-gray-100 rounded-lg p-2.5 leading-relaxed">
+              Bagaimana kondisi pasien ±30 hari setelah triase? Isi berdasarkan informasi
+              yang Anda ketahui — kunjungan ulang, rawat inap, atau kabar dari keluarga.
+              Tidak perlu menghubungi pasien secara khusus, dan isian masih bisa diubah
+              kapan saja.
+            </p>
           </div>
 
           {saved && (

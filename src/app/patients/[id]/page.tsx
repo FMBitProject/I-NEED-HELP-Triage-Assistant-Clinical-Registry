@@ -321,7 +321,10 @@ export default function PatientDetailPage() {
                   <Clock className="w-5 h-5 text-amber-500 shrink-0" />
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-amber-900">Belum Ada Follow-up</p>
-                    <p className="text-xs text-amber-700">Update status outcome untuk melengkapi data registri.</p>
+                    <p className="text-xs text-amber-700">
+                      Catat outcome bila pasien datang kembali atau ada kabar dari keluarga —
+                      tidak perlu menghubungi pasien secara khusus.
+                    </p>
                   </div>
                   {isOwner && !isFinalized && (
                     <Link href={`/patients/${patient.id}/followup`}>

@@ -106,14 +106,29 @@ export default function FollowUpListPage() {
           </div>
 
           <Card className="border-blue-100 ring-1 ring-blue-100 border-0 shadow-sm bg-blue-50">
-            <CardContent className="p-3">
+            <CardContent className="p-3 space-y-2.5">
               <div className="flex items-start gap-2">
                 <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                 <p className="text-xs text-blue-800 leading-relaxed">
                   Follow-up bersifat <strong>oportunistik</strong> — catat outcome saat pasien
-                  kebetulan datang kembali ke IGD/poli. Anda tidak diwajibkan menghubungi
-                  pasien. Jika sampai {QUIET_DAYS} hari tidak ada kabar, cukup tandai{" "}
-                  <strong>Tanpa Kabar</strong> dengan satu ketukan.
+                  kebetulan datang kembali ke IGD/poli atau ada kabar dari keluarga. Anda{" "}
+                  <strong>tidak diwajibkan menghubungi pasien</strong>.
+                </p>
+              </div>
+              <div className="space-y-1 pl-6 text-xs text-blue-800">
+                <p>
+                  <span className="font-semibold">🔵 Hari 0–{FOLLOW_UP_DAYS - 1} · Masa observasi</span>{" "}
+                  — belum perlu tindakan apa pun.
+                </p>
+                <p>
+                  <span className="font-semibold">🟠 Hari {FOLLOW_UP_DAYS}–{QUIET_DAYS} · Jatuh tempo</span>{" "}
+                  — bila ada kabar (kontrol ulang, rawat inap, dsb.), catat lewat tombol{" "}
+                  <strong>Update</strong>.
+                </p>
+                <p>
+                  <span className="font-semibold">⚪ Lewat {QUIET_DAYS} hari · Tanpa kabar</span>{" "}
+                  — pengingat berhenti; cukup tekan <strong>❓ Tanpa Kabar</strong> satu kali.
+                  Masih bisa diubah lewat <strong>Edit</strong> kalau pasien muncul kembali.
                 </p>
               </div>
             </CardContent>

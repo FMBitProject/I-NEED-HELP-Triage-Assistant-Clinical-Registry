@@ -430,7 +430,9 @@ export default function EditPatientPage() {
                     <span className="font-normal text-gray-400">(opsional)</span>
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                    Apa yang terjadi pada pasien di akhir kunjungan IGD — dapat dilengkapi
+                    Apa yang <strong>benar-benar terjadi</strong> pada pasien di akhir
+                    kunjungan IGD — bisa berbeda dari rekomendasi skor (misalnya skor
+                    menyarankan rujuk, tapi pasien menolak dan pulang). Dapat dilengkapi
                     kapan saja tanpa perlu follow-up.
                   </p>
                 </div>

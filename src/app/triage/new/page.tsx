@@ -776,7 +776,9 @@ export default function NewTriagePage() {
                       <span className="font-normal text-gray-400">(opsional)</span>
                     </h3>
                     <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                      Apa yang terjadi pada pasien di akhir kunjungan IGD ini? Dapat diisi
+                      Apa yang <strong>benar-benar terjadi</strong> pada pasien di akhir
+                      kunjungan IGD ini — bisa berbeda dari rekomendasi skor (misalnya skor
+                      menyarankan rujuk, tapi pasien menolak dan pulang). Dapat diisi
                       sekarang atau dilengkapi kemudian melalui Edit Data.
                     </p>
                   </div>
