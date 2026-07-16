@@ -431,12 +431,14 @@ export default function EditPatientPage() {
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
                     Apa yang <strong>benar-benar terjadi</strong> pada pasien di akhir
-                    kunjungan IGD — bisa berbeda dari rekomendasi skor (misalnya skor
-                    menyarankan rujuk, tapi pasien menolak dan pulang). Dapat dilengkapi
-                    kapan saja tanpa perlu follow-up.
+                    kunjungan IGD — bisa berbeda dari rekomendasi skor. Rekomendasi
+                    &quot;Rujuk&quot; artinya pasien perlu perawatan lanjut: di RS yang sudah
+                    mampu (mis. RS rujukan Tipe A/B) wujudnya <strong>Rawat Inap</strong> di
+                    RS sendiri; pilihan <strong>Dirujuk</strong> hanya bila pasien
+                    benar-benar dikirim ke faskes lain.
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {ED_DISPOSITION_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
@@ -445,14 +447,31 @@ export default function EditPatientPage() {
                         update("edDisposition", form.edDisposition === opt.value ? "" : opt.value)
                       }
                       className={cn(
-                        "flex items-center gap-2 p-3 rounded-lg border-2 text-left text-xs font-medium transition-all",
+                        "flex items-start gap-2 p-3 rounded-lg border-2 text-left transition-all",
                         form.edDisposition === opt.value
-                          ? "border-blue-500 bg-blue-50 text-blue-800"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
                       )}
                     >
                       <span className="text-base">{opt.icon}</span>
-                      {opt.label}
+                      <span className="flex flex-col">
+                        <span
+                          className={cn(
+                            "text-xs font-medium",
+                            form.edDisposition === opt.value ? "text-blue-800" : "text-gray-700"
+                          )}
+                        >
+                          {opt.label}
+                        </span>
+                        <span
+                          className={cn(
+                            "text-[10px] leading-snug mt-0.5",
+                            form.edDisposition === opt.value ? "text-blue-600" : "text-gray-400"
+                          )}
+                        >
+                          {opt.desc}
+                        </span>
+                      </span>
                     </button>
                   ))}
                 </div>
