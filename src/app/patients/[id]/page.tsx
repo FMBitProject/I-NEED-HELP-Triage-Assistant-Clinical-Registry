@@ -30,6 +30,7 @@ import { Patient, TriageLog, Outcome, AuditLog } from "@/lib/types";
 import { ED_DISPOSITION_LABELS } from "@/lib/disposition";
 import { TRIAGE_CRITERIA_LABELS, countGdmt } from "@/lib/triage";
 import { GDMT_OMISSION_REASON_LABELS } from "@/lib/gdmt-reasons";
+import { HF_ONSET_LABELS } from "@/lib/hf-onset";
 import { cn } from "@/lib/utils";
 
 const OUTCOME_LABELS: Record<string, { label: string; color: string; icon: string }> = {
@@ -233,6 +234,14 @@ export default function PatientDetailPage() {
                   {NYHA_CAPTIONS[patient.nyhaClass] && (
                     <span className="text-gray-400"> — {NYHA_CAPTIONS[patient.nyhaClass]}</span>
                   )}
+                </p>
+              )}
+              {patient.hfOnset && HF_ONSET_LABELS[patient.hfOnset] && (
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Onset: {HF_ONSET_LABELS[patient.hfOnset].label}
+                  <span className="text-gray-400">
+                    {" "}— {HF_ONSET_LABELS[patient.hfOnset].caption}
+                  </span>
                 </p>
               )}
               <p className="text-xs text-gray-400 mt-0.5">

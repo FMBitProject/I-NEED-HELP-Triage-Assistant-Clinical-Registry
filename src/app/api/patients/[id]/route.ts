@@ -72,7 +72,7 @@ export async function PATCH(
     "comorbidCkd", "comorbidAf", "onAceArni", "onBb", "onMra", "onSglt2i",
     "noAceArniReason", "noBbReason", "noMraReason", "noSglt2iReason",
     "noAceArniReasonOther", "noBbReasonOther", "noMraReasonOther", "noSglt2iReasonOther",
-    "nyhaClass", "edDisposition",
+    "nyhaClass", "hfOnset", "edDisposition",
   ];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

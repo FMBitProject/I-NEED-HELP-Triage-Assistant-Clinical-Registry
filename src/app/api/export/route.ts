@@ -44,6 +44,7 @@ export async function GET() {
         egfr: patients.egfr,
         ntProbnp: patients.ntProbnp,
         nyhaClass: patients.nyhaClass,
+        hfOnset: patients.hfOnset,
         comorbidDm: patients.comorbidDm,
         comorbidHtn: patients.comorbidHtn,
         comorbidCkd: patients.comorbidCkd,
@@ -95,6 +96,18 @@ export async function GET() {
     );
     const outcome = latestOutcomeByPatient.get(p.patientId);
 
+    // Kolom turunan dari LVEF (batas ESC/PERKI: <40 HFrEF, 40–49 HFmrEF,
+    // ≥50 HFpEF) — denominator yang benar saat menabulasi kelengkapan GDMT,
+    // tanpa input tambahan dari pengguna.
+    const efCategory =
+      p.lvef == null
+        ? null
+        : p.lvef < 40
+          ? "HFrEF"
+          : p.lvef < 50
+            ? "HFmrEF"
+            : "HFpEF";
+
     const outcomeCols = {
       outcomeStatus: outcome?.status ?? null,
       outcomeFollowUpDays: outcome?.followUpDays ?? null,
@@ -106,7 +119,7 @@ export async function GET() {
     };
 
     if (logs.length === 0) {
-      rows.push({ ...p, ...outcomeCols });
+      rows.push({ ...p, efCategory, ...outcomeCols });
       continue;
     }
 
@@ -116,6 +129,7 @@ export async function GET() {
       );
       rows.push({
         ...p,
+        efCategory,
         triageId: log.id,
         triageScore: log.score,
         ...criteriaCols,
@@ -130,7 +144,7 @@ export async function GET() {
     "doctorId","doctorName","institutionType","ethicalClearanceNo","ethicalClearanceDate",
     "patientId","patientInitial","age","gender",
     "systolicBp","diastolicBp","heartRate",
-    "lvef","egfr","ntProbnp","nyhaClass",
+    "lvef","efCategory","egfr","ntProbnp","nyhaClass","hfOnset",
     "comorbidDm","comorbidHtn","comorbidCkd","comorbidAf",
     "onAceArni","onBb","onMra","onSglt2i",
     "noAceArniReason","noBbReason","noMraReason","noSglt2iReason",

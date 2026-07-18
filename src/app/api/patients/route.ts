@@ -91,6 +91,7 @@ export async function POST(request: Request) {
           ? body.noSglt2iReasonOther ?? null
           : null,
       nyhaClass: body.nyhaClass ?? null,
+      hfOnset: body.hfOnset ?? null,
       edDisposition: body.edDisposition ?? null,
     })
     .returning();

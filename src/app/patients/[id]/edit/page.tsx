@@ -17,7 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { EdDisposition, GdmtOmissionReason } from "@/lib/types";
+import { EdDisposition, GdmtOmissionReason, HfOnset } from "@/lib/types";
+import { HF_ONSET_OPTIONS } from "@/lib/hf-onset";
 import { ED_DISPOSITION_OPTIONS } from "@/lib/disposition";
 import { GdmtPillarField } from "@/components/gdmt-pillar-field";
 import { cn } from "@/lib/utils";
@@ -49,6 +50,7 @@ interface EditFormData {
   noMraReasonOther: string;
   noSglt2iReasonOther: string;
   nyhaClass: "" | "I" | "II" | "III" | "IV";
+  hfOnset: "" | HfOnset;
   edDisposition: "" | EdDisposition;
 }
 
@@ -137,6 +139,7 @@ export default function EditPatientPage() {
           noMraReasonOther: p.noMraReasonOther ?? "",
           noSglt2iReasonOther: p.noSglt2iReasonOther ?? "",
           nyhaClass: (p.nyhaClass as "" | "I" | "II" | "III" | "IV") ?? "",
+          hfOnset: (p.hfOnset as HfOnset) ?? "",
           edDisposition: (p.edDisposition as EdDisposition) ?? "",
         });
       });
@@ -248,6 +251,7 @@ export default function EditPatientPage() {
               ? form.noSglt2iReasonOther.trim() || null
               : null,
           nyhaClass: form.nyhaClass || null,
+          hfOnset: form.hfOnset || null,
           edDisposition: form.edDisposition || null,
         }),
       });
@@ -359,6 +363,32 @@ export default function EditPatientPage() {
                         )}
                       >
                         <span className="text-sm font-bold block">{opt.value}</span>
+                        <span className="text-[10px] leading-tight block mt-0.5 opacity-80">
+                          {opt.caption}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>
+                    Onset Gagal Jantung{" "}
+                    <span className="text-gray-400 font-normal">(opsional)</span>
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {HF_ONSET_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => update("hfOnset", form.hfOnset === opt.value ? "" : opt.value)}
+                        className={cn(
+                          "py-2 px-1.5 rounded-lg border-2 text-center transition-all",
+                          form.hfOnset === opt.value
+                            ? "border-blue-500 bg-blue-50 text-blue-700"
+                            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                        )}
+                      >
+                        <span className="text-sm font-bold block">{opt.label}</span>
                         <span className="text-[10px] leading-tight block mt-0.5 opacity-80">
                           {opt.caption}
                         </span>

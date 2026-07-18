@@ -109,6 +109,9 @@ export const patients = pgTable("patients", {
   egfr: numeric("egfr", { precision: 6, scale: 2 }),
   ntProbnp: integer("nt_probnp"),
   nyhaClass: text("nyha_class"),
+  // Onset gagal jantung: DE_NOVO | CHRONIC. Nullable (opsional di form)
+  // agar data lama tetap valid.
+  hfOnset: text("hf_onset"),
   // Disposisi akhir kunjungan IGD — endpoint minimal yang diketahui dokter
   // hari itu juga, tanpa perlu follow-up: DISCHARGED | ADMITTED | REFERRED |
   // DECEASED_ED. Nullable agar data lama tetap valid.

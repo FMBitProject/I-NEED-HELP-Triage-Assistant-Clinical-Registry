@@ -11,6 +11,13 @@ export type OutcomeStatus =
 export type EdDisposition = "DISCHARGED" | "ADMITTED" | "REFERRED" | "DECEASED_ED";
 
 /**
+ * Onset gagal jantung: baru terdiagnosis (de novo) atau kronik. Variabel
+ * standar Tabel 1 registri HF — relevan untuk interpretasi GDMT (pasien
+ * de novo wajar belum menerima 4 pilar lengkap).
+ */
+export type HfOnset = "DE_NOVO" | "CHRONIC";
+
+/**
  * Alasan satu pilar GDMT tidak diberikan — variabel kunci studi deskriptif
  * hambatan GDMT. Kategorinya mengikuti pembagian baku literatur barrier GDMT:
  * hambatan klinis, sistem/ketersediaan, inersia peresepan, faktor pasien.
@@ -55,6 +62,7 @@ export interface Patient {
   noMraReasonOther?: string | null;
   noSglt2iReasonOther?: string | null;
   nyhaClass?: string | null;
+  hfOnset?: HfOnset | null;
   edDisposition?: EdDisposition | null;
   createdAt: string;
   finalizedAt?: string | null;

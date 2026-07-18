@@ -28,6 +28,7 @@ export interface PendingPatientPayload {
   // Opsional agar antrean lama di IndexedDB (tersimpan sebelum field ini ada)
   // tetap valid saat disinkronkan.
   edDisposition?: string | null;
+  hfOnset?: string | null;
   noAceArniReason?: string | null;
   noBbReason?: string | null;
   noMraReason?: string | null;
