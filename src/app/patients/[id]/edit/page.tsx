@@ -201,6 +201,9 @@ export default function EditPatientPage() {
       errs.push("Tekanan darah diastolik wajib diisi");
     if (!form.heartRate || Number(form.heartRate) < 20)
       errs.push("Detak jantung wajib diisi");
+    if (!form.nyhaClass) errs.push("Kelas fungsional NYHA wajib dipilih");
+    if (!form.hfOnset)
+      errs.push("Onset gagal jantung wajib dipilih (pilih “Tidak Diketahui” bila riwayat tak dapat dipastikan)");
     setErrors(errs);
     return errs.length === 0;
   };
@@ -345,10 +348,7 @@ export default function EditPatientPage() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>
-                    Kelas Fungsional NYHA{" "}
-                    <span className="text-gray-400 font-normal">(opsional)</span>
-                  </Label>
+                  <Label>Kelas Fungsional NYHA *</Label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {NYHA_OPTIONS.map((opt) => (
                       <button
@@ -371,11 +371,8 @@ export default function EditPatientPage() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <Label>
-                    Onset Gagal Jantung{" "}
-                    <span className="text-gray-400 font-normal">(opsional)</span>
-                  </Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <Label>Onset Gagal Jantung *</Label>
+                  <div className="grid grid-cols-3 gap-2">
                     {HF_ONSET_OPTIONS.map((opt) => (
                       <button
                         key={opt.value}

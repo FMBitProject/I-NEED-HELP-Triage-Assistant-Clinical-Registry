@@ -13,9 +13,11 @@ export type EdDisposition = "DISCHARGED" | "ADMITTED" | "REFERRED" | "DECEASED_E
 /**
  * Onset gagal jantung: baru terdiagnosis (de novo) atau kronik. Variabel
  * standar Tabel 1 registri HF — relevan untuk interpretasi GDMT (pasien
- * de novo wajar belum menerima 4 pilar lengkap).
+ * de novo wajar belum menerima 4 pilar lengkap). UNKNOWN untuk kasus yang
+ * riwayatnya memang tak dapat dipastikan (pasien tidak sadar, tanpa
+ * keluarga) — katup jujur agar field wajib tidak memancing data karangan.
  */
-export type HfOnset = "DE_NOVO" | "CHRONIC";
+export type HfOnset = "DE_NOVO" | "CHRONIC" | "UNKNOWN";
 
 /**
  * Alasan satu pilar GDMT tidak diberikan — variabel kunci studi deskriptif
