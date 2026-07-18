@@ -68,11 +68,28 @@ export async function POST(request: Request) {
       onMra: body.onMra ?? false,
       onSglt2i: body.onSglt2i ?? false,
       // Alasan hanya bermakna bila pilarnya tidak diberikan — cegah data
-      // kontradiktif walau klien mengirim keduanya.
+      // kontradiktif walau klien mengirim keduanya. Teks "Lainnya" hanya
+      // ikut tersimpan bila alasannya OTHER.
       noAceArniReason: body.onAceArni ? null : body.noAceArniReason ?? null,
       noBbReason: body.onBb ? null : body.noBbReason ?? null,
       noMraReason: body.onMra ? null : body.noMraReason ?? null,
       noSglt2iReason: body.onSglt2i ? null : body.noSglt2iReason ?? null,
+      noAceArniReasonOther:
+        !body.onAceArni && body.noAceArniReason === "OTHER"
+          ? body.noAceArniReasonOther ?? null
+          : null,
+      noBbReasonOther:
+        !body.onBb && body.noBbReason === "OTHER"
+          ? body.noBbReasonOther ?? null
+          : null,
+      noMraReasonOther:
+        !body.onMra && body.noMraReason === "OTHER"
+          ? body.noMraReasonOther ?? null
+          : null,
+      noSglt2iReasonOther:
+        !body.onSglt2i && body.noSglt2iReason === "OTHER"
+          ? body.noSglt2iReasonOther ?? null
+          : null,
       nyhaClass: body.nyhaClass ?? null,
       edDisposition: body.edDisposition ?? null,
     })

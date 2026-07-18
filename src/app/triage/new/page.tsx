@@ -53,6 +53,10 @@ interface ProfileData {
   noBbReason: "" | GdmtOmissionReason;
   noMraReason: "" | GdmtOmissionReason;
   noSglt2iReason: "" | GdmtOmissionReason;
+  noAceArniReasonOther: string;
+  noBbReasonOther: string;
+  noMraReasonOther: string;
+  noSglt2iReasonOther: string;
   nyhaClass: "" | "I" | "II" | "III" | "IV";
   edDisposition: "" | EdDisposition;
 }
@@ -79,6 +83,10 @@ const defaultProfile: ProfileData = {
   noBbReason: "",
   noMraReason: "",
   noSglt2iReason: "",
+  noAceArniReasonOther: "",
+  noBbReasonOther: "",
+  noMraReasonOther: "",
+  noSglt2iReasonOther: "",
   nyhaClass: "",
   edDisposition: "",
 };
@@ -187,14 +195,33 @@ export default function NewTriagePage() {
     setErrors([]);
   };
 
-  // Saat pilar GDMT dicentang, alasan "tidak diberikan" ikut dikosongkan
-  // supaya tidak ada data kontradiktif (diberikan tapi punya alasan tidak).
+  // Saat pilar GDMT dicentang, alasan "tidak diberikan" (dan teks Lainnya)
+  // ikut dikosongkan supaya tidak ada data kontradiktif.
   const updateGdmtPillar = (
     flagKey: "onAceArni" | "onBb" | "onMra" | "onSglt2i",
     reasonKey: "noAceArniReason" | "noBbReason" | "noMraReason" | "noSglt2iReason",
     given: boolean
   ) => {
-    setProfile((p) => ({ ...p, [flagKey]: given, [reasonKey]: given ? "" : p[reasonKey] }));
+    setProfile((p) => ({
+      ...p,
+      [flagKey]: given,
+      [reasonKey]: given ? "" : p[reasonKey],
+      [`${reasonKey}Other`]: given ? "" : p[`${reasonKey}Other`],
+    }));
+    setErrors([]);
+  };
+
+  // Teks "Lainnya" hanya relevan bila alasannya OTHER — pindah kategori
+  // langsung mengosongkan teksnya.
+  const updateGdmtReason = (
+    reasonKey: "noAceArniReason" | "noBbReason" | "noMraReason" | "noSglt2iReason",
+    r: "" | GdmtOmissionReason
+  ) => {
+    setProfile((p) => ({
+      ...p,
+      [reasonKey]: r,
+      [`${reasonKey}Other`]: r === "OTHER" ? p[`${reasonKey}Other`] : "",
+    }));
     setErrors([]);
   };
 
@@ -242,6 +269,22 @@ export default function NewTriagePage() {
     noBbReason: profile.onBb ? null : profile.noBbReason || null,
     noMraReason: profile.onMra ? null : profile.noMraReason || null,
     noSglt2iReason: profile.onSglt2i ? null : profile.noSglt2iReason || null,
+    noAceArniReasonOther:
+      !profile.onAceArni && profile.noAceArniReason === "OTHER"
+        ? profile.noAceArniReasonOther.trim() || null
+        : null,
+    noBbReasonOther:
+      !profile.onBb && profile.noBbReason === "OTHER"
+        ? profile.noBbReasonOther.trim() || null
+        : null,
+    noMraReasonOther:
+      !profile.onMra && profile.noMraReason === "OTHER"
+        ? profile.noMraReasonOther.trim() || null
+        : null,
+    noSglt2iReasonOther:
+      !profile.onSglt2i && profile.noSglt2iReason === "OTHER"
+        ? profile.noSglt2iReasonOther.trim() || null
+        : null,
     nyhaClass: profile.nyhaClass || null,
     edDisposition: profile.edDisposition || null,
   });
@@ -682,10 +725,10 @@ export default function NewTriagePage() {
                     pilih alasannya bila diketahui (opsional).
                   </p>
                   <div className="grid grid-cols-1 gap-2">
-                    <GdmtPillarField id="ace" label="ACE-I / ARB / ARNI" hint="ACE-I: captopril, ramipril, lisinopril · ARB: telmisartan, candesartan, valsartan · ARNI: sacubitril/valsartan" checked={profile.onAceArni} reason={profile.noAceArniReason} onCheckedChange={(v) => updateGdmtPillar("onAceArni", "noAceArniReason", v)} onReasonChange={(r) => updateProfile("noAceArniReason", r)} />
-                    <GdmtPillarField id="bb" label="Beta-Blocker" hint="Contoh: bisoprolol, carvedilol, metoprolol suksinat" checked={profile.onBb} reason={profile.noBbReason} onCheckedChange={(v) => updateGdmtPillar("onBb", "noBbReason", v)} onReasonChange={(r) => updateProfile("noBbReason", r)} />
-                    <GdmtPillarField id="mra" label="MRA / Aldosterone Antagonist" hint="Contoh: spironolakton" checked={profile.onMra} reason={profile.noMraReason} onCheckedChange={(v) => updateGdmtPillar("onMra", "noMraReason", v)} onReasonChange={(r) => updateProfile("noMraReason", r)} />
-                    <GdmtPillarField id="sglt2" label="SGLT2 Inhibitor" hint="Contoh: dapagliflozin, empagliflozin" checked={profile.onSglt2i} reason={profile.noSglt2iReason} onCheckedChange={(v) => updateGdmtPillar("onSglt2i", "noSglt2iReason", v)} onReasonChange={(r) => updateProfile("noSglt2iReason", r)} />
+                    <GdmtPillarField id="ace" label="ACE-I / ARB / ARNI" hint="ACE-I: captopril, ramipril, lisinopril · ARB: telmisartan, candesartan, valsartan · ARNI: sacubitril/valsartan" checked={profile.onAceArni} reason={profile.noAceArniReason} reasonOther={profile.noAceArniReasonOther} onCheckedChange={(v) => updateGdmtPillar("onAceArni", "noAceArniReason", v)} onReasonChange={(r) => updateGdmtReason("noAceArniReason", r)} onReasonOtherChange={(t) => updateProfile("noAceArniReasonOther", t)} />
+                    <GdmtPillarField id="bb" label="Beta-Blocker" hint="Contoh: bisoprolol, carvedilol, metoprolol suksinat" checked={profile.onBb} reason={profile.noBbReason} reasonOther={profile.noBbReasonOther} onCheckedChange={(v) => updateGdmtPillar("onBb", "noBbReason", v)} onReasonChange={(r) => updateGdmtReason("noBbReason", r)} onReasonOtherChange={(t) => updateProfile("noBbReasonOther", t)} />
+                    <GdmtPillarField id="mra" label="MRA / Aldosterone Antagonist" hint="Contoh: spironolakton" checked={profile.onMra} reason={profile.noMraReason} reasonOther={profile.noMraReasonOther} onCheckedChange={(v) => updateGdmtPillar("onMra", "noMraReason", v)} onReasonChange={(r) => updateGdmtReason("noMraReason", r)} onReasonOtherChange={(t) => updateProfile("noMraReasonOther", t)} />
+                    <GdmtPillarField id="sglt2" label="SGLT2 Inhibitor" hint="Contoh: dapagliflozin, empagliflozin" checked={profile.onSglt2i} reason={profile.noSglt2iReason} reasonOther={profile.noSglt2iReasonOther} onCheckedChange={(v) => updateGdmtPillar("onSglt2i", "noSglt2iReason", v)} onReasonChange={(r) => updateGdmtReason("noSglt2iReason", r)} onReasonOtherChange={(t) => updateProfile("noSglt2iReasonOther", t)} />
                   </div>
                 </CardContent>
               </Card>

@@ -414,10 +414,10 @@ export default function PatientDetailPage() {
             <CardContent className="p-4 pt-0">
               <div className="space-y-1.5">
                 {[
-                  { label: "ACE-I / ARB / ARNI", hint: "ACE-I: captopril, ramipril, lisinopril · ARB: telmisartan, candesartan, valsartan · ARNI: sacubitril/valsartan", active: patient.onAceArni, reason: patient.noAceArniReason },
-                  { label: "Beta-Blocker", hint: "Contoh: bisoprolol, carvedilol, metoprolol suksinat", active: patient.onBb, reason: patient.noBbReason },
-                  { label: "MRA / Aldosterone Antagonist", hint: "Contoh: spironolakton", active: patient.onMra, reason: patient.noMraReason },
-                  { label: "SGLT2 Inhibitor", hint: "Contoh: dapagliflozin, empagliflozin", active: patient.onSglt2i, reason: patient.noSglt2iReason },
+                  { label: "ACE-I / ARB / ARNI", hint: "ACE-I: captopril, ramipril, lisinopril · ARB: telmisartan, candesartan, valsartan · ARNI: sacubitril/valsartan", active: patient.onAceArni, reason: patient.noAceArniReason, reasonOther: patient.noAceArniReasonOther },
+                  { label: "Beta-Blocker", hint: "Contoh: bisoprolol, carvedilol, metoprolol suksinat", active: patient.onBb, reason: patient.noBbReason, reasonOther: patient.noBbReasonOther },
+                  { label: "MRA / Aldosterone Antagonist", hint: "Contoh: spironolakton", active: patient.onMra, reason: patient.noMraReason, reasonOther: patient.noMraReasonOther },
+                  { label: "SGLT2 Inhibitor", hint: "Contoh: dapagliflozin, empagliflozin", active: patient.onSglt2i, reason: patient.noSglt2iReason, reasonOther: patient.noSglt2iReasonOther },
                 ].map((d) => (
                   <div
                     key={d.label}
@@ -444,9 +444,11 @@ export default function PatientDetailPage() {
                           d.reason ? "text-amber-700" : "text-gray-400"
                         )}
                       >
-                        {d.reason
-                          ? GDMT_OMISSION_REASON_LABELS[d.reason]?.label ?? d.reason
-                          : "Tidak diresepkan"}
+                        {d.reason === "OTHER" && d.reasonOther
+                          ? `Lainnya: ${d.reasonOther}`
+                          : d.reason
+                            ? GDMT_OMISSION_REASON_LABELS[d.reason]?.label ?? d.reason
+                            : "Tidak diresepkan"}
                       </span>
                     )}
                   </div>

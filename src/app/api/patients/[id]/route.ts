@@ -71,6 +71,7 @@ export async function PATCH(
     "heartRate", "lvef", "egfr", "ntProbnp", "comorbidDm", "comorbidHtn",
     "comorbidCkd", "comorbidAf", "onAceArni", "onBb", "onMra", "onSglt2i",
     "noAceArniReason", "noBbReason", "noMraReason", "noSglt2iReason",
+    "noAceArniReasonOther", "noBbReasonOther", "noMraReasonOther", "noSglt2iReasonOther",
     "nyhaClass", "edDisposition",
   ];
 
@@ -84,7 +85,8 @@ export async function PATCH(
 
   // Alasan "GDMT tidak diberikan" hanya bermakna bila pilarnya tidak
   // diberikan — bila update menyatakan pilar diberikan, alasannya ikut
-  // dikosongkan agar tidak ada data kontradiktif.
+  // dikosongkan agar tidak ada data kontradiktif. Teks "Lainnya" ikut
+  // aturan yang sama, plus dikosongkan bila alasannya bukan OTHER.
   const gdmtReasonByFlag = {
     onAceArni: "noAceArniReason",
     onBb: "noBbReason",
@@ -92,7 +94,13 @@ export async function PATCH(
     onSglt2i: "noSglt2iReason",
   } as const;
   for (const [flag, reasonField] of Object.entries(gdmtReasonByFlag)) {
-    if (updates[flag] === true) updates[reasonField] = null;
+    const otherField = `${reasonField}Other`;
+    if (updates[flag] === true) {
+      updates[reasonField] = null;
+      updates[otherField] = null;
+    } else if (reasonField in updates && updates[reasonField] !== "OTHER") {
+      updates[otherField] = null;
+    }
   }
 
   if (Object.keys(updates).length === 0) {

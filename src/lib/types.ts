@@ -49,6 +49,11 @@ export interface Patient {
   noBbReason?: GdmtOmissionReason | null;
   noMraReason?: GdmtOmissionReason | null;
   noSglt2iReason?: GdmtOmissionReason | null;
+  // Teks bebas penjelas, hanya terisi bila alasannya OTHER.
+  noAceArniReasonOther?: string | null;
+  noBbReasonOther?: string | null;
+  noMraReasonOther?: string | null;
+  noSglt2iReasonOther?: string | null;
   nyhaClass?: string | null;
   edDisposition?: EdDisposition | null;
   createdAt: string;

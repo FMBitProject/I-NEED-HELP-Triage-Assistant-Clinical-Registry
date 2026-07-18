@@ -32,6 +32,10 @@ export interface PendingPatientPayload {
   noBbReason?: string | null;
   noMraReason?: string | null;
   noSglt2iReason?: string | null;
+  noAceArniReasonOther?: string | null;
+  noBbReasonOther?: string | null;
+  noMraReasonOther?: string | null;
+  noSglt2iReasonOther?: string | null;
 }
 
 export interface PendingTriage {

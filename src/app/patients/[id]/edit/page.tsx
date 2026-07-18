@@ -44,6 +44,10 @@ interface EditFormData {
   noBbReason: "" | GdmtOmissionReason;
   noMraReason: "" | GdmtOmissionReason;
   noSglt2iReason: "" | GdmtOmissionReason;
+  noAceArniReasonOther: string;
+  noBbReasonOther: string;
+  noMraReasonOther: string;
+  noSglt2iReasonOther: string;
   nyhaClass: "" | "I" | "II" | "III" | "IV";
   edDisposition: "" | EdDisposition;
 }
@@ -128,6 +132,10 @@ export default function EditPatientPage() {
           noBbReason: (p.noBbReason as GdmtOmissionReason) ?? "",
           noMraReason: (p.noMraReason as GdmtOmissionReason) ?? "",
           noSglt2iReason: (p.noSglt2iReason as GdmtOmissionReason) ?? "",
+          noAceArniReasonOther: p.noAceArniReasonOther ?? "",
+          noBbReasonOther: p.noBbReasonOther ?? "",
+          noMraReasonOther: p.noMraReasonOther ?? "",
+          noSglt2iReasonOther: p.noSglt2iReasonOther ?? "",
           nyhaClass: (p.nyhaClass as "" | "I" | "II" | "III" | "IV") ?? "",
           edDisposition: (p.edDisposition as EdDisposition) ?? "",
         });
@@ -141,15 +149,40 @@ export default function EditPatientPage() {
     setErrors([]);
   };
 
-  // Saat pilar GDMT dicentang, alasan "tidak diberikan" ikut dikosongkan
-  // supaya tidak ada data kontradiktif (diberikan tapi punya alasan tidak).
+  // Saat pilar GDMT dicentang, alasan "tidak diberikan" (dan teks Lainnya)
+  // ikut dikosongkan supaya tidak ada data kontradiktif.
   const updateGdmtPillar = (
     flagKey: "onAceArni" | "onBb" | "onMra" | "onSglt2i",
     reasonKey: "noAceArniReason" | "noBbReason" | "noMraReason" | "noSglt2iReason",
     given: boolean
   ) => {
     setForm((f) =>
-      f ? { ...f, [flagKey]: given, [reasonKey]: given ? "" : f[reasonKey] } : f
+      f
+        ? {
+            ...f,
+            [flagKey]: given,
+            [reasonKey]: given ? "" : f[reasonKey],
+            [`${reasonKey}Other`]: given ? "" : f[`${reasonKey}Other`],
+          }
+        : f
+    );
+    setErrors([]);
+  };
+
+  // Teks "Lainnya" hanya relevan bila alasannya OTHER — pindah kategori
+  // langsung mengosongkan teksnya.
+  const updateGdmtReason = (
+    reasonKey: "noAceArniReason" | "noBbReason" | "noMraReason" | "noSglt2iReason",
+    r: "" | GdmtOmissionReason
+  ) => {
+    setForm((f) =>
+      f
+        ? {
+            ...f,
+            [reasonKey]: r,
+            [`${reasonKey}Other`]: r === "OTHER" ? f[`${reasonKey}Other`] : "",
+          }
+        : f
     );
     setErrors([]);
   };
@@ -198,6 +231,22 @@ export default function EditPatientPage() {
           noBbReason: form.onBb ? null : form.noBbReason || null,
           noMraReason: form.onMra ? null : form.noMraReason || null,
           noSglt2iReason: form.onSglt2i ? null : form.noSglt2iReason || null,
+          noAceArniReasonOther:
+            !form.onAceArni && form.noAceArniReason === "OTHER"
+              ? form.noAceArniReasonOther.trim() || null
+              : null,
+          noBbReasonOther:
+            !form.onBb && form.noBbReason === "OTHER"
+              ? form.noBbReasonOther.trim() || null
+              : null,
+          noMraReasonOther:
+            !form.onMra && form.noMraReason === "OTHER"
+              ? form.noMraReasonOther.trim() || null
+              : null,
+          noSglt2iReasonOther:
+            !form.onSglt2i && form.noSglt2iReason === "OTHER"
+              ? form.noSglt2iReasonOther.trim() || null
+              : null,
           nyhaClass: form.nyhaClass || null,
           edDisposition: form.edDisposition || null,
         }),
@@ -440,10 +489,10 @@ export default function EditPatientPage() {
                   pilih alasannya bila diketahui (opsional).
                 </p>
                 <div className="grid grid-cols-1 gap-2">
-                  <GdmtPillarField id="ace" label="ACE-I / ARB / ARNI" hint="ACE-I: captopril, ramipril, lisinopril · ARB: telmisartan, candesartan, valsartan · ARNI: sacubitril/valsartan" checked={form.onAceArni} reason={form.noAceArniReason} onCheckedChange={(v) => updateGdmtPillar("onAceArni", "noAceArniReason", v)} onReasonChange={(r) => update("noAceArniReason", r)} />
-                  <GdmtPillarField id="bb" label="Beta-Blocker" hint="Contoh: bisoprolol, carvedilol, metoprolol suksinat" checked={form.onBb} reason={form.noBbReason} onCheckedChange={(v) => updateGdmtPillar("onBb", "noBbReason", v)} onReasonChange={(r) => update("noBbReason", r)} />
-                  <GdmtPillarField id="mra" label="MRA / Aldosterone Antagonist" hint="Contoh: spironolakton" checked={form.onMra} reason={form.noMraReason} onCheckedChange={(v) => updateGdmtPillar("onMra", "noMraReason", v)} onReasonChange={(r) => update("noMraReason", r)} />
-                  <GdmtPillarField id="sglt2" label="SGLT2 Inhibitor" hint="Contoh: dapagliflozin, empagliflozin" checked={form.onSglt2i} reason={form.noSglt2iReason} onCheckedChange={(v) => updateGdmtPillar("onSglt2i", "noSglt2iReason", v)} onReasonChange={(r) => update("noSglt2iReason", r)} />
+                  <GdmtPillarField id="ace" label="ACE-I / ARB / ARNI" hint="ACE-I: captopril, ramipril, lisinopril · ARB: telmisartan, candesartan, valsartan · ARNI: sacubitril/valsartan" checked={form.onAceArni} reason={form.noAceArniReason} reasonOther={form.noAceArniReasonOther} onCheckedChange={(v) => updateGdmtPillar("onAceArni", "noAceArniReason", v)} onReasonChange={(r) => updateGdmtReason("noAceArniReason", r)} onReasonOtherChange={(t) => update("noAceArniReasonOther", t)} />
+                  <GdmtPillarField id="bb" label="Beta-Blocker" hint="Contoh: bisoprolol, carvedilol, metoprolol suksinat" checked={form.onBb} reason={form.noBbReason} reasonOther={form.noBbReasonOther} onCheckedChange={(v) => updateGdmtPillar("onBb", "noBbReason", v)} onReasonChange={(r) => updateGdmtReason("noBbReason", r)} onReasonOtherChange={(t) => update("noBbReasonOther", t)} />
+                  <GdmtPillarField id="mra" label="MRA / Aldosterone Antagonist" hint="Contoh: spironolakton" checked={form.onMra} reason={form.noMraReason} reasonOther={form.noMraReasonOther} onCheckedChange={(v) => updateGdmtPillar("onMra", "noMraReason", v)} onReasonChange={(r) => updateGdmtReason("noMraReason", r)} onReasonOtherChange={(t) => update("noMraReasonOther", t)} />
+                  <GdmtPillarField id="sglt2" label="SGLT2 Inhibitor" hint="Contoh: dapagliflozin, empagliflozin" checked={form.onSglt2i} reason={form.noSglt2iReason} reasonOther={form.noSglt2iReasonOther} onCheckedChange={(v) => updateGdmtPillar("onSglt2i", "noSglt2iReason", v)} onReasonChange={(r) => updateGdmtReason("noSglt2iReason", r)} onReasonOtherChange={(t) => update("noSglt2iReasonOther", t)} />
                 </div>
               </CardContent>
             </Card>

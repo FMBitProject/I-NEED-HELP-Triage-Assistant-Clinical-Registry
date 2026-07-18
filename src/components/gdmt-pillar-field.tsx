@@ -1,6 +1,7 @@
 "use client";
 
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { GDMT_OMISSION_REASON_OPTIONS } from "@/lib/gdmt-reasons";
 import type { GdmtOmissionReason } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -8,23 +9,28 @@ import { cn } from "@/lib/utils";
 // Satu pilar GDMT: checkbox "diberikan" + (bila tidak dicentang) chip alasan
 // tidak diberikan. Alasan opsional — satu tap memilih, tap lagi membatalkan —
 // dan otomatis dikosongkan saat pilar dicentang, jadi tidak menambah langkah
-// wajib bagi pengisi.
+// wajib bagi pengisi. Chip "Lainnya" memunculkan input teks singkat (opsional)
+// agar kategori OTHER tetap bisa dianalisis isinya.
 export function GdmtPillarField({
   id,
   label,
   hint,
   checked,
   reason,
+  reasonOther,
   onCheckedChange,
   onReasonChange,
+  onReasonOtherChange,
 }: {
   id: string;
   label: string;
   hint?: string;
   checked: boolean;
   reason: "" | GdmtOmissionReason;
+  reasonOther: string;
   onCheckedChange: (v: boolean) => void;
   onReasonChange: (r: "" | GdmtOmissionReason) => void;
+  onReasonOtherChange: (text: string) => void;
 }) {
   return (
     <div
@@ -66,10 +72,19 @@ export function GdmtPillarField({
               </button>
             ))}
           </div>
-          {reason && (
+          {reason && reason !== "OTHER" && (
             <p className="text-[11px] text-amber-700 mt-1.5 leading-snug">
               {GDMT_OMISSION_REASON_OPTIONS.find((o) => o.value === reason)?.desc}
             </p>
+          )}
+          {reason === "OTHER" && (
+            <Input
+              value={reasonOther}
+              onChange={(e) => onReasonOtherChange(e.target.value)}
+              placeholder="Sebutkan singkat (opsional)"
+              maxLength={120}
+              className="mt-1.5 h-8 text-xs"
+            />
           )}
         </div>
       )}

@@ -56,6 +56,10 @@ export async function GET() {
         noBbReason: patients.noBbReason,
         noMraReason: patients.noMraReason,
         noSglt2iReason: patients.noSglt2iReason,
+        noAceArniReasonOther: patients.noAceArniReasonOther,
+        noBbReasonOther: patients.noBbReasonOther,
+        noMraReasonOther: patients.noMraReasonOther,
+        noSglt2iReasonOther: patients.noSglt2iReasonOther,
         edDisposition: patients.edDisposition,
         patientCreatedAt: patients.createdAt,
       })
@@ -130,6 +134,7 @@ export async function GET() {
     "comorbidDm","comorbidHtn","comorbidCkd","comorbidAf",
     "onAceArni","onBb","onMra","onSglt2i",
     "noAceArniReason","noBbReason","noMraReason","noSglt2iReason",
+    "noAceArniReasonOther","noBbReasonOther","noMraReasonOther","noSglt2iReasonOther",
     "edDisposition",
     "patientCreatedAt",
     "triageId","triageScore",

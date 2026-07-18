@@ -129,6 +129,12 @@ export const patients = pgTable("patients", {
   noBbReason: text("no_bb_reason"),
   noMraReason: text("no_mra_reason"),
   noSglt2iReason: text("no_sglt2i_reason"),
+  // Teks bebas penjelas — hanya terisi bila alasannya OTHER, di kolom
+  // terpisah supaya kolom kategori tetap bersih untuk tabulasi.
+  noAceArniReasonOther: text("no_ace_arni_reason_other"),
+  noBbReasonOther: text("no_bb_reason_other"),
+  noMraReasonOther: text("no_mra_reason_other"),
+  noSglt2iReasonOther: text("no_sglt2i_reason_other"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   finalizedAt: timestamp("finalized_at"),
 });

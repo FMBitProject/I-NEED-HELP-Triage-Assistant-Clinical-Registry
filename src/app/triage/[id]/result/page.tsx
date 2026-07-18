@@ -168,10 +168,10 @@ export default function ResultPage() {
               </p>
               <div className="grid grid-cols-2 gap-1.5">
                 {[
-                  { label: "ACE-I/ARB/ARNI", active: patient.onAceArni, reason: patient.noAceArniReason },
-                  { label: "Beta-Blocker", active: patient.onBb, reason: patient.noBbReason },
-                  { label: "MRA", active: patient.onMra, reason: patient.noMraReason },
-                  { label: "SGLT2i", active: patient.onSglt2i, reason: patient.noSglt2iReason },
+                  { label: "ACE-I/ARB/ARNI", active: patient.onAceArni, reason: patient.noAceArniReason, reasonOther: patient.noAceArniReasonOther },
+                  { label: "Beta-Blocker", active: patient.onBb, reason: patient.noBbReason, reasonOther: patient.noBbReasonOther },
+                  { label: "MRA", active: patient.onMra, reason: patient.noMraReason, reasonOther: patient.noMraReasonOther },
+                  { label: "SGLT2i", active: patient.onSglt2i, reason: patient.noSglt2iReason, reasonOther: patient.noSglt2iReasonOther },
                 ].map((d) => (
                   <div
                     key={d.label}
@@ -185,7 +185,9 @@ export default function ResultPage() {
                       {d.label}
                       {!d.active && d.reason && (
                         <span className="block font-normal text-[10px] text-amber-700 mt-0.5">
-                          {GDMT_OMISSION_REASON_LABELS[d.reason]?.label ?? d.reason}
+                          {d.reason === "OTHER" && d.reasonOther
+                            ? `Lainnya: ${d.reasonOther}`
+                            : GDMT_OMISSION_REASON_LABELS[d.reason]?.label ?? d.reason}
                         </span>
                       )}
                     </span>
