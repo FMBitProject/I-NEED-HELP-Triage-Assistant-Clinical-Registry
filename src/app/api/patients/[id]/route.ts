@@ -70,6 +70,7 @@ export async function PATCH(
     "patientInitial", "age", "gender", "systolicBp", "diastolicBp",
     "heartRate", "lvef", "egfr", "ntProbnp", "comorbidDm", "comorbidHtn",
     "comorbidCkd", "comorbidAf", "onAceArni", "onBb", "onMra", "onSglt2i",
+    "noAceArniReason", "noBbReason", "noMraReason", "noSglt2iReason",
     "nyhaClass", "edDisposition",
   ];
 
@@ -79,6 +80,19 @@ export async function PATCH(
     if (field in body) {
       updates[field] = body[field];
     }
+  }
+
+  // Alasan "GDMT tidak diberikan" hanya bermakna bila pilarnya tidak
+  // diberikan — bila update menyatakan pilar diberikan, alasannya ikut
+  // dikosongkan agar tidak ada data kontradiktif.
+  const gdmtReasonByFlag = {
+    onAceArni: "noAceArniReason",
+    onBb: "noBbReason",
+    onMra: "noMraReason",
+    onSglt2i: "noSglt2iReason",
+  } as const;
+  for (const [flag, reasonField] of Object.entries(gdmtReasonByFlag)) {
+    if (updates[flag] === true) updates[reasonField] = null;
   }
 
   if (Object.keys(updates).length === 0) {

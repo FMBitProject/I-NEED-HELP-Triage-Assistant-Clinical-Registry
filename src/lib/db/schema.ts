@@ -121,6 +121,14 @@ export const patients = pgTable("patients", {
   onBb: boolean("on_bb").notNull().default(false),
   onMra: boolean("on_mra").notNull().default(false),
   onSglt2i: boolean("on_sglt2i").notNull().default(false),
+  // Alasan per pilar GDMT yang tidak diberikan (CONTRAINDICATED |
+  // NOT_AVAILABLE | NOT_PRESCRIBED | PATIENT_BARRIER | UNKNOWN | OTHER).
+  // Nullable: null bila pilar diberikan atau alasan tidak diisi — data lama
+  // tetap valid.
+  noAceArniReason: text("no_ace_arni_reason"),
+  noBbReason: text("no_bb_reason"),
+  noMraReason: text("no_mra_reason"),
+  noSglt2iReason: text("no_sglt2i_reason"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   finalizedAt: timestamp("finalized_at"),
 });

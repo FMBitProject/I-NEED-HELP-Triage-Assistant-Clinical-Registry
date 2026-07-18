@@ -52,6 +52,10 @@ export async function GET() {
         onBb: patients.onBb,
         onMra: patients.onMra,
         onSglt2i: patients.onSglt2i,
+        noAceArniReason: patients.noAceArniReason,
+        noBbReason: patients.noBbReason,
+        noMraReason: patients.noMraReason,
+        noSglt2iReason: patients.noSglt2iReason,
         edDisposition: patients.edDisposition,
         patientCreatedAt: patients.createdAt,
       })
@@ -125,6 +129,7 @@ export async function GET() {
     "lvef","egfr","ntProbnp","nyhaClass",
     "comorbidDm","comorbidHtn","comorbidCkd","comorbidAf",
     "onAceArni","onBb","onMra","onSglt2i",
+    "noAceArniReason","noBbReason","noMraReason","noSglt2iReason",
     "edDisposition",
     "patientCreatedAt",
     "triageId","triageScore",

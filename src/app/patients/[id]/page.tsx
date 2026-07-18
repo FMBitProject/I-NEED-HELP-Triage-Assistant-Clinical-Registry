@@ -29,6 +29,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Patient, TriageLog, Outcome, AuditLog } from "@/lib/types";
 import { ED_DISPOSITION_LABELS } from "@/lib/disposition";
 import { TRIAGE_CRITERIA_LABELS, countGdmt } from "@/lib/triage";
+import { GDMT_OMISSION_REASON_LABELS } from "@/lib/gdmt-reasons";
 import { cn } from "@/lib/utils";
 
 const OUTCOME_LABELS: Record<string, { label: string; color: string; icon: string }> = {
@@ -413,10 +414,10 @@ export default function PatientDetailPage() {
             <CardContent className="p-4 pt-0">
               <div className="space-y-1.5">
                 {[
-                  { label: "ACE-I / ARB / ARNI", hint: "ACE-I: captopril, ramipril, lisinopril · ARB: telmisartan, candesartan, valsartan · ARNI: sacubitril/valsartan", active: patient.onAceArni },
-                  { label: "Beta-Blocker", hint: "Contoh: bisoprolol, carvedilol, metoprolol suksinat", active: patient.onBb },
-                  { label: "MRA / Aldosterone Antagonist", hint: "Contoh: spironolakton", active: patient.onMra },
-                  { label: "SGLT2 Inhibitor", hint: "Contoh: dapagliflozin, empagliflozin", active: patient.onSglt2i },
+                  { label: "ACE-I / ARB / ARNI", hint: "ACE-I: captopril, ramipril, lisinopril · ARB: telmisartan, candesartan, valsartan · ARNI: sacubitril/valsartan", active: patient.onAceArni, reason: patient.noAceArniReason },
+                  { label: "Beta-Blocker", hint: "Contoh: bisoprolol, carvedilol, metoprolol suksinat", active: patient.onBb, reason: patient.noBbReason },
+                  { label: "MRA / Aldosterone Antagonist", hint: "Contoh: spironolakton", active: patient.onMra, reason: patient.noMraReason },
+                  { label: "SGLT2 Inhibitor", hint: "Contoh: dapagliflozin, empagliflozin", active: patient.onSglt2i, reason: patient.noSglt2iReason },
                 ].map((d) => (
                   <div
                     key={d.label}
@@ -437,7 +438,16 @@ export default function PatientDetailPage() {
                       </p>
                     </div>
                     {!d.active && (
-                      <span className="ml-auto text-gray-400 shrink-0">Tidak diresepkan</span>
+                      <span
+                        className={cn(
+                          "ml-auto shrink-0 text-right max-w-[40%]",
+                          d.reason ? "text-amber-700" : "text-gray-400"
+                        )}
+                      >
+                        {d.reason
+                          ? GDMT_OMISSION_REASON_LABELS[d.reason]?.label ?? d.reason
+                          : "Tidak diresepkan"}
+                      </span>
                     )}
                   </div>
                 ))}

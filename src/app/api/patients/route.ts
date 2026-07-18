@@ -67,6 +67,12 @@ export async function POST(request: Request) {
       onBb: body.onBb ?? false,
       onMra: body.onMra ?? false,
       onSglt2i: body.onSglt2i ?? false,
+      // Alasan hanya bermakna bila pilarnya tidak diberikan — cegah data
+      // kontradiktif walau klien mengirim keduanya.
+      noAceArniReason: body.onAceArni ? null : body.noAceArniReason ?? null,
+      noBbReason: body.onBb ? null : body.noBbReason ?? null,
+      noMraReason: body.onMra ? null : body.noMraReason ?? null,
+      noSglt2iReason: body.onSglt2i ? null : body.noSglt2iReason ?? null,
       nyhaClass: body.nyhaClass ?? null,
       edDisposition: body.edDisposition ?? null,
     })

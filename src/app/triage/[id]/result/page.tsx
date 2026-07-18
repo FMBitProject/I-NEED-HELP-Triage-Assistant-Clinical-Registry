@@ -20,6 +20,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Patient, TriageLog } from "@/lib/types";
 import { TRIAGE_CRITERIA_LABELS } from "@/lib/triage";
 import { countGdmt } from "@/lib/triage";
+import { GDMT_OMISSION_REASON_LABELS } from "@/lib/gdmt-reasons";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth-context";
 import { REFER_RECOMMENDATIONS, CONTINUE_RECOMMENDATIONS } from "@/lib/recommendations";
@@ -167,20 +168,27 @@ export default function ResultPage() {
               </p>
               <div className="grid grid-cols-2 gap-1.5">
                 {[
-                  { label: "ACE-I/ARB/ARNI", active: patient.onAceArni },
-                  { label: "Beta-Blocker", active: patient.onBb },
-                  { label: "MRA", active: patient.onMra },
-                  { label: "SGLT2i", active: patient.onSglt2i },
+                  { label: "ACE-I/ARB/ARNI", active: patient.onAceArni, reason: patient.noAceArniReason },
+                  { label: "Beta-Blocker", active: patient.onBb, reason: patient.noBbReason },
+                  { label: "MRA", active: patient.onMra, reason: patient.noMraReason },
+                  { label: "SGLT2i", active: patient.onSglt2i, reason: patient.noSglt2iReason },
                 ].map((d) => (
                   <div
                     key={d.label}
                     className={cn(
-                      "flex items-center gap-2 p-2 rounded-lg text-xs font-medium",
+                      "flex items-start gap-2 p-2 rounded-lg text-xs font-medium",
                       d.active ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-400"
                     )}
                   >
                     <span>{d.active ? "✓" : "✗"}</span>
-                    {d.label}
+                    <span>
+                      {d.label}
+                      {!d.active && d.reason && (
+                        <span className="block font-normal text-[10px] text-amber-700 mt-0.5">
+                          {GDMT_OMISSION_REASON_LABELS[d.reason]?.label ?? d.reason}
+                        </span>
+                      )}
+                    </span>
                   </div>
                 ))}
               </div>

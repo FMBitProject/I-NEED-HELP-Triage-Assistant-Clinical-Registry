@@ -20,7 +20,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { TriageCriteria, EdDisposition } from "@/lib/types";
+import { TriageCriteria, EdDisposition, GdmtOmissionReason } from "@/lib/types";
+import { GdmtPillarField } from "@/components/gdmt-pillar-field";
 import { ED_DISPOSITION_OPTIONS } from "@/lib/disposition";
 import { TRIAGE_CRITERIA_LABELS, calculateTriageScore, getTriageResult } from "@/lib/triage";
 import { REFER_RECOMMENDATIONS, CONTINUE_RECOMMENDATIONS } from "@/lib/recommendations";
@@ -48,6 +49,10 @@ interface ProfileData {
   onBb: boolean;
   onMra: boolean;
   onSglt2i: boolean;
+  noAceArniReason: "" | GdmtOmissionReason;
+  noBbReason: "" | GdmtOmissionReason;
+  noMraReason: "" | GdmtOmissionReason;
+  noSglt2iReason: "" | GdmtOmissionReason;
   nyhaClass: "" | "I" | "II" | "III" | "IV";
   edDisposition: "" | EdDisposition;
 }
@@ -70,6 +75,10 @@ const defaultProfile: ProfileData = {
   onBb: false,
   onMra: false,
   onSglt2i: false,
+  noAceArniReason: "",
+  noBbReason: "",
+  noMraReason: "",
+  noSglt2iReason: "",
   nyhaClass: "",
   edDisposition: "",
 };
@@ -178,6 +187,17 @@ export default function NewTriagePage() {
     setErrors([]);
   };
 
+  // Saat pilar GDMT dicentang, alasan "tidak diberikan" ikut dikosongkan
+  // supaya tidak ada data kontradiktif (diberikan tapi punya alasan tidak).
+  const updateGdmtPillar = (
+    flagKey: "onAceArni" | "onBb" | "onMra" | "onSglt2i",
+    reasonKey: "noAceArniReason" | "noBbReason" | "noMraReason" | "noSglt2iReason",
+    given: boolean
+  ) => {
+    setProfile((p) => ({ ...p, [flagKey]: given, [reasonKey]: given ? "" : p[reasonKey] }));
+    setErrors([]);
+  };
+
   const validateStep1 = (): boolean => {
     const errs: string[] = [];
     if (!profile.patientInitial.trim()) errs.push("Inisial pasien wajib diisi");
@@ -218,6 +238,10 @@ export default function NewTriagePage() {
     onBb: profile.onBb,
     onMra: profile.onMra,
     onSglt2i: profile.onSglt2i,
+    noAceArniReason: profile.onAceArni ? null : profile.noAceArniReason || null,
+    noBbReason: profile.onBb ? null : profile.noBbReason || null,
+    noMraReason: profile.onMra ? null : profile.noMraReason || null,
+    noSglt2iReason: profile.onSglt2i ? null : profile.noSglt2iReason || null,
     nyhaClass: profile.nyhaClass || null,
     edDisposition: profile.edDisposition || null,
   });
@@ -654,13 +678,14 @@ export default function NewTriagePage() {
                   <p className="text-xs text-gray-500 leading-relaxed -mt-1">
                     Centang seluruh terapi GDMT yang sedang diterima pasien — termasuk yang
                     diinisiasi selama perawatan di IGD maupun yang diberikan atas advis konsultasi
-                    dari IGD untuk rawat inap.
+                    dari IGD untuk rawat inap. Untuk pilar yang <strong>tidak</strong> diberikan,
+                    pilih alasannya bila diketahui (opsional).
                   </p>
                   <div className="grid grid-cols-1 gap-2">
-                    <CheckboxField id="ace" label="ACE-I / ARB / ARNI" hint="ACE-I: captopril, ramipril, lisinopril · ARB: telmisartan, candesartan, valsartan · ARNI: sacubitril/valsartan" checked={profile.onAceArni} onChange={(v) => updateProfile("onAceArni", v)} />
-                    <CheckboxField id="bb" label="Beta-Blocker" hint="Contoh: bisoprolol, carvedilol, metoprolol suksinat" checked={profile.onBb} onChange={(v) => updateProfile("onBb", v)} />
-                    <CheckboxField id="mra" label="MRA / Aldosterone Antagonist" hint="Contoh: spironolakton" checked={profile.onMra} onChange={(v) => updateProfile("onMra", v)} />
-                    <CheckboxField id="sglt2" label="SGLT2 Inhibitor" hint="Contoh: dapagliflozin, empagliflozin" checked={profile.onSglt2i} onChange={(v) => updateProfile("onSglt2i", v)} />
+                    <GdmtPillarField id="ace" label="ACE-I / ARB / ARNI" hint="ACE-I: captopril, ramipril, lisinopril · ARB: telmisartan, candesartan, valsartan · ARNI: sacubitril/valsartan" checked={profile.onAceArni} reason={profile.noAceArniReason} onCheckedChange={(v) => updateGdmtPillar("onAceArni", "noAceArniReason", v)} onReasonChange={(r) => updateProfile("noAceArniReason", r)} />
+                    <GdmtPillarField id="bb" label="Beta-Blocker" hint="Contoh: bisoprolol, carvedilol, metoprolol suksinat" checked={profile.onBb} reason={profile.noBbReason} onCheckedChange={(v) => updateGdmtPillar("onBb", "noBbReason", v)} onReasonChange={(r) => updateProfile("noBbReason", r)} />
+                    <GdmtPillarField id="mra" label="MRA / Aldosterone Antagonist" hint="Contoh: spironolakton" checked={profile.onMra} reason={profile.noMraReason} onCheckedChange={(v) => updateGdmtPillar("onMra", "noMraReason", v)} onReasonChange={(r) => updateProfile("noMraReason", r)} />
+                    <GdmtPillarField id="sglt2" label="SGLT2 Inhibitor" hint="Contoh: dapagliflozin, empagliflozin" checked={profile.onSglt2i} reason={profile.noSglt2iReason} onCheckedChange={(v) => updateGdmtPillar("onSglt2i", "noSglt2iReason", v)} onReasonChange={(r) => updateProfile("noSglt2iReason", r)} />
                   </div>
                 </CardContent>
               </Card>

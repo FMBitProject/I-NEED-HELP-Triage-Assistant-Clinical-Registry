@@ -154,14 +154,15 @@ export default function ExportPage() {
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">
                     Satu baris per event triase: baseline pasien (TTV, komorbiditas, lab,
-                    GDMT), 9 kriteria I-NEED-HELP sebagai kolom terpisah (crit_I …
-                    crit_P), rekomendasi, dan outcome 30-hari terakhir.
+                    GDMT beserta alasan pilar yang tidak diberikan), 9 kriteria
+                    I-NEED-HELP sebagai kolom terpisah (crit_I … crit_P), rekomendasi,
+                    dan outcome 30-hari terakhir.
                   </p>
                   <div className="flex gap-3 mt-1.5">
                     <span className="text-xs text-blue-600 font-medium">
                       {stats.total} pasien
                     </span>
-                    <span className="text-xs text-gray-400">46 kolom</span>
+                    <span className="text-xs text-gray-400">50 kolom</span>
                     <span className="text-xs text-gray-400">.csv</span>
                   </div>
                 </div>

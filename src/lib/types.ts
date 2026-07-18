@@ -10,6 +10,19 @@ export type OutcomeStatus =
 /** Disposisi akhir kunjungan IGD — diketahui hari itu juga, tanpa follow-up. */
 export type EdDisposition = "DISCHARGED" | "ADMITTED" | "REFERRED" | "DECEASED_ED";
 
+/**
+ * Alasan satu pilar GDMT tidak diberikan — variabel kunci studi deskriptif
+ * hambatan GDMT. Kategorinya mengikuti pembagian baku literatur barrier GDMT:
+ * hambatan klinis, sistem/ketersediaan, inersia peresepan, faktor pasien.
+ */
+export type GdmtOmissionReason =
+  | "CONTRAINDICATED"
+  | "NOT_AVAILABLE"
+  | "NOT_PRESCRIBED"
+  | "PATIENT_BARRIER"
+  | "UNKNOWN"
+  | "OTHER";
+
 export interface Patient {
   id: string;
   doctorId: string;
@@ -30,6 +43,12 @@ export interface Patient {
   onBb: boolean;
   onMra: boolean;
   onSglt2i: boolean;
+  // Alasan per pilar GDMT yang TIDAK diberikan; null bila pilar diberikan
+  // atau alasan tidak diisi (field bersifat opsional di form).
+  noAceArniReason?: GdmtOmissionReason | null;
+  noBbReason?: GdmtOmissionReason | null;
+  noMraReason?: GdmtOmissionReason | null;
+  noSglt2iReason?: GdmtOmissionReason | null;
   nyhaClass?: string | null;
   edDisposition?: EdDisposition | null;
   createdAt: string;

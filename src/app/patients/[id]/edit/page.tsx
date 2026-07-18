@@ -17,8 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { EdDisposition } from "@/lib/types";
+import { EdDisposition, GdmtOmissionReason } from "@/lib/types";
 import { ED_DISPOSITION_OPTIONS } from "@/lib/disposition";
+import { GdmtPillarField } from "@/components/gdmt-pillar-field";
 import { cn } from "@/lib/utils";
 
 interface EditFormData {
@@ -39,6 +40,10 @@ interface EditFormData {
   onBb: boolean;
   onMra: boolean;
   onSglt2i: boolean;
+  noAceArniReason: "" | GdmtOmissionReason;
+  noBbReason: "" | GdmtOmissionReason;
+  noMraReason: "" | GdmtOmissionReason;
+  noSglt2iReason: "" | GdmtOmissionReason;
   nyhaClass: "" | "I" | "II" | "III" | "IV";
   edDisposition: "" | EdDisposition;
 }
@@ -119,6 +124,10 @@ export default function EditPatientPage() {
           onBb: p.onBb ?? false,
           onMra: p.onMra ?? false,
           onSglt2i: p.onSglt2i ?? false,
+          noAceArniReason: (p.noAceArniReason as GdmtOmissionReason) ?? "",
+          noBbReason: (p.noBbReason as GdmtOmissionReason) ?? "",
+          noMraReason: (p.noMraReason as GdmtOmissionReason) ?? "",
+          noSglt2iReason: (p.noSglt2iReason as GdmtOmissionReason) ?? "",
           nyhaClass: (p.nyhaClass as "" | "I" | "II" | "III" | "IV") ?? "",
           edDisposition: (p.edDisposition as EdDisposition) ?? "",
         });
@@ -129,6 +138,19 @@ export default function EditPatientPage() {
 
   const update = (key: keyof EditFormData, value: string | boolean) => {
     setForm((f) => f ? { ...f, [key]: value } : f);
+    setErrors([]);
+  };
+
+  // Saat pilar GDMT dicentang, alasan "tidak diberikan" ikut dikosongkan
+  // supaya tidak ada data kontradiktif (diberikan tapi punya alasan tidak).
+  const updateGdmtPillar = (
+    flagKey: "onAceArni" | "onBb" | "onMra" | "onSglt2i",
+    reasonKey: "noAceArniReason" | "noBbReason" | "noMraReason" | "noSglt2iReason",
+    given: boolean
+  ) => {
+    setForm((f) =>
+      f ? { ...f, [flagKey]: given, [reasonKey]: given ? "" : f[reasonKey] } : f
+    );
     setErrors([]);
   };
 
@@ -172,6 +194,10 @@ export default function EditPatientPage() {
           onBb: form.onBb,
           onMra: form.onMra,
           onSglt2i: form.onSglt2i,
+          noAceArniReason: form.onAceArni ? null : form.noAceArniReason || null,
+          noBbReason: form.onBb ? null : form.noBbReason || null,
+          noMraReason: form.onMra ? null : form.noMraReason || null,
+          noSglt2iReason: form.onSglt2i ? null : form.noSglt2iReason || null,
           nyhaClass: form.nyhaClass || null,
           edDisposition: form.edDisposition || null,
         }),
@@ -410,13 +436,14 @@ export default function EditPatientPage() {
                 <p className="text-xs text-gray-500 leading-relaxed -mt-1">
                   Centang seluruh terapi GDMT yang sedang diterima pasien — termasuk yang
                   diinisiasi selama perawatan di IGD maupun yang diberikan atas advis konsultasi
-                  dari IGD untuk rawat inap.
+                  dari IGD untuk rawat inap. Untuk pilar yang <strong>tidak</strong> diberikan,
+                  pilih alasannya bila diketahui (opsional).
                 </p>
                 <div className="grid grid-cols-1 gap-2">
-                  <CheckboxField id="ace" label="ACE-I / ARB / ARNI" hint="ACE-I: captopril, ramipril, lisinopril · ARB: telmisartan, candesartan, valsartan · ARNI: sacubitril/valsartan" checked={form.onAceArni} onChange={(v) => update("onAceArni", v)} />
-                  <CheckboxField id="bb" label="Beta-Blocker" hint="Contoh: bisoprolol, carvedilol, metoprolol suksinat" checked={form.onBb} onChange={(v) => update("onBb", v)} />
-                  <CheckboxField id="mra" label="MRA / Aldosterone Antagonist" hint="Contoh: spironolakton" checked={form.onMra} onChange={(v) => update("onMra", v)} />
-                  <CheckboxField id="sglt2" label="SGLT2 Inhibitor" hint="Contoh: dapagliflozin, empagliflozin" checked={form.onSglt2i} onChange={(v) => update("onSglt2i", v)} />
+                  <GdmtPillarField id="ace" label="ACE-I / ARB / ARNI" hint="ACE-I: captopril, ramipril, lisinopril · ARB: telmisartan, candesartan, valsartan · ARNI: sacubitril/valsartan" checked={form.onAceArni} reason={form.noAceArniReason} onCheckedChange={(v) => updateGdmtPillar("onAceArni", "noAceArniReason", v)} onReasonChange={(r) => update("noAceArniReason", r)} />
+                  <GdmtPillarField id="bb" label="Beta-Blocker" hint="Contoh: bisoprolol, carvedilol, metoprolol suksinat" checked={form.onBb} reason={form.noBbReason} onCheckedChange={(v) => updateGdmtPillar("onBb", "noBbReason", v)} onReasonChange={(r) => update("noBbReason", r)} />
+                  <GdmtPillarField id="mra" label="MRA / Aldosterone Antagonist" hint="Contoh: spironolakton" checked={form.onMra} reason={form.noMraReason} onCheckedChange={(v) => updateGdmtPillar("onMra", "noMraReason", v)} onReasonChange={(r) => update("noMraReason", r)} />
+                  <GdmtPillarField id="sglt2" label="SGLT2 Inhibitor" hint="Contoh: dapagliflozin, empagliflozin" checked={form.onSglt2i} reason={form.noSglt2iReason} onCheckedChange={(v) => updateGdmtPillar("onSglt2i", "noSglt2iReason", v)} onReasonChange={(r) => update("noSglt2iReason", r)} />
                 </div>
               </CardContent>
             </Card>
