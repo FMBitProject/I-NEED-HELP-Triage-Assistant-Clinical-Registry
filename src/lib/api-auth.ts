@@ -29,7 +29,9 @@ export async function requireApprovedSession() {
 export async function requireAdmin() {
   const { session, error } = await requireSession();
   if (error) return { session: null, error };
-  if (session!.user.role !== "ADMIN") {
+  // Also require `approved` (not just role === "ADMIN") as a second layer —
+  // role alone shouldn't be enough to grant admin access.
+  if (session!.user.role !== "ADMIN" || !session!.user.approved) {
     return { session: null, error: Response.json({ error: "Forbidden" }, { status: 403 }) };
   }
   return { session: session!, error: null };

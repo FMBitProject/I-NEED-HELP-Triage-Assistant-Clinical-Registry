@@ -95,9 +95,13 @@ export const auth = betterAuth({
         required: false,
         fieldName: "institutionType",
       },
+      // `input: false` stops sign-up payloads from setting this themselves —
+      // without it, a client could POST role: "ADMIN" at sign-up and get an
+      // admin session with zero approval.
       role: {
         type: "string",
         defaultValue: "DOCTOR",
+        input: false,
         fieldName: "role",
       },
       // New sign-ups start unapproved; an ADMIN must approve them from
