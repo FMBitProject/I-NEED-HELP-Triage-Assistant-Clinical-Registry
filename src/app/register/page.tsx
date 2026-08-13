@@ -60,7 +60,7 @@ export default function RegisterPage() {
             <HeartPulse className="w-7 h-7 text-red-600" />
           </div>
           <h1 className="text-xl font-bold text-gray-900">Daftar Akun Dokter</h1>
-          <p className="text-sm text-gray-500 mt-1">I-NEED-HELP Clinical Registry</p>
+          <p className="text-sm text-gray-500 mt-1">Registry Gagal Jantung</p>
         </div>
 
         <Card className="shadow-lg border-0 ring-1 ring-gray-100">
@@ -187,7 +187,7 @@ export default function RegisterPage() {
 
                     <p className="text-gray-600">
                       Dengan mendaftar pada platform{" "}
-                      <strong>I-NEED-HELP Clinical Registry</strong>, Anda selaku tenaga
+                      <strong>Registry Gagal Jantung</strong>, Anda selaku tenaga
                       kesehatan yang berwenang menyatakan memahami dan menyetujui hal-hal
                       berikut:
                     </p>
@@ -259,9 +259,10 @@ export default function RegisterPage() {
                           6. Batasan Penggunaan Klinis
                         </p>
                         <p className="text-gray-600 mt-0.5">
-                          Hasil triase I-NEED-HELP bersifat <em>clinical decision support</em>,
-                          bukan pengganti penilaian klinis dokter. Keputusan tata laksana pasien
-                          sepenuhnya merupakan tanggung jawab dokter yang memeriksa.
+                          Data dan ringkasan GDMT yang ditampilkan pada platform ini bersifat
+                          pencatatan registri untuk kepentingan riset, bukan pengganti penilaian
+                          klinis dokter. Keputusan tata laksana pasien sepenuhnya merupakan
+                          tanggung jawab dokter yang memeriksa.
                         </p>
                       </div>
                     </div>
@@ -289,7 +290,7 @@ export default function RegisterPage() {
                 size="lg"
                 disabled={loading || !consent}
               >
-                {loading ? "Mendaftarkan..." : "Daftar & Mulai Triase"}
+                {loading ? "Mendaftarkan..." : "Daftar & Mulai Registrasi Pasien"}
               </Button>
             </form>
           </CardContent>

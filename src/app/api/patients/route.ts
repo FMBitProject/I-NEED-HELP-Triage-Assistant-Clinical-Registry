@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
-import { outcomes, patients, triageLogs } from "@/lib/db/schema";
+import { outcomes, patients } from "@/lib/db/schema";
 import { requireApprovedSession } from "@/lib/api-auth";
-import { desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 
 export async function GET() {
   const { session, error } = await requireApprovedSession();
@@ -17,19 +17,14 @@ export async function GET() {
 
   const patientIds = patientsList.map((p) => p.id);
 
-  const [allLogs, allOutcomes] = await Promise.all([
-    db.select().from(triageLogs).where(inArray(triageLogs.patientId, patientIds)),
-    db.select().from(outcomes).where(inArray(outcomes.patientId, patientIds)),
-  ]);
+  const allOutcomes = await db
+    .select()
+    .from(outcomes)
+    .where(inArray(outcomes.patientId, patientIds));
 
   const enriched = patientsList.map((p) => ({
     ...p,
     egfr: p.egfr != null ? parseFloat(p.egfr) : null,
-    triage:
-      allLogs
-        .filter((l) => l.patientId === p.id)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] ??
-      null,
     outcome:
       allOutcomes
         .filter((o) => o.patientId === p.id)
@@ -56,10 +51,16 @@ export async function POST(request: Request) {
     );
   }
 
+  const clientRequestId =
+    typeof body.clientRequestId === "string" && body.clientRequestId
+      ? body.clientRequestId
+      : null;
+
   const [patient] = await db
     .insert(patients)
     .values({
       doctorId: session.user.id,
+      clientRequestId,
       patientInitial: body.patientInitial,
       age: body.age,
       gender: body.gender,
@@ -104,7 +105,34 @@ export async function POST(request: Request) {
       hfOnset: body.hfOnset ?? null,
       edDisposition: body.edDisposition ?? null,
     })
+    .onConflictDoNothing({ target: patients.clientRequestId })
     .returning();
+
+  // Tidak ada baris kembali = clientRequestId sudah pernah dipakai, artinya
+  // kiriman ini duplikat (respons sebelumnya hilang di jalan). Kembalikan
+  // pasien yang sudah tersimpan supaya klien menganggapnya sukses dan
+  // mengosongkan antrean, bukan menumpuk pasien dobel.
+  if (!patient) {
+    const existing = clientRequestId
+      ? await db.query.patients.findFirst({
+          where: and(
+            eq(patients.clientRequestId, clientRequestId),
+            eq(patients.doctorId, session.user.id)
+          ),
+        })
+      : undefined;
+
+    if (!existing) {
+      return Response.json(
+        { error: "Gagal menyimpan data pasien" },
+        { status: 409 }
+      );
+    }
+    return Response.json(
+      { ...existing, egfr: existing.egfr != null ? parseFloat(existing.egfr) : null },
+      { status: 200 }
+    );
+  }
 
   return Response.json({ ...patient, egfr: patient.egfr != null ? parseFloat(patient.egfr) : null }, { status: 201 });
 }

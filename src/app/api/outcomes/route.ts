@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   if (error) return error;
 
   const body = await request.json();
-  const { patientId, status, followUpDays, notes, admissionDate, dischargeDate, notReferredReason } = body;
+  const { patientId, status, followUpDays, notes, admissionDate, dischargeDate } = body;
 
   if (admissionDate && dischargeDate && dischargeDate < admissionDate) {
     return Response.json(
@@ -72,7 +72,6 @@ export async function POST(request: Request) {
       notes: notes ?? null,
       admissionDate: admissionDate ?? null,
       dischargeDate: dischargeDate ?? null,
-      notReferredReason: notReferredReason ?? null,
     })
     .returning();
 

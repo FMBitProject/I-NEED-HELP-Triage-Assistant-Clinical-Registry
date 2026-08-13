@@ -44,8 +44,8 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-50 border border-red-100 mb-4">
             <HeartPulse className="w-8 h-8 text-red-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">I-NEED-HELP</h1>
-          <p className="text-sm text-gray-500 mt-1">Triage Assistant & Clinical Registry</p>
+          <h1 className="text-2xl font-bold text-gray-900">Registry Gagal Jantung</h1>
+          <p className="text-sm text-gray-500 mt-1">Registri Klinis & Pemantauan GDMT</p>
         </div>
 
         <Card className="shadow-lg border-0 ring-1 ring-gray-100">
@@ -120,7 +120,7 @@ export default function LoginPage() {
             <Link href="/terms" className="hover:underline text-gray-500">Syarat &amp; Ketentuan</Link>
           </p>
           <a
-            href="mailto:renfael6@gmail.com?subject=Masukan%20untuk%20I-NEED-HELP%20Registry"
+            href="mailto:renfael6@gmail.com?subject=Masukan%20untuk%20Registry%20Gagal%20Jantung"
             className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-blue-600 transition-colors"
           >
             <Mail className="w-3 h-3" />

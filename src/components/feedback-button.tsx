@@ -12,7 +12,7 @@ export function FeedbackButton() {
 
   if (!doctor) return null;
 
-  const subject = encodeURIComponent("Masukan untuk I-NEED-HELP Registry");
+  const subject = encodeURIComponent("Masukan untuk Registry Gagal Jantung");
   const body = encodeURIComponent(
     `Halo Developer,\n\nSaya ingin menyampaikan masukan berikut:\n\n[Tulis masukan di sini]\n\n---\nDikirim dari: ${doctor.name}\nFaskes: ${doctor.institutionType}`
   );

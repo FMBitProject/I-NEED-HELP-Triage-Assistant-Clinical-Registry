@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { auditLogs, patients, triageLogs, outcomes } from "@/lib/db/schema";
+import { auditLogs, patients, outcomes } from "@/lib/db/schema";
 import { requireApprovedSession } from "@/lib/api-auth";
 import { and, eq } from "drizzle-orm";
 
@@ -25,17 +25,12 @@ export async function GET(
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 
-  const triage = await db.query.triageLogs.findFirst({
-    where: eq(triageLogs.patientId, id),
-    orderBy: (t, { desc }) => [desc(t.createdAt)],
-  });
-
   const outcome = await db.query.outcomes.findFirst({
     where: eq(outcomes.patientId, id),
     orderBy: (o, { desc }) => [desc(o.recordedAt)],
   });
 
-  return Response.json({ patient, triage: triage ?? null, outcome: outcome ?? null });
+  return Response.json({ patient, outcome: outcome ?? null });
 }
 
 export async function PATCH(

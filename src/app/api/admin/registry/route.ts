@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { outcomes, patients, triageLogs, user } from "@/lib/db/schema";
+import { outcomes, patients, user } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/api-auth";
 import { desc, eq, inArray } from "drizzle-orm";
 
@@ -24,10 +24,10 @@ export async function GET() {
 
   const patientIds = rows.map((r) => r.patient.id);
 
-  const [allLogs, allOutcomes] = await Promise.all([
-    db.select().from(triageLogs).where(inArray(triageLogs.patientId, patientIds)),
-    db.select().from(outcomes).where(inArray(outcomes.patientId, patientIds)),
-  ]);
+  const allOutcomes = await db
+    .select()
+    .from(outcomes)
+    .where(inArray(outcomes.patientId, patientIds));
 
   const enriched = rows.map(({ patient: p, doctorName, doctorEmail, doctorInstitution }) => ({
     ...p,
@@ -35,11 +35,6 @@ export async function GET() {
     doctorName,
     doctorEmail,
     doctorInstitution,
-    triage:
-      allLogs
-        .filter((l) => l.patientId === p.id)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] ??
-      null,
     outcome:
       allOutcomes
         .filter((o) => o.patientId === p.id)

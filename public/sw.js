@@ -1,6 +1,6 @@
-const CACHE = "ineedhelp-v2";
+const CACHE = "hf-registry-v3";
 
-const PRECACHE = ["/dashboard", "/patients", "/triage/new", "/followup"];
+const PRECACHE = ["/dashboard", "/patients", "/patients/new", "/followup"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -85,7 +85,7 @@ self.addEventListener("fetch", (event) => {
           (cached) =>
             cached ||
             new Response(
-              `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>Offline – I-NEED-HELP</title>
+              `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>Offline – Registry Gagal Jantung</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc}
 .box{text-align:center;padding:2rem}.icon{font-size:3rem}.h{font-size:1.25rem;font-weight:700;color:#1e293b;margin:.5rem 0}

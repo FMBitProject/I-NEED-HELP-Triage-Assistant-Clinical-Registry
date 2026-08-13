@@ -8,12 +8,10 @@ import {
   HeartPulse,
   Pill,
   Activity,
-  AlertTriangle,
   CheckCircle,
   Clock,
   Trash2,
   Pencil,
-  RefreshCw,
   Lock,
   FileCheck,
   History,
@@ -26,9 +24,9 @@ import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Patient, TriageLog, Outcome, AuditLog } from "@/lib/types";
+import { Patient, Outcome, AuditLog } from "@/lib/types";
 import { ED_DISPOSITION_LABELS } from "@/lib/disposition";
-import { TRIAGE_CRITERIA_LABELS, countGdmt } from "@/lib/triage";
+import { countGdmt } from "@/lib/gdmt";
 import { GDMT_OMISSION_REASON_LABELS } from "@/lib/gdmt-reasons";
 import { HF_ONSET_LABELS } from "@/lib/hf-onset";
 import { cn } from "@/lib/utils";
@@ -70,7 +68,6 @@ export default function PatientDetailPage() {
   const { doctor, isLoading } = useAuth();
   const router = useRouter();
   const [patient, setPatient] = useState<Patient | null>(null);
-  const [triageLog, setTriageLog] = useState<TriageLog | null>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -90,7 +87,6 @@ export default function PatientDetailPage() {
       .then((data) => {
         if (!data) { router.replace("/patients"); return; }
         setPatient(data.patient);
-        setTriageLog(data.triage);
         setOutcome(data.outcome);
       });
   }, [id, doctor, router]);
@@ -139,13 +135,7 @@ export default function PatientDetailPage() {
   );
   const unlockMailto = `mailto:renfael6@gmail.com?subject=${unlockSubject}&body=${unlockBody}`;
 
-  const isRefer = triageLog?.recommendationGiven === "REFER";
   const gdmtCount = countGdmt(patient);
-  const metCriteriaKeys = triageLog
-    ? (Object.entries(triageLog.criteriaMet) as [keyof typeof TRIAGE_CRITERIA_LABELS, boolean][])
-        .filter(([, v]) => v)
-        .map(([k]) => k)
-    : [];
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -202,22 +192,12 @@ export default function PatientDetailPage() {
 
           {/* Header */}
           <div className="flex items-start gap-4">
-            <div
-              className={cn(
-                "w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black shrink-0",
-                isRefer ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
-              )}
-            >
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black shrink-0 bg-blue-100 text-blue-700">
               {patient.patientInitial}
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl font-bold text-gray-900">{patient.patientInitial}</h1>
-                {triageLog && (
-                  <Badge variant={isRefer ? "destructive" : "success"}>
-                    {isRefer ? "Perlu Rujukan" : "Lanjut GDMT"}
-                  </Badge>
-                )}
                 {isFinalized && (
                   <Badge variant="secondary" className="gap-1 bg-green-100 text-green-800 border-green-200">
                     <Lock className="w-2.5 h-2.5" />
@@ -245,7 +225,7 @@ export default function PatientDetailPage() {
                 </p>
               )}
               <p className="text-xs text-gray-400 mt-0.5">
-                Triase:{" "}
+                Terdaftar:{" "}
                 {new Date(patient.createdAt).toLocaleDateString("id-ID", {
                   day: "numeric", month: "long", year: "numeric",
                 })}
@@ -276,12 +256,6 @@ export default function PatientDetailPage() {
                       Edit Data
                     </Button>
                   </Link>
-                  <Link href={`/patients/${patient.id}/retriage`}>
-                    <Button variant="outline" size="sm" className="gap-1.5">
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      Triase Ulang
-                    </Button>
-                  </Link>
                 </div>
               ))}
             </div>
@@ -300,7 +274,7 @@ export default function PatientDetailPage() {
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
                       Dicatat: {new Date(outcome.recordedAt).toLocaleDateString("id-ID")} •{" "}
-                      {outcome.followUpDays} hari setelah triase
+                      {outcome.followUpDays} hari setelah pendaftaran
                     </p>
                     {outcome.admissionDate && (
                       <p className="text-xs text-gray-400 mt-0.5">
@@ -308,11 +282,6 @@ export default function PatientDetailPage() {
                         {outcome.dischargeDate
                           ? ` — ${new Date(outcome.dischargeDate).toLocaleDateString("id-ID")} (LOS ${Math.round((new Date(outcome.dischargeDate).getTime() - new Date(outcome.admissionDate).getTime()) / 86400000)} hari)`
                           : " — masih dirawat"}
-                      </p>
-                    )}
-                    {outcome.notReferredReason && (
-                      <p className="text-xs text-amber-600 mt-0.5">
-                        Tidak dirujuk: {outcome.notReferredReason}
                       </p>
                     )}
                   </div>
@@ -415,9 +384,9 @@ export default function PatientDetailPage() {
                 Status GDMT ({gdmtCount}/4)
               </CardTitle>
               <p className="text-xs text-gray-400 leading-relaxed mt-1">
-                Terapi GDMT yang tercatat saat triase — mencakup terapi yang diinisiasi selama
-                perawatan di IGD maupun yang diberikan atas advis konsultasi dari IGD untuk
-                rawat inap.
+                Terapi GDMT yang tercatat saat pendaftaran — mencakup terapi yang diinisiasi
+                selama perawatan di IGD maupun yang diberikan atas advis konsultasi dari IGD
+                untuk rawat inap.
               </p>
             </CardHeader>
             <CardContent className="p-4 pt-0">
@@ -465,49 +434,6 @@ export default function PatientDetailPage() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Triage Score */}
-          {triageLog && (
-            <Card className="border-0 shadow-sm">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-blue-500" />
-                    Skor I-NEED-HELP
-                  </CardTitle>
-                  <span
-                    className={cn(
-                      "text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap",
-                      isRefer ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
-                    )}
-                  >
-                    {triageLog.score}/9 — {isRefer ? "RUJUK" : "LANJUT GDMT"}
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                {metCriteriaKeys.length === 0 ? (
-                  <p className="text-xs text-gray-400 text-center py-3">
-                    Tidak ada kriteria perburukan yang terpenuhi
-                  </p>
-                ) : (
-                  <div className="space-y-1.5">
-                    {metCriteriaKeys.map((k) => {
-                      const info = TRIAGE_CRITERIA_LABELS[k];
-                      return (
-                        <div key={k} className="flex items-start gap-2 p-2.5 bg-red-50 rounded-lg">
-                          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-600 text-white text-[9px] font-black shrink-0 mt-0.5">
-                            {info.key}
-                          </span>
-                          <p className="text-xs text-red-800 font-medium">{info.label}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
 
           {/* Finalize section */}
           {isOwner && !isFinalized && (

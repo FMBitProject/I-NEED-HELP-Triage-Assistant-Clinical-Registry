@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   Activity,
   Users,
-  TrendingUp,
   AlertTriangle,
   ClipboardList,
   Plus,
@@ -17,11 +16,10 @@ import {
 import { useAuth } from "@/contexts/auth-context";
 import { Navbar } from "@/components/layout/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PatientWithDetails } from "@/lib/types";
-import { countGdmt } from "@/lib/triage";
-import { FOLLOW_UP_DAYS, daysSinceTriage, isFollowUpDue, isInObservation } from "@/lib/followup";
+import { countGdmt } from "@/lib/gdmt";
+import { FOLLOW_UP_DAYS, daysSinceRegistration, isFollowUpDue, isInObservation } from "@/lib/followup";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 function getDaysAgo(iso: string) {
@@ -58,15 +56,11 @@ export default function DashboardPage() {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).length;
 
-  const logs = patients.map((p) => p.triage).filter(Boolean);
-  const referrals = logs.filter((l) => l!.recommendationGiven === "REFER").length;
-  const referralRate = logs.length > 0 ? Math.round((referrals / logs.length) * 100) : 0;
-
   const gdmtFull = patients.filter((p) => countGdmt(p) === 4).length;
   const gdmtRate = totalPatients > 0 ? Math.round((gdmtFull / totalPatients) * 100) : 0;
 
-  // PRD: notifikasi hanya untuk pasien yang sudah melewati masa triase
-  // (30 hari) tanpa outcome — bukan pasien yang baru ditriase.
+  // PRD: notifikasi hanya untuk pasien yang sudah melewati masa observasi
+  // (30 hari) tanpa outcome — bukan pasien yang baru didaftarkan.
   const dueFollowup = patients.filter((p) => isFollowUpDue(p));
   const inObservation = patients.filter((p) => isInObservation(p));
 
@@ -91,14 +85,6 @@ export default function DashboardPage() {
       icon: Users,
       color: "text-blue-600",
       bg: "bg-blue-50",
-    },
-    {
-      label: "Tingkat Rujukan",
-      value: `${referralRate}%`,
-      sub: `${referrals} dari ${logs.length} triase`,
-      icon: TrendingUp,
-      color: "text-red-600",
-      bg: "bg-red-50",
     },
     {
       label: "GDMT Lengkap",
@@ -131,17 +117,17 @@ export default function DashboardPage() {
               </h1>
               <p className="text-sm text-gray-500 mt-0.5 truncate max-w-[200px] sm:max-w-none">{doctor.institutionType}</p>
             </div>
-            <Link href="/triage/new">
+            <Link href="/patients/new">
               <Button size="lg" className="shrink-0 gap-2">
                 <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Triase Baru</span>
-                <span className="sm:hidden">Triase</span>
+                <span className="hidden sm:inline">Pasien Baru</span>
+                <span className="sm:hidden">Pasien</span>
               </Button>
             </Link>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {stats.map((s) => (
               <Card key={s.label} className="border-0 shadow-sm">
                 <CardContent className="p-4">
@@ -243,16 +229,15 @@ export default function DashboardPage() {
                   <div className="flex flex-col items-center justify-center py-10 text-center">
                     <Activity className="w-8 h-8 text-gray-300 mb-2" />
                     <p className="text-sm text-gray-400">Belum ada data pasien</p>
-                    <Link href="/triage/new">
+                    <Link href="/patients/new">
                       <Button variant="outline" size="sm" className="mt-3">
-                        Mulai Triase Pertama
+                        Tambah Pasien Pertama
                       </Button>
                     </Link>
                   </div>
                 ) : (
                   <ul className="divide-y divide-gray-100">
                     {recentPatients.map((p) => {
-                      const log = p.triage;
                       const outcome = p.outcome;
                       return (
                         <li key={p.id}>
@@ -273,14 +258,6 @@ export default function DashboardPage() {
                                 <span className="text-xs text-gray-400">
                                   {p.age}th • {p.gender === "M" ? "L" : "P"}
                                 </span>
-                                {log && (
-                                  <Badge
-                                    variant={log.recommendationGiven === "REFER" ? "destructive" : "success"}
-                                    className="text-[10px]"
-                                  >
-                                    {log.recommendationGiven === "REFER" ? "Rujuk" : "Lanjut GDMT"}
-                                  </Badge>
-                                )}
                               </div>
                               <p className="text-xs text-gray-400">{getDaysAgo(p.createdAt)}</p>
                             </div>
@@ -366,8 +343,7 @@ export default function DashboardPage() {
               <CardContent className="p-0">
                 <ul className="divide-y divide-gray-100">
                   {[...dueFollowup, ...inObservation].slice(0, 3).map((p) => {
-                    const log = p.triage;
-                    const daysWaiting = daysSinceTriage(p);
+                    const daysWaiting = daysSinceRegistration(p);
                     const due = isFollowUpDue(p);
                     return (
                       <li key={p.id} className="flex items-center gap-3 px-5 py-3">
@@ -378,18 +354,10 @@ export default function DashboardPage() {
                           <div className="flex items-center gap-2">
                             <p className="text-sm font-semibold text-gray-900">{p.patientInitial}</p>
                             <p className="text-xs text-gray-400">{p.age}th</p>
-                            {log && (
-                              <Badge
-                                variant={log.recommendationGiven === "REFER" ? "destructive" : "success"}
-                                className="text-[10px]"
-                              >
-                                {log.recommendationGiven === "REFER" ? "Rujuk" : "Lanjut GDMT"}
-                              </Badge>
-                            )}
                           </div>
                           {due ? (
                             <p className="text-xs text-amber-600 font-medium">
-                              {daysWaiting} hari sejak triase — jatuh tempo
+                              {daysWaiting} hari sejak pendaftaran — jatuh tempo
                             </p>
                           ) : (
                             <p className="text-xs text-gray-400">

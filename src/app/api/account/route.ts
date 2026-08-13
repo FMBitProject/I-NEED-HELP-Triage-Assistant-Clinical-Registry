@@ -7,7 +7,7 @@ export async function DELETE() {
   const { session, error } = await requireSession();
   if (error) return error;
 
-  // CASCADE in schema handles: sessions, accounts, patients → triage_logs, outcomes
+  // CASCADE in schema handles: sessions, accounts, patients → outcomes, audit_logs
   await db.delete(user).where(eq(user.id, session.user.id));
 
   return Response.json({ success: true });

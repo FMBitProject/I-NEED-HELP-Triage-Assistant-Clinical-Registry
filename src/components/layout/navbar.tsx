@@ -26,10 +26,20 @@ import { Badge } from "@/components/ui/badge";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/triage/new", label: "Triase Baru", icon: Activity },
+  { href: "/patients/new", label: "Pasien Baru", icon: Activity },
   { href: "/patients", label: "Pasien", icon: Users },
   { href: "/followup", label: "Follow-up", icon: ClipboardList },
 ];
+
+// "/patients" tidak boleh ikut menyala saat berada di "/patients/new" —
+// keduanya menu terpisah walau nested secara URL.
+function isNavItemActive(href: string, pathname: string): boolean {
+  if (href === "/dashboard") return pathname === href;
+  if (href === "/patients") {
+    return pathname === "/patients" || (pathname.startsWith("/patients/") && !pathname.startsWith("/patients/new"));
+  }
+  return pathname === href || pathname.startsWith(href);
+}
 
 export function Navbar() {
   const { doctor, logout } = useAuth();
@@ -56,7 +66,7 @@ export function Navbar() {
           <Link href="/dashboard" className="flex items-center gap-2">
             <HeartPulse className="w-6 h-6 text-red-600" />
             <span className="font-bold text-gray-900 text-sm sm:text-base">
-              I-NEED-HELP
+              Registry Gagal Jantung
             </span>
           </Link>
 
@@ -68,7 +78,7 @@ export function Navbar() {
                 href={item.href}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                  pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
+                  isNavItemActive(item.href, pathname)
                     ? "bg-blue-50 text-blue-700"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 )}
@@ -167,7 +177,7 @@ export function Navbar() {
                 onClick={() => setOpen(false)}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                  pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
+                  isNavItemActive(item.href, pathname)
                     ? "bg-blue-50 text-blue-700"
                     : "text-gray-600 hover:bg-gray-100"
                 )}

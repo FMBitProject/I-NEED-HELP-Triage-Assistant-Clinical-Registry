@@ -1,22 +1,22 @@
-# I-NEED-HELP Triage Assistant & Clinical Registry
+# Registry Gagal Jantung
 
-Aplikasi web (PWA, mobile-first) untuk dokter umum di faskes primer dan IGD:
-mendigitalkan triase gagal jantung **I-NEED-HELP** (panduan PERKI) sekaligus
-mengumpulkan data registri observasional anonim yang siap dianalisis untuk
+Aplikasi web (PWA, mobile-first) untuk dokter di rumah sakit yang mengelola
+registri observasional gagal jantung (mengacu panduan PERKI) sekaligus
+memantau kepatuhan terapi GDMT (obat pilar) — data siap dianalisis untuk
 publikasi ilmiah.
 
 > Dokumen kebutuhan lengkap: [Product Requirements Document (PRD).md](<Product Requirements Document (PRD).md>)
 
 ## Fitur Utama
 
-- **Triase 2 tahap** — profil pasien + ceklis 9 kriteria I-NEED-HELP, hasil
-  Merah (Rujuk) / Hijau (Lanjut GDMT) beserta anjuran klinis PERKI dalam < 1 menit
-- **Offline-first** — form triase tetap berfungsi tanpa sinyal; data ngantri
-  di perangkat (IndexedDB) dan tersinkron otomatis saat koneksi kembali
+- **Registrasi pasien** — profil, tanda vital, komorbiditas, lab (termasuk
+  NT-proBNP wajib untuk konfirmasi diagnosis), dan status 4 pilar GDMT
+  beserta alasan bila tidak diberikan
+- **Offline-first** — form registrasi tetap berfungsi tanpa sinyal; data
+  ngantri di perangkat (IndexedDB) dan tersinkron otomatis saat koneksi kembali
 - **Follow-up tracker** — pengingat outcome 30-hari (jatuh tempo vs masa observasi)
-- **Dashboard audit personal** — statistik triase, tingkat rujukan, audit 4 pilar GDMT
-- **Research export (admin)** — CSV long-format siap SPSS/Stata/R: 1 baris per
-  triase, kriteria sebagai kolom `crit_*`, boolean `1/0`
+- **Dashboard audit personal** — statistik pasien, audit kelengkapan 4 pilar GDMT
+- **Research export (admin)** — CSV siap SPSS/Stata/R: 1 baris per pasien
 - **Persetujuan riset & approval akun** — akun dokter baru harus disetujui admin
 
 ## Tech Stack
@@ -44,7 +44,7 @@ Perintah lain:
 
 | Perintah | Fungsi |
 |---|---|
-| `npm test` | Unit test (vitest) — skoring, CSV, follow-up, antrean offline |
+| `npm test` | Unit test (vitest) — GDMT, CSV, follow-up, antrean offline |
 | `npm run build` | Build produksi |
 | `npm run db:push` | Sinkronkan skema Drizzle ke database |
 | `npm run db:studio` | GUI inspeksi database |
@@ -53,7 +53,7 @@ Perintah lain:
 
 | Lokasi | Isi |
 |---|---|
-| [src/lib/triage.ts](src/lib/triage.ts) | Logika skoring I-NEED-HELP (satu-satunya sumber kebenaran, jangan tambah kriteria di luar guideline) |
+| [src/lib/gdmt.ts](src/lib/gdmt.ts) | Penghitungan kelengkapan 4 pilar GDMT |
 | [src/lib/offline-queue.ts](src/lib/offline-queue.ts) | Antrean offline + sinkronisasi |
 | [src/lib/db/schema.ts](src/lib/db/schema.ts) | Skema database (Drizzle) |
 | [src/app/api/export/route.ts](src/app/api/export/route.ts) | Ekspor CSV riset (admin) |
@@ -62,7 +62,7 @@ Perintah lain:
 ## Catatan Riset & Etik
 
 - Data pasien pseudoanonim (inisial saja, tanpa identitas langsung)
-- Ekspor CSV: 1 baris per event triase; outcome yang dipakai adalah yang
+- Ekspor CSV: 1 baris per pasien; outcome yang dipakai adalah yang
   terakhir dicatat per pasien
 - Isi nomor **ethical clearance** di menu Pengaturan sebelum data dipakai
   untuk publikasi

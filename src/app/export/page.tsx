@@ -8,7 +8,6 @@ import {
   Users,
   FileSpreadsheet,
   Shield,
-  AlertTriangle,
   CheckCircle,
   BarChart3,
 } from "lucide-react";
@@ -17,7 +16,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { countGdmt } from "@/lib/triage";
+import { countGdmt } from "@/lib/gdmt";
 
 async function downloadFromAPI(filename: string) {
   const res = await fetch("/api/export");
@@ -36,7 +35,7 @@ export default function ExportPage() {
   const router = useRouter();
   const [exporting, setExporting] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
-  const [stats, setStats] = useState({ total: 0, referrals: 0, withOutcome: 0, fullGdmt: 0 });
+  const [stats, setStats] = useState({ total: 0, withOutcome: 0, fullGdmt: 0 });
 
   useEffect(() => {
     if (!isLoading && !doctor) router.replace("/login");
@@ -52,7 +51,6 @@ export default function ExportPage() {
         .then((patients) => {
           setStats({
             total: patients.length,
-            referrals: patients.filter((p: { triage?: { recommendationGiven: string } }) => p.triage?.recommendationGiven === "REFER").length,
             withOutcome: patients.filter((p: { outcome?: unknown }) => !!p.outcome).length,
             fullGdmt: patients.filter((p: Parameters<typeof countGdmt>[0]) => countGdmt(p) === 4).length,
           });
@@ -125,10 +123,11 @@ export default function ExportPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {/* TODO(minor): 3 kolom tanpa breakpoint agak sempit di HP kecil
+                  (<360px). Kosmetik saja, belum diubah. */}
+              <div className="grid grid-cols-3 gap-3">
                 {[
                   { label: "Total Pasien", value: stats.total, icon: Users },
-                  { label: "Kasus Rujukan", value: stats.referrals, icon: AlertTriangle },
                   { label: "Ada Outcome", value: stats.withOutcome, icon: CheckCircle },
                   { label: "GDMT Lengkap", value: stats.fullGdmt, icon: CheckCircle },
                 ].map((s) => (
@@ -150,19 +149,18 @@ export default function ExportPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-900">
-                    Dataset Registri Lengkap (Long Format)
+                    Dataset Registri Lengkap (Satu Baris per Pasien)
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Satu baris per event triase: baseline pasien (TTV, komorbiditas, lab,
-                    GDMT beserta alasan pilar yang tidak diberikan), 9 kriteria
-                    I-NEED-HELP sebagai kolom terpisah (crit_I … crit_P), rekomendasi,
+                    Baseline pasien (TTV, komorbiditas, lab, NYHA, onset gagal jantung),
+                    GDMT beserta alasan pilar yang tidak diberikan, disposisi akhir IGD,
                     dan outcome 30-hari terakhir.
                   </p>
                   <div className="flex gap-3 mt-1.5">
                     <span className="text-xs text-blue-600 font-medium">
                       {stats.total} pasien
                     </span>
-                    <span className="text-xs text-gray-400">56 kolom</span>
+                    <span className="text-xs text-gray-400">42 kolom</span>
                     <span className="text-xs text-gray-400">.csv</span>
                   </div>
                 </div>
