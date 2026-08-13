@@ -242,6 +242,11 @@ export default function NewTriagePage() {
     if (!profile.nyhaClass) errs.push("Kelas fungsional NYHA wajib dipilih");
     if (!profile.hfOnset)
       errs.push("Onset gagal jantung wajib dipilih (pilih “Tidak Diketahui” bila riwayat tak dapat dipastikan)");
+    // TODO(minor): Number(x) <= 0 tidak menangkap NaN (NaN <= 0 selalu false).
+    // Risiko rendah karena <input type=number> browser mereset nilai tak
+    // valid jadi "" duluan, tapi bukan jaminan untuk semua jalur input.
+    if (!profile.ntProbnp || Number(profile.ntProbnp) <= 0)
+      errs.push("NT-proBNP wajib diisi — dibutuhkan untuk konfirmasi diagnosis gagal jantung");
     setErrors(errs);
     return errs.length === 0;
   };
@@ -711,13 +716,11 @@ export default function NewTriagePage() {
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center gap-2 mb-1">
                     <FlaskConical className="w-4 h-4 text-purple-600" />
-                    <h3 className="text-sm font-semibold text-gray-900">
-                      Data Lab <span className="text-gray-400 font-normal">(opsional)</span>
-                    </h3>
+                    <h3 className="text-sm font-semibold text-gray-900">Data Lab</h3>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <Label htmlFor="egfr">eGFR / Kreatinin (mL/min)</Label>
+                      <Label htmlFor="egfr">eGFR / Kreatinin (mL/min) <span className="text-gray-400 font-normal">opsional</span></Label>
                       <Input
                         id="egfr"
                         type="number"
@@ -727,7 +730,7 @@ export default function NewTriagePage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="bnp">NT-proBNP (pg/mL)</Label>
+                      <Label htmlFor="bnp">NT-proBNP (pg/mL) *</Label>
                       <Input
                         id="bnp"
                         type="number"

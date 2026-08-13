@@ -46,6 +46,16 @@ export async function POST(request: Request) {
 
   const body = await request.json();
 
+  // Kriteria inklusi registri: pasien baru wajib punya NT-proBNP. Dicek lagi
+  // di sini (bukan cuma di form) supaya entri offline-queue lama yang antre
+  // dari sebelum field ini diwajibkan tidak lolos diam-diam saat disinkron.
+  if (!(typeof body.ntProbnp === "number" && body.ntProbnp > 0)) {
+    return Response.json(
+      { error: "NT-proBNP wajib diisi untuk pendaftaran pasien baru" },
+      { status: 400 }
+    );
+  }
+
   const [patient] = await db
     .insert(patients)
     .values({

@@ -107,6 +107,9 @@ export const patients = pgTable("patients", {
   heartRate: integer("heart_rate").notNull(),
   lvef: integer("lvef"),
   egfr: numeric("egfr", { precision: 6, scale: 2 }),
+  // Wajib diisi di form (kriteria inklusi registri butuh lab ini untuk
+  // konfirmasi diagnosis). Nullable di DB agar data lama sebelum field ini
+  // diwajibkan tetap valid.
   ntProbnp: integer("nt_probnp"),
   nyhaClass: text("nyha_class"),
   // Onset gagal jantung: DE_NOVO | CHRONIC. Nullable (opsional di form)
