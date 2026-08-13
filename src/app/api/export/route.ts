@@ -1,31 +1,14 @@
 import { db } from "@/lib/db";
-import { outcomes, patients, triageLogs, user } from "@/lib/db/schema";
+import { outcomes, patients, user } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/api-auth";
 import { buildCsv } from "@/lib/csv";
 import { eq } from "drizzle-orm";
-import type { TriageCriteria } from "@/lib/types";
-
-// Kunci kriteria I-NEED-HELP, dipecah jadi kolom boolean terpisah agar CSV
-// langsung siap dianalisis di SPSS/Stata/R (tanpa parsing JSON).
-const CRITERIA_KEYS: (keyof TriageCriteria)[] = [
-  "I",
-  "N",
-  "E1",
-  "E2",
-  "D",
-  "H",
-  "E3",
-  "L",
-  "P",
-];
 
 export async function GET() {
   const { error } = await requireAdmin();
   if (error) return error;
 
-  // Kueri dipisah (bukan double left-join) supaya pasien dengan >1 triase dan
-  // >1 outcome tidak menghasilkan baris perkalian silang (duplikasi data).
-  const [patientRows, allLogs, allOutcomes] = await Promise.all([
+  const [patientRows, allOutcomes] = await Promise.all([
     db
       .select({
         doctorId: user.id,
@@ -67,16 +50,8 @@ export async function GET() {
       .from(patients)
       .innerJoin(user, eq(patients.doctorId, user.id))
       .orderBy(patients.createdAt),
-    db.select().from(triageLogs),
     db.select().from(outcomes),
   ]);
-
-  const logsByPatient = new Map<string, typeof allLogs>();
-  for (const log of allLogs) {
-    const list = logsByPatient.get(log.patientId) ?? [];
-    list.push(log);
-    logsByPatient.set(log.patientId, list);
-  }
 
   // Satu outcome (yang terakhir dicatat) per pasien — konsisten dengan
   // endpoint /api/patients.
@@ -88,12 +63,8 @@ export async function GET() {
     }
   }
 
-  // Format long: 1 baris per triase; pasien tanpa triase tetap muncul 1 baris.
-  const rows: Record<string, unknown>[] = [];
-  for (const p of patientRows) {
-    const logs = (logsByPatient.get(p.patientId) ?? []).sort(
-      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    );
+  // Satu baris per pasien.
+  const rows: Record<string, unknown>[] = patientRows.map((p) => {
     const outcome = latestOutcomeByPatient.get(p.patientId);
 
     // Kolom turunan dari LVEF (batas ESC/PERKI: <40 HFrEF, 40–49 HFmrEF,
@@ -108,37 +79,17 @@ export async function GET() {
             ? "HFmrEF"
             : "HFpEF";
 
-    const outcomeCols = {
+    return {
+      ...p,
+      efCategory,
       outcomeStatus: outcome?.status ?? null,
       outcomeFollowUpDays: outcome?.followUpDays ?? null,
       outcomeNotes: outcome?.notes ?? null,
       outcomeAdmissionDate: outcome?.admissionDate ?? null,
       outcomeDischargeDate: outcome?.dischargeDate ?? null,
-      outcomeNotReferredReason: outcome?.notReferredReason ?? null,
       outcomeRecordedAt: outcome?.recordedAt ?? null,
     };
-
-    if (logs.length === 0) {
-      rows.push({ ...p, efCategory, ...outcomeCols });
-      continue;
-    }
-
-    for (const log of logs) {
-      const criteriaCols = Object.fromEntries(
-        CRITERIA_KEYS.map((k) => [`crit_${k}`, log.criteriaMet?.[k] ?? false])
-      );
-      rows.push({
-        ...p,
-        efCategory,
-        triageId: log.id,
-        triageScore: log.score,
-        ...criteriaCols,
-        triageRecommendation: log.recommendationGiven,
-        triageCreatedAt: log.createdAt,
-        ...outcomeCols,
-      });
-    }
-  }
+  });
 
   const headers = [
     "doctorId","doctorName","institutionType","ethicalClearanceNo","ethicalClearanceDate",
@@ -151,11 +102,8 @@ export async function GET() {
     "noAceArniReasonOther","noBbReasonOther","noMraReasonOther","noSglt2iReasonOther",
     "edDisposition",
     "patientCreatedAt",
-    "triageId","triageScore",
-    ...CRITERIA_KEYS.map((k) => `crit_${k}`),
-    "triageRecommendation","triageCreatedAt",
     "outcomeStatus","outcomeFollowUpDays","outcomeNotes",
-    "outcomeAdmissionDate","outcomeDischargeDate","outcomeNotReferredReason",
+    "outcomeAdmissionDate","outcomeDischargeDate",
     "outcomeRecordedAt",
   ];
 

@@ -19,7 +19,7 @@ export default function TermsPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Syarat &amp; Ketentuan Penggunaan</h1>
-            <p className="text-sm text-gray-500">I-NEED-HELP Triage Assistant &amp; Clinical Registry</p>
+            <p className="text-sm text-gray-500">Registry Gagal Jantung</p>
           </div>
         </div>
 
@@ -28,8 +28,8 @@ export default function TermsPage() {
             <h2 className="font-bold text-gray-900 text-base mb-2">1. Definisi</h2>
             <ul className="ml-4 list-disc space-y-1 text-gray-600">
               <li>
-                <strong>Platform</strong> — Aplikasi web I-NEED-HELP Triage Assistant &amp;
-                Clinical Registry beserta seluruh API dan layanan terkait.
+                <strong>Platform</strong> — Aplikasi web Registry Gagal Jantung beserta
+                seluruh API dan layanan terkait.
               </li>
               <li>
                 <strong>Pengguna</strong> — Tenaga kesehatan (dokter) yang terdaftar dan
@@ -98,15 +98,15 @@ export default function TermsPage() {
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
               <p className="text-amber-900 text-xs font-semibold mb-1">Peringatan Penting</p>
               <p className="text-amber-800 text-xs">
-                Platform ini adalah alat bantu keputusan klinis (clinical decision support tool),
+                Platform ini adalah alat pencatatan registri klinis dan pemantauan terapi GDMT,
                 bukan pengganti penilaian klinis dokter yang terlatih.
               </p>
             </div>
             <ul className="ml-4 list-disc space-y-1 text-gray-600">
               <li>
-                Hasil skor triase I-NEED-HELP bersifat rekomendatif berdasarkan algoritma yang
-                telah dipublikasikan. Keputusan tata laksana akhir sepenuhnya merupakan tanggung
-                jawab dokter yang memeriksa pasien.
+                Data dan ringkasan yang ditampilkan platform bersifat pencatatan, bukan
+                rekomendasi otomatis. Keputusan tata laksana akhir sepenuhnya merupakan
+                tanggung jawab dokter yang memeriksa pasien.
               </li>
               <li>
                 Platform ini <strong>bukan sistem rekam medis (EMR)</strong> dan tidak menggantikan
@@ -126,8 +126,8 @@ export default function TermsPage() {
           <section>
             <h2 className="font-bold text-gray-900 text-base mb-2">5. Hak Kekayaan Intelektual</h2>
             <p className="text-gray-600">
-              Algoritma skor I-NEED-HELP, antarmuka platform, dan seluruh konten di dalamnya
-              adalah milik tim peneliti. Data klinis yang dimasukkan oleh pengguna tetap menjadi
+              Antarmuka platform dan seluruh konten di dalamnya adalah milik tim peneliti.
+              Data klinis yang dimasukkan oleh pengguna tetap menjadi
               milik institusi/pengguna yang bersangkutan, namun pengguna memberikan lisensi kepada
               pengelola untuk menggunakannya dalam analisis agregat anonim untuk keperluan
               penelitian ilmiah.
@@ -177,8 +177,8 @@ export default function TermsPage() {
             <h2 className="font-bold text-gray-900 text-base mb-2">9. Kontak</h2>
             <p className="text-gray-600">
               Pertanyaan terkait ketentuan ini dapat diajukan ke:{" "}
-              <a href="mailto:dpo@ineedhelp-registry.id" className="text-blue-600 hover:underline">
-                dpo@ineedhelp-registry.id
+              <a href="mailto:renfael6@gmail.com" className="text-blue-600 hover:underline">
+                renfael6@gmail.com
               </a>
             </p>
           </section>

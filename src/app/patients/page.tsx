@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { PatientWithDetails } from "@/lib/types";
-import { countGdmt } from "@/lib/triage";
+import { countGdmt } from "@/lib/gdmt";
 import { cn } from "@/lib/utils";
 
 function formatDate(iso: string) {
@@ -41,7 +41,7 @@ export default function PatientsPage() {
   const router = useRouter();
   const [patients, setPatients] = useState<PatientWithDetails[]>([]);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "refer" | "continue" | "pending" | "gdmt">("all");
+  const [filter, setFilter] = useState<"all" | "pending" | "gdmt">("all");
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
 
@@ -62,8 +62,6 @@ export default function PatientsPage() {
   const filtered = patients.filter((p) => {
     const q = search.toLowerCase();
     if (q && !p.patientInitial.toLowerCase().includes(q)) return false;
-    if (filter === "refer") return p.triage?.recommendationGiven === "REFER";
-    if (filter === "continue") return p.triage?.recommendationGiven === "CONTINUE_GDMT";
     if (filter === "pending") return !p.outcome;
     if (filter === "gdmt") return countGdmt(p) === 4;
     return true;
@@ -81,10 +79,10 @@ export default function PatientsPage() {
               <h1 className="text-xl font-bold text-gray-900">Daftar Pasien</h1>
               <p className="text-sm text-gray-500">{patients.length} total pasien tercatat</p>
             </div>
-            <Link href="/triage/new">
+            <Link href="/patients/new">
               <Button size="sm" className="gap-1.5 shrink-0">
                 <Plus className="w-4 h-4" />
-                Triase Baru
+                Pasien Baru
               </Button>
             </Link>
           </div>
@@ -104,8 +102,6 @@ export default function PatientsPage() {
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {[
               { key: "all", label: "Semua" },
-              { key: "refer", label: "Rujukan" },
-              { key: "continue", label: "Lanjut GDMT" },
               { key: "pending", label: "Perlu Follow-up" },
               { key: "gdmt", label: "GDMT Lengkap" },
             ].map((f) => (
@@ -129,16 +125,15 @@ export default function PatientsPage() {
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Activity className="w-10 h-10 text-gray-300 mb-3" />
               <p className="text-gray-400 font-medium">Tidak ada pasien ditemukan</p>
-              <Link href="/triage/new">
+              <Link href="/patients/new">
                 <Button variant="outline" size="sm" className="mt-4">
-                  Mulai Triase Pertama
+                  Tambah Pasien Pertama
                 </Button>
               </Link>
             </div>
           ) : (
             <div className="space-y-2">
               {paginatedFiltered.map((p) => {
-                const log = p.triage;
                 const outcome = p.outcome;
                 const gdmt = countGdmt(p);
                 const outcomeInfo = outcome ? OUTCOME_LABELS[outcome.status] : null;
@@ -148,14 +143,7 @@ export default function PatientsPage() {
                     <Card className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
                       <CardContent className="p-4">
                         <div className="flex items-center gap-3">
-                          <div
-                            className={cn(
-                              "w-11 h-11 rounded-xl flex items-center justify-center shrink-0 font-bold text-sm",
-                              log?.recommendationGiven === "REFER"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-green-100 text-green-700"
-                            )}
-                          >
+                          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 font-bold text-sm bg-blue-100 text-blue-700">
                             {p.patientInitial}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -164,14 +152,6 @@ export default function PatientsPage() {
                               <span className="text-xs text-gray-400">
                                 {p.age}th • {p.gender === "M" ? "L" : "P"}
                               </span>
-                              {log && (
-                                <Badge
-                                  variant={log.recommendationGiven === "REFER" ? "destructive" : "success"}
-                                  className="text-[10px]"
-                                >
-                                  {log.recommendationGiven === "REFER" ? "Rujuk" : "Lanjut GDMT"}
-                                </Badge>
-                              )}
                               {outcomeInfo && (
                                 <Badge
                                   variant={outcomeInfo.color as "success" | "destructive" | "warning" | "default" | "secondary"}

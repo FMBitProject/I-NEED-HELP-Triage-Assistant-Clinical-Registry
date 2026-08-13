@@ -46,7 +46,7 @@ export async function GET(
               marginTop: Math.round(s * 0.04),
             }}
           >
-            I-NEED-HELP
+            REGISTRY HF
           </div>
         </div>
       </div>

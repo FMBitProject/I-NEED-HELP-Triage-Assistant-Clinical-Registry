@@ -8,13 +8,13 @@ import { FeedbackButton } from "@/components/feedback-button";
 import { ErrorReporter } from "@/components/error-reporter";
 
 export const metadata: Metadata = {
-  title: "I-NEED-HELP Triage Assistant",
-  description: "Sistem Triase & Registri Klinis Gagal Jantung – PERKI Guidelines",
+  title: "Registry Gagal Jantung",
+  description: "Registri Klinis & Pemantauan GDMT Gagal Jantung – PERKI Guidelines",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "I-NEED-HELP",
+    title: "Registry HF",
   },
 };
 

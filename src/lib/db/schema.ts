@@ -2,14 +2,12 @@ import {
   boolean,
   date,
   integer,
-  json,
   numeric,
   pgEnum,
   pgTable,
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
-import type { TriageCriteria } from "../types";
 
 // ─── Better Auth required tables ──────────────────────────────────────────────
 
@@ -77,11 +75,6 @@ export const verification = pgTable("verification", {
 
 export const genderEnum = pgEnum("gender", ["M", "F"]);
 
-export const recommendationEnum = pgEnum("recommendation", [
-  "REFER",
-  "CONTINUE_GDMT",
-]);
-
 export const outcomeStatusEnum = pgEnum("outcome_status", [
   "STABLE",
   "HOSPITALIZED",
@@ -99,6 +92,12 @@ export const patients = pgTable("patients", {
   doctorId: text("doctor_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
+  // Kunci idempotensi dari klien. Kalau respons POST hilang di tengah jalan
+  // (sinyal putus, tab ditutup) antrean offline akan mengirim ulang payload
+  // yang sama; unique index ini yang mencegahnya jadi pasien dobel di
+  // registri. Nullable: data lama & entri antrean lama tidak punya ini, dan
+  // di Postgres NULL tidak pernah bentrok dengan NULL lain.
+  clientRequestId: text("client_request_id").unique(),
   patientInitial: text("patient_initial").notNull(),
   age: integer("age").notNull(),
   gender: genderEnum("gender").notNull(),
@@ -145,19 +144,6 @@ export const patients = pgTable("patients", {
   finalizedAt: timestamp("finalized_at"),
 });
 
-export const triageLogs = pgTable("triage_logs", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  patientId: text("patient_id")
-    .notNull()
-    .references(() => patients.id, { onDelete: "cascade" }),
-  score: integer("score").notNull(),
-  criteriaMet: json("criteria_met").$type<TriageCriteria>().notNull(),
-  recommendationGiven: recommendationEnum("recommendation_given").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
 export const outcomes = pgTable("outcomes", {
   id: text("id")
     .primaryKey()
@@ -170,7 +156,6 @@ export const outcomes = pgTable("outcomes", {
   notes: text("notes"),
   admissionDate: date("admission_date"),
   dischargeDate: date("discharge_date"),
-  notReferredReason: text("not_referred_reason"),
   recordedAt: timestamp("recorded_at").notNull().defaultNow(),
 });
 

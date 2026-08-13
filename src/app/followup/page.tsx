@@ -7,13 +7,12 @@ import { Clock, CheckCircle, Info } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Outcome, PatientWithDetails } from "@/lib/types";
 import {
   FOLLOW_UP_DAYS,
   QUIET_DAYS,
-  daysSinceTriage,
+  daysSinceRegistration,
   isFollowUpDue,
   isPastQuietPeriod,
 } from "@/lib/followup";
@@ -59,7 +58,11 @@ export default function FollowUpListPage() {
         body: JSON.stringify({
           patientId: p.id,
           status: "LOST_TO_FOLLOWUP",
-          followUpDays: daysSinceTriage(p),
+          // TODO(minor): nilai ini bisa negatif kalau jam perangkat mundur
+          // (createdAt terbaca di masa depan) dan tersimpan apa adanya —
+          // kolom follow_up_days belum punya CHECK constraint. Dibiarkan
+          // dulu: dampaknya kosmetik pada satu baris data, bukan korupsi.
+          followUpDays: daysSinceRegistration(p),
         }),
       });
       if (res.ok) {
@@ -81,7 +84,7 @@ export default function FollowUpListPage() {
       const rank = (p: PatientWithDetails) =>
         isFollowUpDue(p) ? 0 : isPastQuietPeriod(p) ? 1 : 2;
       if (rank(a) !== rank(b)) return rank(a) - rank(b);
-      return daysSinceTriage(b) - daysSinceTriage(a);
+      return daysSinceRegistration(b) - daysSinceRegistration(a);
     });
   const dueCount = pending.filter((p) => isFollowUpDue(p)).length;
   const quietCount = pending.filter((p) => isPastQuietPeriod(p)).length;
@@ -190,23 +193,16 @@ export default function FollowUpListPage() {
           ) : (
             <div className="space-y-2">
               {list.map((p) => {
-                const log = p.triage;
                 const outcome = p.outcome;
-                const daysWaiting = daysSinceTriage(p);
+                const daysWaiting = daysSinceRegistration(p);
                 const due = isFollowUpDue(p);
                 const quiet = isPastQuietPeriod(p);
-                const isRefer = log?.recommendationGiven === "REFER";
 
                 return (
                   <Card key={p.id} className="border-0 shadow-sm">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3">
-                        <div
-                          className={cn(
-                            "w-11 h-11 rounded-xl flex items-center justify-center text-sm font-black shrink-0",
-                            isRefer ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
-                          )}
-                        >
+                        <div className="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-black shrink-0 bg-blue-100 text-blue-700">
                           {p.patientInitial}
                         </div>
 
@@ -214,14 +210,6 @@ export default function FollowUpListPage() {
                           <div className="flex items-center gap-2 flex-wrap">
                             <p className="font-semibold text-gray-900">{p.patientInitial}</p>
                             <span className="text-xs text-gray-400">{p.age}th</span>
-                            {log && (
-                              <Badge
-                                variant={isRefer ? "destructive" : "success"}
-                                className="text-[10px]"
-                              >
-                                {isRefer ? "Rujuk" : "Lanjut GDMT"}
-                              </Badge>
-                            )}
                           </div>
 
                           {outcome ? (

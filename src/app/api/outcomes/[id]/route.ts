@@ -62,7 +62,6 @@ export async function PATCH(
       notes: body.notes ?? outcome.notes,
       admissionDate: nextAdmissionDate,
       dischargeDate: nextDischargeDate,
-      notReferredReason: "notReferredReason" in body ? body.notReferredReason : outcome.notReferredReason,
     })
     .where(eq(outcomes.id, id))
     .returning();

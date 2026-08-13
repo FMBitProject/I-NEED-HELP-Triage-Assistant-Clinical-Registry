@@ -1,6 +1,6 @@
 // Pemeriksaan kewajaran nilai input (plausibility check) untuk kualitas data
 // registri — HANYA peringatan lunak anti-typo, tidak memblokir dan tidak
-// memengaruhi skoring I-NEED-HELP maupun kriteria guideline apa pun.
+// memengaruhi kriteria guideline apa pun.
 
 export interface VitalsInput {
   age?: number | null;

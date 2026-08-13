@@ -70,27 +70,6 @@ export interface Patient {
   finalizedAt?: string | null;
 }
 
-export interface TriageCriteria {
-  I: boolean; // Inotropik IV
-  N: boolean; // NYHA IIIB/IV atau Natriuretic Peptide
-  E1: boolean; // End-organ dysfunction
-  E2: boolean; // EF (LVEF) < 35%
-  D: boolean; // Defibrillator shock
-  H: boolean; // Hospitalisasi > 1x/tahun
-  E3: boolean; // Edema persisten
-  L: boolean; // Low BP, High HR
-  P: boolean; // Intolerasi GDMT
-}
-
-export interface TriageLog {
-  id: string;
-  patientId: string;
-  score: number;
-  criteriaMet: TriageCriteria;
-  recommendationGiven: "REFER" | "CONTINUE_GDMT";
-  createdAt: string;
-}
-
 export interface Outcome {
   id: string;
   patientId: string;
@@ -100,7 +79,6 @@ export interface Outcome {
   notes?: string;
   admissionDate?: string | null;
   dischargeDate?: string | null;
-  notReferredReason?: string | null;
 }
 
 export interface Doctor {
@@ -116,7 +94,6 @@ export interface Doctor {
 }
 
 export interface PatientWithDetails extends Patient {
-  triage: TriageLog | null;
   outcome: Outcome | null;
 }
 

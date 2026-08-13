@@ -1,17 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  PendingTriage,
+  PendingPatient,
   QueueStorage,
-  syncPendingTriages,
+  syncPendingPatients,
 } from "./offline-queue";
-import type { TriageCriteria } from "./types";
 
-const CRITERIA: TriageCriteria = {
-  I: false, N: true, E1: false, E2: false, D: false, H: false, E3: false, L: false, P: false,
-};
-
-function memoryStorage(initial: PendingTriage[] = []): QueueStorage & {
-  entries: PendingTriage[];
+function memoryStorage(initial: PendingPatient[] = []): QueueStorage & {
+  entries: PendingPatient[];
 } {
   const entries = [...initial];
   return {
@@ -33,11 +28,12 @@ function memoryStorage(initial: PendingTriage[] = []): QueueStorage & {
   };
 }
 
-function entry(overrides: Partial<PendingTriage> = {}): PendingTriage {
+function entry(overrides: Partial<PendingPatient> = {}): PendingPatient {
   return {
     queueId: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
     patient: {
+      clientRequestId: "req-fixed-1",
       patientInitial: "AB",
       age: 60,
       gender: "M",
@@ -57,8 +53,6 @@ function entry(overrides: Partial<PendingTriage> = {}): PendingTriage {
       onSglt2i: false,
       nyhaClass: null,
     },
-    patientId: null,
-    criteria: CRITERIA,
     ...overrides,
   };
 }
@@ -67,38 +61,25 @@ function okJson(data: unknown, status = 201): Response {
   return new Response(JSON.stringify(data), { status });
 }
 
-describe("syncPendingTriages", () => {
-  it("mengirim pasien lalu triase, dan mengosongkan antrean", async () => {
+describe("syncPendingPatients", () => {
+  it("mengirim setiap pasien dan mengosongkan antrean", async () => {
     const storage = memoryStorage([entry(), entry()]);
     const calls: string[] = [];
     const fetchFn: typeof fetch = async (url) => {
       calls.push(String(url));
-      if (String(url).includes("/api/patients")) return okJson({ id: "pat-1" });
-      return okJson({ id: "tri-1" });
+      return okJson({ id: "pat-1" });
     };
 
-    const result = await syncPendingTriages(storage, fetchFn);
+    const result = await syncPendingPatients(storage, fetchFn);
 
-    expect(result).toEqual({ synced: 2, remaining: 0, needsLogin: false });
-    expect(calls).toEqual([
-      "/api/patients", "/api/triage",
-      "/api/patients", "/api/triage",
-    ]);
-  });
-
-  it("entri dengan patientId (pasien sudah tersimpan) tidak membuat pasien dobel", async () => {
-    const storage = memoryStorage([entry({ patient: null, patientId: "pat-9" })]);
-    const calls: string[] = [];
-    const fetchFn: typeof fetch = async (url, init) => {
-      calls.push(String(url));
-      expect(JSON.parse(String(init?.body)).patientId).toBe("pat-9");
-      return okJson({ id: "tri-1" });
-    };
-
-    const result = await syncPendingTriages(storage, fetchFn);
-
-    expect(result.synced).toBe(1);
-    expect(calls).toEqual(["/api/triage"]);
+    expect(result).toEqual({
+      synced: 2,
+      remaining: 0,
+      needsLogin: false,
+      rejected: 0,
+      lastRejectionError: null,
+    });
+    expect(calls).toEqual(["/api/patients", "/api/patients"]);
   });
 
   it("berhenti (entri tetap tersimpan) saat jaringan masih putus", async () => {
@@ -107,67 +88,104 @@ describe("syncPendingTriages", () => {
       throw new TypeError("Failed to fetch");
     };
 
-    const result = await syncPendingTriages(storage, fetchFn);
+    const result = await syncPendingPatients(storage, fetchFn);
 
-    expect(result).toEqual({ synced: 0, remaining: 2, needsLogin: false });
-  });
-
-  it("jaringan putus di antara dua request: patientId disimpan agar sync ulang tidak dobel", async () => {
-    const storage = memoryStorage([entry()]);
-    let call = 0;
-    const fetchFn: typeof fetch = async (url) => {
-      call++;
-      if (String(url).includes("/api/patients")) return okJson({ id: "pat-1" });
-      throw new TypeError("Failed to fetch"); // putus saat kirim triase
-    };
-
-    const first = await syncPendingTriages(storage, fetchFn);
-    expect(first.synced).toBe(0);
-    expect(first.remaining).toBe(1);
-    expect(storage.entries[0].patientId).toBe("pat-1");
-    expect(storage.entries[0].patient).toBeNull();
-
-    // Koneksi kembali: hanya triase yang dikirim, tidak ada POST pasien kedua.
-    const calls2: string[] = [];
-    const fetchFn2: typeof fetch = async (url) => {
-      calls2.push(String(url));
-      return okJson({ id: "tri-1" });
-    };
-    const second = await syncPendingTriages(storage, fetchFn2);
-    expect(second).toEqual({ synced: 1, remaining: 0, needsLogin: false });
-    expect(calls2).toEqual(["/api/triage"]);
-    expect(call).toBe(2);
+    expect(result).toEqual({
+      synced: 0,
+      remaining: 2,
+      needsLogin: false,
+      rejected: 0,
+      lastRejectionError: null,
+    });
   });
 
   it("sesi habis (401) → berhenti dan menandai needsLogin, data tidak hilang", async () => {
     const storage = memoryStorage([entry(), entry()]);
     const fetchFn: typeof fetch = async () => okJson({ error: "unauthorized" }, 401);
 
-    const result = await syncPendingTriages(storage, fetchFn);
+    const result = await syncPendingPatients(storage, fetchFn);
 
-    expect(result).toEqual({ synced: 0, remaining: 2, needsLogin: true });
+    expect(result).toEqual({
+      synced: 0,
+      remaining: 2,
+      needsLogin: true,
+      rejected: 0,
+      lastRejectionError: null,
+    });
   });
 
   it("satu entri ditolak server (400) tidak menyandera entri lain", async () => {
     const bad = entry({ createdAt: "2026-01-01T00:00:00Z" });
     const good = entry({ createdAt: "2026-01-02T00:00:00Z" });
     const storage = memoryStorage([bad, good]);
-    let patientCalls = 0;
-    const fetchFn: typeof fetch = async (url) => {
-      if (String(url).includes("/api/patients")) {
-        patientCalls++;
-        // Panggilan pertama = entri paling lama (bad) → ditolak validasi server
-        return patientCalls === 1
-          ? okJson({ error: "invalid" }, 400)
-          : okJson({ id: "pat-2" });
-      }
-      return okJson({ id: "tri-2" });
+    let calls = 0;
+    const fetchFn: typeof fetch = async () => {
+      calls++;
+      // Panggilan pertama = entri paling lama (bad) → ditolak validasi server
+      return calls === 1 ? okJson({ error: "invalid" }, 400) : okJson({ id: "pat-2" });
     };
 
-    const result = await syncPendingTriages(storage, fetchFn);
+    const result = await syncPendingPatients(storage, fetchFn);
 
     expect(result.synced).toBe(1);
     expect(result.remaining).toBe(1);
     expect(storage.entries[0].queueId).toBe(bad.queueId);
+  });
+
+  it("entri yang ditolak server ditandai (bukan dibuang) beserta alasannya", async () => {
+    const bad = entry({ createdAt: "2026-01-01T00:00:00Z" });
+    const storage = memoryStorage([bad]);
+    const fetchFn: typeof fetch = async () =>
+      okJson({ error: "NT-proBNP wajib diisi untuk pendaftaran pasien baru" }, 400);
+
+    const result = await syncPendingPatients(storage, fetchFn);
+
+    // Data klinis tidak boleh hilang diam-diam...
+    expect(result.remaining).toBe(1);
+    expect(storage.entries[0].patient.patientInitial).toBe("AB");
+    // ...tapi harus terlaporkan supaya UI bisa memberi tahu dokter.
+    expect(result.rejected).toBe(1);
+    expect(result.lastRejectionError).toBe(
+      "NT-proBNP wajib diisi untuk pendaftaran pasien baru"
+    );
+    expect(storage.entries[0].rejectedAttempts).toBe(1);
+    expect(storage.entries[0].lastError).toBe(
+      "NT-proBNP wajib diisi untuk pendaftaran pasien baru"
+    );
+  });
+
+  it("percobaan penolakan berulang terakumulasi, entri tetap tersimpan", async () => {
+    const storage = memoryStorage([entry()]);
+    const fetchFn: typeof fetch = async () => okJson({ error: "invalid" }, 400);
+
+    await syncPendingPatients(storage, fetchFn);
+    await syncPendingPatients(storage, fetchFn);
+
+    expect(storage.entries).toHaveLength(1);
+    expect(storage.entries[0].rejectedAttempts).toBe(2);
+  });
+
+  it("penolakan dengan body non-JSON tetap memberi pesan yang bisa dibaca", async () => {
+    const storage = memoryStorage([entry()]);
+    const fetchFn: typeof fetch = async () =>
+      new Response("<html>Bad Gateway</html>", { status: 502 });
+
+    const result = await syncPendingPatients(storage, fetchFn);
+
+    expect(result.rejected).toBe(1);
+    expect(result.lastRejectionError).toBe("Ditolak server (HTTP 502)");
+  });
+
+  it("clientRequestId ikut terkirim supaya kiriman ulang tidak jadi pasien dobel", async () => {
+    const storage = memoryStorage([entry()]);
+    let sentBody: Record<string, unknown> = {};
+    const fetchFn: typeof fetch = async (_url, init) => {
+      sentBody = JSON.parse(String(init?.body));
+      return okJson({ id: "pat-1" });
+    };
+
+    await syncPendingPatients(storage, fetchFn);
+
+    expect(sentBody.clientRequestId).toBe("req-fixed-1");
   });
 });

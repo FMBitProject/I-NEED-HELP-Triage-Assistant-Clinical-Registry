@@ -9,16 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Patient, OutcomeStatus, TriageLog } from "@/lib/types";
+import { Patient, OutcomeStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
-
-const NOT_REFERRED_REASONS = [
-  "RS mampu kelola mandiri",
-  "Pasien/keluarga menolak rujukan",
-  "Faskes rujukan penuh/tidak tersedia",
-  "Kendala BPJS/administrasi",
-  "Lainnya",
-];
 
 const STATUS_OPTIONS: { value: OutcomeStatus; label: string; desc: string; icon: string; color: string }[] = [
   {
@@ -63,14 +55,11 @@ export default function FollowUpPage() {
   const { doctor, isLoading } = useAuth();
   const router = useRouter();
   const [patient, setPatient] = useState<Patient | null>(null);
-  const [triage, setTriage] = useState<TriageLog | null>(null);
   const [status, setStatus] = useState<OutcomeStatus | "">("");
   const [followUpDays, setFollowUpDays] = useState("30");
   const [notes, setNotes] = useState("");
   const [admissionDate, setAdmissionDate] = useState("");
   const [dischargeDate, setDischargeDate] = useState("");
-  const [notReferredReason, setNotReferredReason] = useState("");
-  const [notReferredReasonOther, setNotReferredReasonOther] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -85,28 +74,18 @@ export default function FollowUpPage() {
       .then((data) => {
         if (!data) { router.replace("/patients"); return; }
         setPatient(data.patient);
-        setTriage(data.triage);
         if (data.outcome) {
           setStatus(data.outcome.status);
           setFollowUpDays(String(data.outcome.followUpDays));
           setNotes(data.outcome.notes ?? "");
           setAdmissionDate(data.outcome.admissionDate ?? "");
           setDischargeDate(data.outcome.dischargeDate ?? "");
-          const reason = data.outcome.notReferredReason ?? "";
-          if (reason && !NOT_REFERRED_REASONS.includes(reason)) {
-            setNotReferredReason("Lainnya");
-            setNotReferredReasonOther(reason);
-          } else {
-            setNotReferredReason(reason);
-          }
         }
       });
   }, [id, doctor, router]);
 
   if (isLoading || !doctor || !patient) return null;
 
-  const wasRecommendedReferral = triage?.recommendationGiven === "REFER";
-  const showNotReferredReason = wasRecommendedReferral && status !== "" && status !== "REFERRED";
   const showAdmissionFields = status === "HOSPITALIZED";
   const lengthOfStay =
     admissionDate && dischargeDate
@@ -129,9 +108,6 @@ export default function FollowUpPage() {
         notes: notes || null,
         admissionDate: showAdmissionFields ? admissionDate || null : null,
         dischargeDate: showAdmissionFields ? dischargeDate || null : null,
-        notReferredReason: showNotReferredReason
-          ? (notReferredReason === "Lainnya" ? notReferredReasonOther : notReferredReason) || null
-          : null,
       }),
     });
     setSaved(true);
@@ -159,10 +135,10 @@ export default function FollowUpPage() {
               {patient.gender === "M" ? "L" : "P"}
             </p>
             <p className="text-xs text-gray-500 mt-1.5 bg-gray-100 rounded-lg p-2.5 leading-relaxed">
-              Bagaimana kondisi pasien ±30 hari setelah triase? Isi berdasarkan informasi
-              yang Anda ketahui — kunjungan ulang, rawat inap, atau kabar dari keluarga.
-              Tidak perlu menghubungi pasien secara khusus, dan isian masih bisa diubah
-              kapan saja.
+              Bagaimana kondisi pasien ±30 hari setelah pendaftaran? Isi berdasarkan
+              informasi yang Anda ketahui — kunjungan ulang, rawat inap, atau kabar dari
+              keluarga. Tidak perlu menghubungi pasien secara khusus, dan isian masih bisa
+              diubah kapan saja.
             </p>
           </div>
 
@@ -242,40 +218,10 @@ export default function FollowUpPage() {
             </Card>
           )}
 
-          {showNotReferredReason && (
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-4 space-y-3">
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">Alasan Tidak Dirujuk</p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Skor I-NEED-HELP merekomendasikan rujukan, namun status outcome bukan &quot;Dirujuk&quot;.
-                  </p>
-                </div>
-                <select
-                  value={notReferredReason}
-                  onChange={(e) => setNotReferredReason(e.target.value)}
-                  className="flex w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                >
-                  <option value="">Pilih alasan...</option>
-                  {NOT_REFERRED_REASONS.map((r) => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
-                </select>
-                {notReferredReason === "Lainnya" && (
-                  <Input
-                    placeholder="Tuliskan alasan..."
-                    value={notReferredReasonOther}
-                    onChange={(e) => setNotReferredReasonOther(e.target.value)}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          )}
-
           <Card className="border-0 shadow-sm">
             <CardContent className="p-4 space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="days">Hari Sejak Triase</Label>
+                <Label htmlFor="days">Hari Sejak Pendaftaran</Label>
                 <Input
                   id="days"
                   type="number"
@@ -284,7 +230,7 @@ export default function FollowUpPage() {
                   value={followUpDays}
                   onChange={(e) => setFollowUpDays(e.target.value)}
                 />
-                <p className="text-xs text-gray-400">Berapa hari sejak triase awal dilakukan?</p>
+                <p className="text-xs text-gray-400">Berapa hari sejak pasien didaftarkan?</p>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="notes">Catatan Klinis (opsional)</Label>

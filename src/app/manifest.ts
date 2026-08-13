@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "I-NEED-HELP Triage Assistant",
-    short_name: "I-NEED-HELP",
-    description: "Sistem Triase & Registri Klinis Gagal Jantung – PERKI Guidelines",
+    name: "Registry Gagal Jantung",
+    short_name: "Registry HF",
+    description: "Registri Klinis & Pemantauan GDMT Gagal Jantung – PERKI Guidelines",
     start_url: "/dashboard",
     display: "standalone",
     orientation: "portrait",

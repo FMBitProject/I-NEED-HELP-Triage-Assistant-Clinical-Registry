@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   Users,
   Stethoscope,
-  TrendingUp,
   CheckCircle,
   Clock,
   Database,
@@ -56,28 +55,22 @@ export default function AdminRegistryPage() {
 
   const totalPatients = patients.length;
 
-  const logs = patients.map((p) => p.triage).filter(Boolean);
-  const referrals = logs.filter((l) => l!.recommendationGiven === "REFER").length;
-  const referralRate = logs.length > 0 ? Math.round((referrals / logs.length) * 100) : 0;
-
   const withOutcome = patients.filter((p) => p.outcome).length;
 
   // Rekap per dokter
   const byDoctor = new Map<
     string,
-    { name: string; institution: string | null; total: number; referred: number; withOutcome: number; lastEntry: string }
+    { name: string; institution: string | null; total: number; withOutcome: number; lastEntry: string }
   >();
   for (const p of patients) {
     const entry = byDoctor.get(p.doctorId) ?? {
       name: p.doctorName,
       institution: p.doctorInstitution,
       total: 0,
-      referred: 0,
       withOutcome: 0,
       lastEntry: p.createdAt,
     };
     entry.total += 1;
-    if (p.triage?.recommendationGiven === "REFER") entry.referred += 1;
     if (p.outcome) entry.withOutcome += 1;
     if (new Date(p.createdAt) > new Date(entry.lastEntry)) entry.lastEntry = p.createdAt;
     byDoctor.set(p.doctorId, entry);
@@ -111,13 +104,6 @@ export default function AdminRegistryPage() {
       bg: "bg-purple-50",
     },
     {
-      label: "Tingkat Rujukan",
-      value: `${referralRate}%`,
-      icon: TrendingUp,
-      color: "text-red-600",
-      bg: "bg-red-50",
-    },
-    {
       label: "Outcome Terisi",
       value: `${withOutcome}/${totalPatients}`,
       icon: CheckCircle,
@@ -142,13 +128,13 @@ export default function AdminRegistryPage() {
                 <Badge variant="secondary">Admin Only</Badge>
               </div>
               <p className="text-sm text-gray-500 mt-0.5">
-                Rekap seluruh data triase dari semua dokter yang mengisi registri.
+                Rekap seluruh data pasien dari semua dokter yang mengisi registri.
               </p>
             </div>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {stats.map((s) => (
               <Card key={s.label} className="border-0 shadow-sm">
                 <CardContent className="p-4">
@@ -201,7 +187,6 @@ export default function AdminRegistryPage() {
                       <tr className="text-left text-xs text-gray-500 border-b border-gray-100">
                         <th className="px-5 py-2.5 font-medium">Dokter</th>
                         <th className="px-3 py-2.5 font-medium text-center">Pasien</th>
-                        <th className="px-3 py-2.5 font-medium text-center">Dirujuk</th>
                         <th className="px-3 py-2.5 font-medium text-center">Outcome</th>
                         <th className="px-5 py-2.5 font-medium text-right">Input Terakhir</th>
                       </tr>
@@ -214,7 +199,6 @@ export default function AdminRegistryPage() {
                             <p className="text-xs text-gray-400">{d.institution || "—"}</p>
                           </td>
                           <td className="px-3 py-3 text-center font-bold text-gray-900">{d.total}</td>
-                          <td className="px-3 py-3 text-center text-gray-700">{d.referred}</td>
                           <td className="px-3 py-3 text-center text-gray-700">
                             {d.withOutcome}/{d.total}
                           </td>
@@ -257,17 +241,6 @@ export default function AdminRegistryPage() {
                           <span className="text-xs text-gray-400">
                             {p.age}th • {p.gender === "M" ? "L" : "P"}
                           </span>
-                          {p.triage && (
-                            <Badge
-                              variant={p.triage.recommendationGiven === "REFER" ? "destructive" : "success"}
-                              className="text-[10px]"
-                            >
-                              {p.triage.recommendationGiven === "REFER" ? "Rujuk" : "Lanjut GDMT"}
-                            </Badge>
-                          )}
-                          {p.triage && (
-                            <span className="text-xs text-gray-400">Skor {p.triage.score}</span>
-                          )}
                         </div>
                         <p className="text-xs text-gray-500 truncate">
                           {p.doctorName}

@@ -263,10 +263,10 @@ export default function SettingsPage() {
                 <p className="text-xs text-gray-500">
                   Hak hapus data (UU PDP No. 27/2022):{" "}
                   <a
-                    href="mailto:dpo@ineedhelp-registry.id"
+                    href="mailto:renfael6@gmail.com"
                     className="text-blue-600 hover:underline"
                   >
-                    dpo@ineedhelp-registry.id
+                    renfael6@gmail.com
                   </a>
                 </p>
               </div>
@@ -360,7 +360,7 @@ export default function SettingsPage() {
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
                     <p className="text-xs text-red-800 font-semibold">
-                      Apakah Anda yakin? Semua data pasien, triase, dan follow-up akan dihapus
+                      Apakah Anda yakin? Semua data pasien dan follow-up akan dihapus
                       secara permanen.
                     </p>
                   </div>

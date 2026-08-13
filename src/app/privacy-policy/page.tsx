@@ -19,7 +19,7 @@ export default function PrivacyPolicyPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Kebijakan Privasi</h1>
-            <p className="text-sm text-gray-500">I-NEED-HELP Triage Assistant &amp; Clinical Registry</p>
+            <p className="text-sm text-gray-500">Registry Gagal Jantung</p>
           </div>
         </div>
 
@@ -36,7 +36,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="font-bold text-gray-900 text-base mb-2">1. Pengelola Data</h2>
             <p>
-              Platform <strong>I-NEED-HELP Clinical Registry</strong> dikelola oleh tim peneliti
+              Platform <strong>Registry Gagal Jantung</strong> dikelola oleh tim peneliti
               sebagai penyelenggara registri klinis observasional untuk gagal jantung. Selaku
               Pengendali Data (Data Controller) sebagaimana dimaksud dalam UU PDP, kami bertanggung
               jawab atas pemrosesan data yang dilakukan melalui platform ini.
@@ -44,10 +44,10 @@ export default function PrivacyPolicyPage() {
             <p className="mt-2">
               Kontak Penanggung Jawab Data (Data Protection Officer):{" "}
               <a
-                href="mailto:dpo@ineedhelp-registry.id"
+                href="mailto:renfael6@gmail.com"
                 className="text-blue-600 hover:underline"
               >
-                dpo@ineedhelp-registry.id
+                renfael6@gmail.com
               </a>
             </p>
           </section>
@@ -76,8 +76,7 @@ export default function PrivacyPolicyPage() {
                   <li>Usia dan jenis kelamin</li>
                   <li>Parameter klinis: tekanan darah, denyut jantung, LVEF, eGFR, NT-proBNP</li>
                   <li>Status komorbiditas (DM, HT, CKD, AF)</li>
-                  <li>Status terapi GDMT</li>
-                  <li>Hasil skor triase I-NEED-HELP dan rekomendasi</li>
+                  <li>Status terapi GDMT (4 pilar) beserta alasan bila tidak diberikan</li>
                   <li>Status outcome follow-up 30 hari</li>
                 </ul>
               </div>
@@ -87,7 +86,6 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="font-bold text-gray-900 text-base mb-2">3. Tujuan Pemrosesan Data</h2>
             <ul className="ml-4 list-disc space-y-1 text-gray-600">
-              <li>Mendukung keputusan klinis triase gagal jantung berbasis skor I-NEED-HELP</li>
               <li>Membangun registri klinis observasional untuk penelitian epidemiologi gagal jantung</li>
               <li>Analisis statistik untuk publikasi ilmiah (data diagregasi/anonim)</li>
               <li>Evaluasi kualitas tata laksana GDMT di fasilitas kesehatan primer dan sekunder</li>
@@ -157,8 +155,8 @@ export default function PrivacyPolicyPage() {
             </ul>
             <p className="mt-2 text-gray-600">
               Untuk menggunakan hak-hak di atas, hubungi:{" "}
-              <a href="mailto:dpo@ineedhelp-registry.id" className="text-blue-600 hover:underline">
-                dpo@ineedhelp-registry.id
+              <a href="mailto:renfael6@gmail.com" className="text-blue-600 hover:underline">
+                renfael6@gmail.com
               </a>
             </p>
           </section>
