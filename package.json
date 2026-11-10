@@ -12,7 +12,8 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:migrate:care-setting": "node scripts/migrate-2026-11-care-setting.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

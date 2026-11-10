@@ -14,6 +14,7 @@ export async function GET() {
         doctorId: user.id,
         doctorName: user.name,
         institutionType: user.institutionType,
+        doctorType: user.doctorType,
         ethicalClearanceNo: user.ethicalClearanceNo,
         ethicalClearanceDate: user.ethicalClearanceDate,
         patientId: patients.id,
@@ -44,7 +45,8 @@ export async function GET() {
         noBbReasonOther: patients.noBbReasonOther,
         noMraReasonOther: patients.noMraReasonOther,
         noSglt2iReasonOther: patients.noSglt2iReasonOther,
-        edDisposition: patients.edDisposition,
+        careSetting: patients.careSetting,
+        visitDisposition: patients.visitDisposition,
         patientCreatedAt: patients.createdAt,
       })
       .from(patients)
@@ -92,15 +94,15 @@ export async function GET() {
   });
 
   const headers = [
-    "doctorId","doctorName","institutionType","ethicalClearanceNo","ethicalClearanceDate",
-    "patientId","patientInitial","age","gender",
+    "doctorId","doctorName","institutionType","doctorType","ethicalClearanceNo","ethicalClearanceDate",
+    "patientId","patientInitial","careSetting","age","gender",
     "systolicBp","diastolicBp","heartRate",
     "lvef","efCategory","egfr","ntProbnp","nyhaClass","hfOnset",
     "comorbidDm","comorbidHtn","comorbidCkd","comorbidAf",
     "onAceArni","onBb","onMra","onSglt2i",
     "noAceArniReason","noBbReason","noMraReason","noSglt2iReason",
     "noAceArniReasonOther","noBbReasonOther","noMraReasonOther","noSglt2iReasonOther",
-    "edDisposition",
+    "visitDisposition",
     "patientCreatedAt",
     "outcomeStatus","outcomeFollowUpDays","outcomeNotes",
     "outcomeAdmissionDate","outcomeDischargeDate",

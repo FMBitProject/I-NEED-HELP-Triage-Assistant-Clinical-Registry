@@ -13,6 +13,7 @@ export async function GET() {
       name: user.name,
       email: user.email,
       institutionType: user.institutionType,
+      doctorType: user.doctorType,
       role: user.role,
       approved: user.approved,
       createdAt: user.createdAt,

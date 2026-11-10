@@ -30,6 +30,14 @@ export interface PendingPatientPayload {
   clientRequestId?: string;
   // Opsional agar antrean lama di IndexedDB (tersimpan sebelum field ini ada)
   // tetap valid saat disinkronkan.
+  careSetting?: string | null;
+  visitDisposition?: string | null;
+  /**
+   * @deprecated Nama lama `visitDisposition` (era IGD). Tidak pernah ditulis
+   * lagi oleh klien baru, tapi tetap dideklarasikan karena entri antrean di
+   * IndexedDB yang tersimpan sebelum rename masih membawanya. Server membaca
+   * field ini sebagai cadangan (lihat readRawDisposition di disposition.ts).
+   */
   edDisposition?: string | null;
   hfOnset?: string | null;
   noAceArniReason?: string | null;

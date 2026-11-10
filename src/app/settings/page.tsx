@@ -16,12 +16,14 @@ import {
   KeyRound,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
-import { authClient } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DOCTOR_TYPE_OPTIONS } from "@/lib/doctor-type";
 
 export default function SettingsPage() {
   const { doctor, logout, isLoading } = useAuth();
@@ -34,6 +36,14 @@ export default function SettingsPage() {
   const [ecDate, setEcDate] = useState(doctor?.ethicalClearanceDate ?? "");
   const [ecSaving, setEcSaving] = useState(false);
   const [ecSaved, setEcSaved] = useState(false);
+
+  // Jenis dokter. dtDraft null = belum diedit (tampilkan nilai dari sesi),
+  // jadi tidak perlu effect untuk menyinkronkan saat sesi selesai dimuat.
+  const { refetch: refetchSession } = useSession();
+  const [dtDraft, setDtDraft] = useState<string | null>(null);
+  const [dtSaving, setDtSaving] = useState(false);
+  const [dtSaved, setDtSaved] = useState(false);
+  const [dtError, setDtError] = useState<string | null>(null);
 
   // Change password state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -81,6 +91,35 @@ export default function SettingsPage() {
     setEcSaving(false);
     setEcSaved(true);
     setTimeout(() => setEcSaved(false), 3000);
+  };
+
+  const dtValue = dtDraft ?? doctor.doctorType ?? "";
+
+  const handleSaveDoctorType = async () => {
+    setDtError(null);
+    setDtSaving(true);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ doctorType: dtValue }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setDtError(body?.error || "Gagal menyimpan jenis dokter. Coba lagi.");
+        return;
+      }
+      // Sesi di klien masih membawa doctorType lama — ambil ulang supaya
+      // banner "belum diisi" di dashboard & halaman ini ikut hilang.
+      await refetchSession();
+      setDtDraft(null);
+      setDtSaved(true);
+      setTimeout(() => setDtSaved(false), 3000);
+    } catch {
+      setDtError("Tidak ada koneksi. Jenis dokter belum tersimpan.");
+    } finally {
+      setDtSaving(false);
+    }
   };
 
   const handleChangePassword = async () => {
@@ -161,6 +200,48 @@ export default function SettingsPage() {
               <div>
                 <p className="text-xs text-gray-500">Peran</p>
                 <p className="text-sm text-gray-700">{doctor.role}</p>
+              </div>
+
+              {/* Jenis dokter — akun lama (sebelum field ini ada) melengkapinya di sini */}
+              <div className="pt-2 border-t border-gray-100 space-y-1.5">
+                <Label htmlFor="doctor-type">Jenis Dokter</Label>
+                {!doctor.doctorType && (
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5">
+                    Belum diisi. Mohon lengkapi — data ini dipakai untuk membandingkan
+                    pola peresepan GDMT antar jenis dokter.
+                  </p>
+                )}
+                <Select
+                  value={dtValue}
+                  onValueChange={(v) => { setDtDraft(v); setDtSaved(false); setDtError(null); }}
+                >
+                  <SelectTrigger id="doctor-type">
+                    <SelectValue placeholder="Dokter umum atau spesialis..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DOCTOR_TYPE_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {dtError && <p className="text-xs text-red-600">{dtError}</p>}
+                <div className="flex items-center gap-3">
+                  <Button
+                    size="sm"
+                    onClick={handleSaveDoctorType}
+                    disabled={dtSaving || !dtValue || dtValue === (doctor.doctorType ?? "")}
+                  >
+                    {dtSaving ? "Menyimpan..." : "Simpan Jenis Dokter"}
+                  </Button>
+                  {dtSaved && (
+                    <span className="flex items-center gap-1 text-xs text-green-700 font-medium">
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      Tersimpan
+                    </span>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>

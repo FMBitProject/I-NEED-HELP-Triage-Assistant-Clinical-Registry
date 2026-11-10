@@ -4,6 +4,7 @@ import React, { createContext, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { Doctor } from "@/lib/types";
 import { authClient, useSession } from "@/lib/auth-client";
+import { isValidDoctorType } from "@/lib/doctor-type";
 
 interface AuthContextType {
   doctor: Doctor | null;
@@ -19,6 +20,7 @@ interface RegisterData {
   password: string;
   institutionType: string;
   institutionName?: string;
+  doctorType: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const u = session?.user as (NonNullable<typeof session>["user"] & {
     institutionType?: string;
+    doctorType?: string;
     role?: string;
     approved?: boolean;
     ethicalClearanceNo?: string | null;
@@ -41,6 +44,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: u.email,
         name: u.name,
         institutionType: u.institutionType || "",
+        // Divalidasi, bukan di-cast: "" atau nilai tak dikenal → null, supaya
+        // banner "jenis dokter belum diisi" tetap muncul untuk kasus itu.
+        doctorType: isValidDoctorType(u.doctorType) ? u.doctorType : null,
         createdAt: u.createdAt instanceof Date ? u.createdAt.toISOString() : String(u.createdAt),
         role: (u.role as "DOCTOR" | "ADMIN") || "DOCTOR",
         approved: u.approved ?? false,
@@ -71,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password: string;
       name: string;
       institutionType: string;
+      doctorType: string;
       researchConsent: boolean;
     }) => Promise<{ error: { message?: string } | null }>;
     const { error } = await signUpEmail({
@@ -78,6 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password: data.password,
       name: data.name,
       institutionType: combined,
+      doctorType: data.doctorType,
       researchConsent: true,
     });
     if (error) return { success: false, error: error.message || "Pendaftaran gagal." };

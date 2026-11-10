@@ -15,6 +15,7 @@ export async function GET() {
       doctorName: user.name,
       doctorEmail: user.email,
       doctorInstitution: user.institutionType,
+      doctorType: user.doctorType,
     })
     .from(patients)
     .innerJoin(user, eq(patients.doctorId, user.id))
@@ -29,12 +30,13 @@ export async function GET() {
     .from(outcomes)
     .where(inArray(outcomes.patientId, patientIds));
 
-  const enriched = rows.map(({ patient: p, doctorName, doctorEmail, doctorInstitution }) => ({
+  const enriched = rows.map(({ patient: p, doctorName, doctorEmail, doctorInstitution, doctorType }) => ({
     ...p,
     egfr: p.egfr != null ? parseFloat(p.egfr) : null,
     doctorName,
     doctorEmail,
     doctorInstitution,
+    doctorType,
     outcome:
       allOutcomes
         .filter((o) => o.patientId === p.id)

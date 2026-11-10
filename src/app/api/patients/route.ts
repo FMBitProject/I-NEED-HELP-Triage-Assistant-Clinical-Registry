@@ -2,6 +2,14 @@ import { db } from "@/lib/db";
 import { outcomes, patients } from "@/lib/db/schema";
 import { requireApprovedSession } from "@/lib/api-auth";
 import { and, desc, eq, inArray } from "drizzle-orm";
+import { parseOptionalEnum } from "@/lib/enum-field";
+import { CARE_SETTING_LABELS } from "@/lib/care-setting";
+import {
+  VISIT_DISPOSITION_LABELS,
+  isDispositionAllowed,
+  readRawDisposition,
+} from "@/lib/disposition";
+import { HF_ONSET_LABELS } from "@/lib/hf-onset";
 
 export async function GET() {
   const { session, error } = await requireApprovedSession();
@@ -47,6 +55,38 @@ export async function POST(request: Request) {
   if (!(typeof body.ntProbnp === "number" && body.ntProbnp > 0)) {
     return Response.json(
       { error: "NT-proBNP wajib diisi untuk pendaftaran pasien baru" },
+      { status: 400 }
+    );
+  }
+
+  // Field enum divalidasi di server: nilai sembarang ditolak dengan pesan
+  // yang menyebut field-nya (muncul sebagai alasan penolakan di antrean
+  // offline), bukan disimpan diam-diam lalu disembunyikan UI.
+  //
+  // Disposisi dibaca juga dari nama field lama `edDisposition` (+ nilai lama
+  // DECEASED_ED → DECEASED): entri antrean offline yang tersimpan sebelum
+  // rename masih mengirim nama itu, dan mengabaikannya berarti disposisi yang
+  // sudah diisi dokter hilang tanpa error.
+  const careSettingParsed = parseOptionalEnum("careSetting", body.careSetting, CARE_SETTING_LABELS);
+  const dispositionParsed = parseOptionalEnum(
+    "visitDisposition",
+    readRawDisposition(body),
+    VISIT_DISPOSITION_LABELS
+  );
+  const hfOnsetParsed = parseOptionalEnum("hfOnset", body.hfOnset, HF_ONSET_LABELS);
+  for (const parsed of [careSettingParsed, dispositionParsed, hfOnsetParsed]) {
+    if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
+  }
+  const careSetting = careSettingParsed.ok ? careSettingParsed.value : null;
+  const visitDisposition = dispositionParsed.ok ? dispositionParsed.value : null;
+  const hfOnset = hfOnsetParsed.ok ? hfOnsetParsed.value : null;
+
+  if (!isDispositionAllowed(careSetting, visitDisposition)) {
+    return Response.json(
+      {
+        error:
+          "Pasien yang didaftarkan di rawat inap tidak bisa berdisposisi \"Rawat Inap\" — kosongkan disposisi bila pasien masih dirawat.",
+      },
       { status: 400 }
     );
   }
@@ -102,8 +142,13 @@ export async function POST(request: Request) {
           ? body.noSglt2iReasonOther ?? null
           : null,
       nyhaClass: body.nyhaClass ?? null,
-      hfOnset: body.hfOnset ?? null,
-      edDisposition: body.edDisposition ?? null,
+      hfOnset,
+      // careSetting wajib dipilih di form, tapi TIDAK diwajibkan di sini: entri
+      // offline-queue yang antre dari sebelum field ini ada tidak punya
+      // nilainya, dan menolaknya berarti membuang data klinis asli. Null di
+      // sini berarti "entri lama", bukan "dokter lupa mengisi".
+      careSetting,
+      visitDisposition,
     })
     .onConflictDoNothing({ target: patients.clientRequestId })
     .returning();

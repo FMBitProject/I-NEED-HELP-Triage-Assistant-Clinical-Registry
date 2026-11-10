@@ -152,15 +152,15 @@ export default function ExportPage() {
                     Dataset Registri Lengkap (Satu Baris per Pasien)
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Baseline pasien (TTV, komorbiditas, lab, NYHA, onset gagal jantung),
-                    GDMT beserta alasan pilar yang tidak diberikan, disposisi akhir IGD,
-                    dan outcome 30-hari terakhir.
+                    Baseline pasien (lokasi perawatan, TTV, komorbiditas, lab, NYHA, onset
+                    gagal jantung), GDMT beserta alasan pilar yang tidak diberikan,
+                    disposisi akhir perawatan, dan outcome 30-hari terakhir.
                   </p>
                   <div className="flex gap-3 mt-1.5">
                     <span className="text-xs text-blue-600 font-medium">
                       {stats.total} pasien
                     </span>
-                    <span className="text-xs text-gray-400">42 kolom</span>
+                    <span className="text-xs text-gray-400">44 kolom</span>
                     <span className="text-xs text-gray-400">.csv</span>
                   </div>
                 </div>

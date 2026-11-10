@@ -12,6 +12,7 @@ import {
   ArrowRight,
   CheckCircle,
   Clock,
+  UserCog,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Navbar } from "@/components/layout/navbar";
@@ -160,6 +161,33 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             </CardContent>
           </Card>
+
+          {/* Akun lama (dibuat sebelum field jenis dokter ada) — minta dilengkapi.
+              Tanpa ini kolom provenans doctorType di CSV kosong untuk semua
+              dokter yang sudah terdaftar. */}
+          {!doctor.doctorType && (
+            <Card className="border-amber-200 bg-amber-50 shadow-sm border-0 ring-1 ring-amber-200">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <UserCog className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-amber-900">
+                      Jenis dokter Anda belum diisi
+                    </p>
+                    <p className="text-xs text-amber-700 mt-0.5">
+                      Dokter umum atau spesialis? Satu pilihan, dipakai untuk membandingkan
+                      pola peresepan GDMT antar jenis dokter.
+                    </p>
+                  </div>
+                  <Link href="/settings">
+                    <Button variant="warning" size="sm" className="shrink-0">
+                      Lengkapi
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Soft reminder: ethical clearance belum diisi (muncul setelah 5 pasien) */}
           {!doctor.ethicalClearanceNo && totalPatients >= 5 && (

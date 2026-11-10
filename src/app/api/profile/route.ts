@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { user } from "@/lib/db/schema";
 import { requireSession } from "@/lib/api-auth";
 import { eq } from "drizzle-orm";
+import { INVALID_DOCTOR_TYPE_MESSAGE, isValidDoctorType } from "@/lib/doctor-type";
 
 export async function PATCH(request: Request) {
   const { session, error } = await requireSession();
@@ -14,6 +15,17 @@ export async function PATCH(request: Request) {
   const updates: Record<string, any> = {};
   for (const field of allowed) {
     if (field in body) updates[field] = body[field] ?? null;
+  }
+
+  // Jenis dokter: jalur akun lama (dibuat sebelum field ini ada) untuk
+  // melengkapi provenansnya. Harus nilai valid — tidak boleh dikosongkan.
+  // Rute ini menulis langsung lewat Drizzle (tidak lewat databaseHooks
+  // better-auth), jadi validasinya diulang di sini.
+  if ("doctorType" in body) {
+    if (!isValidDoctorType(body.doctorType)) {
+      return Response.json({ error: INVALID_DOCTOR_TYPE_MESSAGE }, { status: 400 });
+    }
+    updates.doctorType = body.doctorType;
   }
 
   if (Object.keys(updates).length === 0) {

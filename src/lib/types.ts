@@ -7,8 +7,25 @@ export type OutcomeStatus =
   | "DECEASED"
   | "LOST_TO_FOLLOWUP";
 
-/** Disposisi akhir kunjungan IGD — diketahui hari itu juga, tanpa follow-up. */
-export type EdDisposition = "DISCHARGED" | "ADMITTED" | "REFERRED" | "DECEASED_ED";
+/**
+ * Lokasi perawatan saat pasien didaftarkan. Registri diisi oleh dokter di
+ * poliklinik rawat jalan dan di ruang rawat inap — variabel ini yang memisahkan
+ * kedua populasi saat analisis.
+ */
+export type CareSetting = "POLI" | "INPATIENT";
+
+/** Disposisi akhir episode perawatan — diketahui hari itu juga, tanpa follow-up. */
+export type VisitDisposition = "DISCHARGED" | "ADMITTED" | "REFERRED" | "DECEASED";
+
+/**
+ * Jenis dokter yang mengisi registri. Registri ini terbuka untuk dokter umum
+ * maupun spesialis, dan kategorinya ikut dicatat sebagai provenans data.
+ */
+export type DoctorType =
+  | "GENERAL_PRACTITIONER"
+  | "INTERNAL_MEDICINE"
+  | "CARDIOLOGY"
+  | "OTHER_SPECIALIST";
 
 /**
  * Onset gagal jantung: baru terdiagnosis (de novo) atau kronik. Variabel
@@ -65,7 +82,8 @@ export interface Patient {
   noSglt2iReasonOther?: string | null;
   nyhaClass?: string | null;
   hfOnset?: HfOnset | null;
-  edDisposition?: EdDisposition | null;
+  careSetting?: CareSetting | null;
+  visitDisposition?: VisitDisposition | null;
   createdAt: string;
   finalizedAt?: string | null;
 }
@@ -86,6 +104,7 @@ export interface Doctor {
   email: string;
   name: string;
   institutionType: string;
+  doctorType?: DoctorType | null;
   createdAt: string;
   role: "DOCTOR" | "ADMIN";
   approved: boolean;

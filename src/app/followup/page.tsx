@@ -114,7 +114,7 @@ export default function FollowUpListPage() {
                 <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                 <p className="text-xs text-blue-800 leading-relaxed">
                   Follow-up bersifat <strong>oportunistik</strong> — catat outcome saat pasien
-                  kebetulan datang kembali ke IGD/poli atau ada kabar dari keluarga. Anda{" "}
+                  kebetulan kontrol kembali ke poli, dirawat ulang, atau ada kabar dari keluarga. Anda{" "}
                   <strong>tidak diwajibkan menghubungi pasien</strong>.
                 </p>
               </div>
