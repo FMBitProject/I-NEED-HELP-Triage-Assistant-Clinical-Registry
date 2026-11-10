@@ -14,6 +14,14 @@ export type OutcomeStatus =
  */
 export type CareSetting = "POLI" | "INPATIENT";
 
+/**
+ * Dasar hukum pemrosesan data pasien. Subjek data menurut UU PDP adalah
+ * PASIEN, bukan dokter, jadi persetujuan dokter saat daftar akun tidak cukup.
+ * INFORMED_CONSENT = persetujuan pasien/wali; ETHICS_WAIVER = komite etik
+ * membebaskan kewajiban informed consent (umum untuk registri observasional).
+ */
+export type ConsentBasis = "INFORMED_CONSENT" | "ETHICS_WAIVER";
+
 /** Disposisi akhir episode perawatan — diketahui hari itu juga, tanpa follow-up. */
 export type VisitDisposition = "DISCHARGED" | "ADMITTED" | "REFERRED" | "DECEASED";
 
@@ -84,6 +92,8 @@ export interface Patient {
   hfOnset?: HfOnset | null;
   careSetting?: CareSetting | null;
   visitDisposition?: VisitDisposition | null;
+  // Null hanya untuk data lama sebelum field ini ada.
+  consentBasis?: ConsentBasis | null;
   createdAt: string;
   finalizedAt?: string | null;
 }

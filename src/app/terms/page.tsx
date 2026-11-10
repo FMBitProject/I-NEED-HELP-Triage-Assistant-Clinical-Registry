@@ -70,12 +70,23 @@ export default function TermsPage() {
             <ul className="ml-4 list-disc space-y-1 text-gray-600">
               <li>
                 Anda telah memperoleh <strong>informed consent</strong> dari pasien (atau wali
-                yang sah) sebelum memasukkan data klinis ke dalam sistem, sesuai prinsip etika
-                penelitian yang berlaku.
+                yang sah), atau studi Anda memiliki <strong>waiver informed consent</strong> dari
+                komite etik, sebelum memasukkan data klinis ke dalam sistem — dan Anda mencatat
+                dasar tersebut dengan jujur untuk setiap pasien.
               </li>
               <li>
-                Anda hanya memasukkan data dalam bentuk <strong>pseudoanonim</strong> — inisial,
-                bukan nama lengkap atau nomor identitas pasien.
+                Anda hanya memasukkan data dalam bentuk <strong>pseudonim</strong> — inisial,
+                bukan nama lengkap atau nomor identitas pasien. Larangan ini juga berlaku untuk
+                kolom teks bebas (catatan klinis, alasan &ldquo;Lainnya&rdquo;): jangan menulis
+                nama, NIK, alamat, atau nomor rekam medis.
+              </li>
+              <li>
+                Bila pasien menarik persetujuannya, Anda menghapus data pasien tersebut dari
+                registri (atau menghubungi admin bila data sudah difinalisasi).
+              </li>
+              <li>
+                File ekspor dan tangkapan layar data registri tidak dibagikan di grup chat,
+                media sosial, atau penyimpanan publik.
               </li>
               <li>
                 Anda bertanggung jawab menjaga kerahasiaan kredensial akun (email dan password)
@@ -185,7 +196,7 @@ export default function TermsPage() {
 
           <div className="border-t border-gray-200 pt-4">
             <p className="text-xs text-gray-500">
-              Versi: 1.0 · Berlaku sejak 17 Juni 2026
+              Versi: 1.1 · Berlaku sejak 10 November 2026
             </p>
             <div className="flex gap-4 mt-3">
               <Link href="/privacy-policy" className="text-xs text-blue-600 hover:underline">

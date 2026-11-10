@@ -1,24 +1,27 @@
 import { db } from "@/lib/db";
-import { outcomes, patients, user } from "@/lib/db/schema";
+import { accessLogs, outcomes, patients, user } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/api-auth";
 import { buildCsv } from "@/lib/csv";
 import { eq } from "drizzle-orm";
 
-export async function GET() {
-  const { error } = await requireAdmin();
+// Minimalisasi data (UU PDP): ekspor riset sengaja TIDAK memuat inisial
+// pasien maupun nama dokter. Analisis statistik tidak butuh keduanya, dan
+// inisial + usia + jenis kelamin + tanggal cukup untuk menebak identitas
+// pasien bila file CSV bocor. Pasien & dokter dikenali lewat ID acak (UUID).
+export async function GET(request: Request) {
+  const { session, error } = await requireAdmin();
   if (error) return error;
 
   const [patientRows, allOutcomes] = await Promise.all([
     db
       .select({
         doctorId: user.id,
-        doctorName: user.name,
         institutionType: user.institutionType,
         doctorType: user.doctorType,
         ethicalClearanceNo: user.ethicalClearanceNo,
         ethicalClearanceDate: user.ethicalClearanceDate,
         patientId: patients.id,
-        patientInitial: patients.patientInitial,
+        consentBasis: patients.consentBasis,
         age: patients.age,
         gender: patients.gender,
         systolicBp: patients.systolicBp,
@@ -94,8 +97,8 @@ export async function GET() {
   });
 
   const headers = [
-    "doctorId","doctorName","institutionType","doctorType","ethicalClearanceNo","ethicalClearanceDate",
-    "patientId","patientInitial","careSetting","age","gender",
+    "doctorId","institutionType","doctorType","ethicalClearanceNo","ethicalClearanceDate",
+    "patientId","consentBasis","careSetting","age","gender",
     "systolicBp","diastolicBp","heartRate",
     "lvef","efCategory","egfr","ntProbnp","nyhaClass","hfOnset",
     "comorbidDm","comorbidHtn","comorbidCkd","comorbidAf",
@@ -108,6 +111,16 @@ export async function GET() {
     "outcomeAdmissionDate","outcomeDischargeDate",
     "outcomeRecordedAt",
   ];
+
+  // Catat SEBELUM file dikirim: kalau pencatatan gagal, ekspor ikut gagal —
+  // tidak boleh ada unduhan seluruh registri yang tidak meninggalkan jejak.
+  await db.insert(accessLogs).values({
+    userId: session.user.id,
+    userName: session.user.name,
+    action: "export_csv",
+    detail: `${rows.length} pasien`,
+    ipAddress: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null,
+  });
 
   return new Response(buildCsv(headers, rows), {
     headers: {

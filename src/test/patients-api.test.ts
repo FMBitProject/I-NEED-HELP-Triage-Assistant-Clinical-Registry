@@ -56,6 +56,7 @@ const basePayload = {
   ntProbnp: 1500,
   nyhaClass: "II",
   hfOnset: "CHRONIC",
+  consentBasis: "INFORMED_CONSENT",
 };
 
 function post(body: Record<string, unknown>) {
@@ -118,6 +119,40 @@ describe("POST /api/patients", () => {
     expect(res.status).toBe(400);
     expect(state.inserted).toBeNull();
   });
+
+  // ─── UU PDP ───────────────────────────────────────────────────────────────
+  it("tanpa consentBasis ditolak 400 (termasuk entri antrean offline lama)", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { consentBasis, ...legacy } = basePayload;
+    const res = await post(legacy);
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toContain("persetujuan");
+    expect(state.inserted).toBeNull();
+  });
+
+  it("consentBasis tak dikenal ditolak 400", async () => {
+    const res = await post({ ...basePayload, consentBasis: "VERBAL" });
+    expect(res.status).toBe(400);
+    expect(state.inserted).toBeNull();
+  });
+
+  it("consentBasis tersimpan", async () => {
+    const res = await post({ ...basePayload, consentBasis: "ETHICS_WAIVER" });
+    expect(res.status).toBe(201);
+    expect(state.inserted?.consentBasis).toBe("ETHICS_WAIVER");
+  });
+
+  it("nama lengkap sebagai inisial ditolak 400", async () => {
+    const res = await post({ ...basePayload, patientInitial: "Budi Santoso" });
+    expect(res.status).toBe(400);
+    expect(state.inserted).toBeNull();
+  });
+
+  it("inisial dinormalisasi sebelum disimpan", async () => {
+    const res = await post({ ...basePayload, patientInitial: "b.w." });
+    expect(res.status).toBe(201);
+    expect(state.inserted?.patientInitial).toBe("BW");
+  });
 });
 
 describe("PATCH /api/patients/[id]", () => {
@@ -161,6 +196,27 @@ describe("PATCH /api/patients/[id]", () => {
   it("visitDisposition tak dikenal ditolak 400", async () => {
     state.existing = { ...existingRow };
     const res = await patch({ visitDisposition: "LOST" });
+    expect(res.status).toBe(400);
+    expect(state.updated).toBeNull();
+  });
+
+  it("consentBasis yang sudah tercatat tidak boleh dihapus", async () => {
+    state.existing = { ...existingRow, consentBasis: "INFORMED_CONSENT" };
+    const res = await patch({ consentBasis: null });
+    expect(res.status).toBe(400);
+    expect(state.updated).toBeNull();
+  });
+
+  it("data lama tanpa consentBasis boleh dilengkapi", async () => {
+    state.existing = { ...existingRow, consentBasis: null };
+    const res = await patch({ consentBasis: "ETHICS_WAIVER" });
+    expect(res.status).toBe(200);
+    expect(state.updated?.consentBasis).toBe("ETHICS_WAIVER");
+  });
+
+  it("PATCH nama lengkap sebagai inisial ditolak", async () => {
+    state.existing = { ...existingRow };
+    const res = await patch({ patientInitial: "Siti Aminah" });
     expect(res.status).toBe(400);
     expect(state.updated).toBeNull();
   });

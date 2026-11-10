@@ -94,6 +94,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     await authClient.signOut();
+    // Service worker menyimpan salinan daftar pasien untuk mode offline
+    // (public/sw.js). Hapus saat logout supaya data pasien tidak tertinggal
+    // di HP/komputer bersama. Antrean offline (pasien yang belum terkirim)
+    // sengaja TIDAK dihapus — itu data klinis yang belum tersimpan di server.
+    try {
+      if (typeof caches !== "undefined") {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(async (k) => (await caches.open(k)).delete("/api/patients")));
+      }
+    } catch {
+      // Cache API tidak tersedia (mis. mode privat) — tidak ada yang perlu dihapus.
+    }
     router.push("/login");
   };
 

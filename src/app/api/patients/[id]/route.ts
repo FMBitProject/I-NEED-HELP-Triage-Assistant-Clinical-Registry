@@ -10,6 +10,8 @@ import {
   readRawDisposition,
 } from "@/lib/disposition";
 import { HF_ONSET_LABELS } from "@/lib/hf-onset";
+import { CONSENT_BASIS_LABELS, MISSING_CONSENT_MESSAGE } from "@/lib/consent";
+import { INVALID_INITIAL_MESSAGE, normalizePatientInitial } from "@/lib/patient-initial";
 
 export async function GET(
   _req: Request,
@@ -75,7 +77,7 @@ export async function PATCH(
     "comorbidCkd", "comorbidAf", "onAceArni", "onBb", "onMra", "onSglt2i",
     "noAceArniReason", "noBbReason", "noMraReason", "noSglt2iReason",
     "noAceArniReasonOther", "noBbReasonOther", "noMraReasonOther", "noSglt2iReasonOther",
-    "nyhaClass", "hfOnset", "careSetting", "visitDisposition",
+    "nyhaClass", "hfOnset", "careSetting", "visitDisposition", "consentBasis",
   ];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -96,12 +98,25 @@ export async function PATCH(
     ["careSetting", CARE_SETTING_LABELS],
     ["visitDisposition", VISIT_DISPOSITION_LABELS],
     ["hfOnset", HF_ONSET_LABELS],
+    ["consentBasis", CONSENT_BASIS_LABELS],
   ];
   for (const [field, labels] of enumFields) {
     if (!(field in updates)) continue;
     const parsed = parseOptionalEnum(field, updates[field], labels);
     if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
     updates[field] = parsed.value;
+  }
+
+  // Dasar persetujuan yang sudah tercatat tidak boleh dihapus (bukti
+  // kepatuhan UU PDP). Data lama yang masih null boleh dilengkapi.
+  if ("consentBasis" in updates && updates.consentBasis === null && existing.consentBasis) {
+    return Response.json({ error: MISSING_CONSENT_MESSAGE }, { status: 400 });
+  }
+
+  if ("patientInitial" in updates) {
+    const initial = normalizePatientInitial(updates.patientInitial);
+    if (!initial) return Response.json({ error: INVALID_INITIAL_MESSAGE }, { status: 400 });
+    updates.patientInitial = initial;
   }
 
   // Lokasi perawatan yang sudah tercatat tidak boleh dikosongkan lagi. Null

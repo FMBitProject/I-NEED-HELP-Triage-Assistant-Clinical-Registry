@@ -156,11 +156,18 @@ export default function ExportPage() {
                     gagal jantung), GDMT beserta alasan pilar yang tidak diberikan,
                     disposisi akhir perawatan, dan outcome 30-hari terakhir.
                   </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Sesuai prinsip minimalisasi data (UU PDP), file ekspor{" "}
+                    <strong>tidak</strong> memuat inisial pasien dan nama dokter — pasien
+                    dan dokter dikenali lewat ID acak. Setiap unduhan tercatat (siapa &amp;
+                    kapan). Simpan file di perangkat terenkripsi dan jangan dibagikan di grup
+                    chat.
+                  </p>
                   <div className="flex gap-3 mt-1.5">
                     <span className="text-xs text-blue-600 font-medium">
                       {stats.total} pasien
                     </span>
-                    <span className="text-xs text-gray-400">44 kolom</span>
+                    <span className="text-xs text-gray-400">43 kolom</span>
                     <span className="text-xs text-gray-400">.csv</span>
                   </div>
                 </div>

@@ -130,6 +130,10 @@ export const patients = pgTable("patients", {
   // Kolom ini hasil RENAME dari ed_disposition (DECEASED_ED → DECEASED); lihat
   // scripts/migrate-2026-11-care-setting.mjs — jangan dibuat ulang via push.
   visitDisposition: text("visit_disposition"),
+  // Dasar hukum pemrosesan data pasien (UU PDP): INFORMED_CONSENT |
+  // ETHICS_WAIVER. Wajib untuk pasien baru (ditegakkan di API), nullable di DB
+  // hanya agar data lama sebelum field ini ada tetap valid.
+  consentBasis: text("consent_basis"),
   comorbidDm: boolean("comorbid_dm").notNull().default(false),
   comorbidHtn: boolean("comorbid_htn").notNull().default(false),
   comorbidCkd: boolean("comorbid_ckd").notNull().default(false),
@@ -184,5 +188,22 @@ export const auditLogs = pgTable("audit_logs", {
   changedField: text("changed_field"),
   oldValue: text("old_value"),
   newValue: text("new_value"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Jejak akses massal ke data registri (mis. unduh CSV semua pasien). Terpisah
+// dari audit_logs karena audit_logs selalu terikat ke satu pasien. Disimpan
+// di DB, bukan hanya di log Vercel, karena log Vercel paket Hobby cuma
+// bertahan sebentar — padahal jejak ini dibutuhkan saat investigasi
+// kebocoran data (UU PDP mewajibkan notifikasi 3×24 jam).
+export const accessLogs = pgTable("access_logs", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+  userName: text("user_name"),
+  action: text("action").notNull(), // 'export_csv'
+  detail: text("detail"),
+  ipAddress: text("ip_address"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

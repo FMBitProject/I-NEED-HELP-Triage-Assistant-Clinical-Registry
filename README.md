@@ -66,6 +66,7 @@ Migrasi yang tertunda:
 | Skrip | Isi | Perintah |
 |---|---|---|
 | [scripts/migrate-2026-11-care-setting.mjs](scripts/migrate-2026-11-care-setting.mjs) | Rename `ed_disposition` → `visit_disposition` (+ `DECEASED_ED` → `DECEASED`), tambah `care_setting` & `doctor_type` | `npm run db:migrate:care-setting` |
+| [scripts/migrate-2026-11-pdp.mjs](scripts/migrate-2026-11-pdp.mjs) | Tambah `patients.consent_basis` & tabel `access_logs` (UU PDP) — hanya menambah, tidak mengubah data | `npm run db:migrate:pdp` |
 
 ## Peta Kode Penting
 
@@ -79,9 +80,15 @@ Migrasi yang tertunda:
 
 ## Catatan Riset & Etik
 
-- Data pasien pseudoanonim (inisial saja, tanpa identitas langsung)
+- Kepatuhan UU PDP — apa yang sudah ditangani kode dan apa yang **wajib
+  diurus di luar kode**: [docs/KEPATUHAN-PDP.md](docs/KEPATUHAN-PDP.md)
+- Data pasien pseudonim (inisial maks. 4 huruf, ditegakkan di server)
+- Setiap pasien wajib punya `consentBasis` (`INFORMED_CONSENT` /
+  `ETHICS_WAIVER`); kosong hanya pada data lama sebelum field ini ada
 - Ekspor CSV: 1 baris per pasien; outcome yang dipakai adalah yang
-  terakhir dicatat per pasien
+  terakhir dicatat per pasien. **Tidak** memuat inisial pasien dan nama
+  dokter — pakai `patientId` / `doctorId`. Setiap ekspor tercatat di
+  tabel `access_logs`
 - Data dari era IGD (sebelum registri beralih ke poli + rawat inap) punya
   ciri yang perlu diperhitungkan saat analisis:
   - `institutionType` = `IGD / Unit Gawat Darurat` — kategori lama yang

@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Patient, Outcome, AuditLog } from "@/lib/types";
 import { CARE_SETTING_LABELS } from "@/lib/care-setting";
+import { CONSENT_BASIS_LABELS } from "@/lib/consent";
 import { VISIT_DISPOSITION_LABELS } from "@/lib/disposition";
 import { countGdmt } from "@/lib/gdmt";
 import { GDMT_OMISSION_REASON_LABELS } from "@/lib/gdmt-reasons";
@@ -62,6 +63,7 @@ const FIELD_LABELS: Record<string, string> = {
   comorbidDm: "Komorbid DM", comorbidHtn: "Komorbid HTN", comorbidCkd: "Komorbid CKD",
   comorbidAf: "Komorbid AF", onAceArni: "ACE-I/ARB/ARNI", onBb: "Beta-Blocker",
   onMra: "MRA", onSglt2i: "SGLT2i", careSetting: "Lokasi Perawatan",
+  consentBasis: "Dasar Persetujuan",
   visitDisposition: "Disposisi Akhir",
   // Nama field sebelum rename — baris audit lama masih menyimpannya.
   edDisposition: "Disposisi IGD (lama)",
@@ -240,6 +242,18 @@ export default function PatientDetailPage() {
                   <span className="font-medium">
                     {CARE_SETTING_LABELS[patient.careSetting].label}
                   </span>
+                </p>
+              )}
+              {patient.consentBasis && CONSENT_BASIS_LABELS[patient.consentBasis] ? (
+                <p className="text-xs text-gray-600 mt-0.5">
+                  {CONSENT_BASIS_LABELS[patient.consentBasis].icon} Persetujuan:{" "}
+                  <span className="font-medium">
+                    {CONSENT_BASIS_LABELS[patient.consentBasis].label}
+                  </span>
+                </p>
+              ) : (
+                <p className="text-xs text-amber-700 mt-0.5">
+                  ⚠️ Dasar persetujuan pasien belum dicatat — lengkapi lewat Edit
                 </p>
               )}
               {patient.visitDisposition && VISIT_DISPOSITION_LABELS[patient.visitDisposition] && (

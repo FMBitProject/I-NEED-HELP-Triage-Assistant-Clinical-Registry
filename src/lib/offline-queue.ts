@@ -32,6 +32,9 @@ export interface PendingPatientPayload {
   // tetap valid saat disinkronkan.
   careSetting?: string | null;
   visitDisposition?: string | null;
+  // Entri lama tanpa field ini akan DITOLAK server (data pasien tanpa dasar
+  // persetujuan tidak boleh disimpan) dan tampil sebagai "ditolak" di banner.
+  consentBasis?: string | null;
   /**
    * @deprecated Nama lama `visitDisposition` (era IGD). Tidak pernah ditulis
    * lagi oleh klien baru, tapi tetap dideklarasikan karena entri antrean di

@@ -10,6 +10,8 @@ import {
   readRawDisposition,
 } from "@/lib/disposition";
 import { HF_ONSET_LABELS } from "@/lib/hf-onset";
+import { CONSENT_BASIS_LABELS, MISSING_CONSENT_MESSAGE } from "@/lib/consent";
+import { INVALID_INITIAL_MESSAGE, normalizePatientInitial } from "@/lib/patient-initial";
 
 export async function GET() {
   const { session, error } = await requireApprovedSession();
@@ -59,6 +61,22 @@ export async function POST(request: Request) {
     );
   }
 
+  // UU PDP: data pasien hanya boleh disimpan bila ada dasar hukumnya.
+  // Sengaja TIDAK diberi pengecualian untuk entri antrean offline lama —
+  // entri itu tetap tersimpan di perangkat dan ditandai "ditolak", jadi
+  // dokter bisa mendaftarkannya ulang setelah memastikan persetujuannya.
+  const consentParsed = parseOptionalEnum("consentBasis", body.consentBasis, CONSENT_BASIS_LABELS);
+  if (!consentParsed.ok || consentParsed.value === null) {
+    return Response.json({ error: MISSING_CONSENT_MESSAGE }, { status: 400 });
+  }
+  const consentBasis = consentParsed.value;
+
+  // Minimalisasi data: hanya inisial, ditegakkan di server.
+  const patientInitial = normalizePatientInitial(body.patientInitial);
+  if (!patientInitial) {
+    return Response.json({ error: INVALID_INITIAL_MESSAGE }, { status: 400 });
+  }
+
   // Field enum divalidasi di server: nilai sembarang ditolak dengan pesan
   // yang menyebut field-nya (muncul sebagai alasan penolakan di antrean
   // offline), bukan disimpan diam-diam lalu disembunyikan UI.
@@ -101,7 +119,8 @@ export async function POST(request: Request) {
     .values({
       doctorId: session.user.id,
       clientRequestId,
-      patientInitial: body.patientInitial,
+      patientInitial,
+      consentBasis,
       age: body.age,
       gender: body.gender,
       systolicBp: body.systolicBp,

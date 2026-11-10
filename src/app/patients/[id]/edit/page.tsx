@@ -10,7 +10,10 @@ import {
   Pill,
   AlertCircle,
   Building2,
+  ShieldCheck,
 } from "lucide-react";
+import { CONSENT_BASIS_OPTIONS } from "@/lib/consent";
+import { normalizePatientInitial, INVALID_INITIAL_MESSAGE } from "@/lib/patient-initial";
 import { useAuth } from "@/contexts/auth-context";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
@@ -18,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CareSetting, GdmtOmissionReason, HfOnset, VisitDisposition } from "@/lib/types";
+import { CareSetting, ConsentBasis, GdmtOmissionReason, HfOnset, VisitDisposition } from "@/lib/types";
 import { HF_ONSET_OPTIONS } from "@/lib/hf-onset";
 import { CARE_SETTING_OPTIONS } from "@/lib/care-setting";
 import {
@@ -60,6 +63,7 @@ interface EditFormData {
   hfOnset: "" | HfOnset;
   careSetting: "" | CareSetting;
   visitDisposition: "" | VisitDisposition;
+  consentBasis: "" | ConsentBasis;
 }
 
 const NYHA_OPTIONS = [
@@ -110,6 +114,9 @@ export default function EditPatientPage() {
   // era IGD tidak punya — dan jawaban jujurnya memang bukan Poli maupun
   // Rawat Inap, jadi untuk record seperti itu field ini tidak diwajibkan.
   const [hadCareSetting, setHadCareSetting] = useState(false);
+  // Data lama (sebelum field persetujuan ada) belum punya catatan dasar
+  // persetujuan — ditampilkan peringatan agar dokter melengkapinya.
+  const [hadConsent, setHadConsent] = useState(true);
   const [errors, setErrors] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -157,8 +164,10 @@ export default function EditPatientPage() {
           // petakan ke nilai baru agar tombolnya tampil terpilih.
           visitDisposition:
             (readRawDisposition({ visitDisposition: p.visitDisposition }) as VisitDisposition) ?? "",
+          consentBasis: (p.consentBasis as ConsentBasis) ?? "",
         });
         setHadCareSetting(!!p.careSetting);
+        setHadConsent(!!p.consentBasis);
       });
   }, [id, doctor, router]);
 
@@ -226,7 +235,12 @@ export default function EditPatientPage() {
 
   const validate = (): boolean => {
     const errs: string[] = [];
+    // Wajib juga untuk data lama: data pasien tanpa dasar persetujuan tidak
+    // boleh terus disimpan (UU PDP). Bila memang tidak ada, data harus dihapus.
+    if (!form.consentBasis)
+      errs.push("Dasar persetujuan pasien wajib dipilih — bila pasien tidak pernah memberi persetujuan dan tidak ada waiver komite etik, hapus data pasien ini");
     if (!form.patientInitial.trim()) errs.push("Inisial pasien wajib diisi");
+    else if (!normalizePatientInitial(form.patientInitial)) errs.push(INVALID_INITIAL_MESSAGE);
     if (!form.age || Number(form.age) < 1) errs.push("Usia wajib diisi");
     if (!form.gender) errs.push("Jenis kelamin wajib dipilih");
     if (!form.systolicBp || Number(form.systolicBp) < 50)
@@ -295,6 +309,7 @@ export default function EditPatientPage() {
           hfOnset: form.hfOnset || null,
           careSetting: form.careSetting || null,
           visitDisposition: form.visitDisposition || null,
+          consentBasis: form.consentBasis || null,
         }),
       });
       if (!res.ok) {
@@ -341,6 +356,28 @@ export default function EditPatientPage() {
                 </ul>
               </div>
             )}
+
+            {/* Dasar hukum pemrosesan data pasien (UU PDP) */}
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <ShieldCheck className="w-4 h-4 text-blue-600" />
+                  <h3 className="text-sm font-semibold text-gray-900">Persetujuan Pasien *</h3>
+                </div>
+                {!hadConsent && (
+                  <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5">
+                    Data ini didaftarkan sebelum pencatatan persetujuan diwajibkan. Pilih
+                    dasar persetujuan yang sebenarnya. Bila pasien tidak pernah memberi
+                    persetujuan dan tidak ada waiver komite etik, hapus data pasien ini.
+                  </p>
+                )}
+                <OptionCardGroup
+                  options={CONSENT_BASIS_OPTIONS}
+                  value={form.consentBasis}
+                  onChange={(v) => update("consentBasis", v)}
+                />
+              </CardContent>
+            </Card>
 
             {/* Lokasi perawatan — pemisah populasi poli vs rawat inap */}
             <Card className="border-0 shadow-sm">

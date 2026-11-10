@@ -237,7 +237,7 @@ export default function FollowUpPage() {
                 <textarea
                   id="notes"
                   rows={3}
-                  placeholder="Tambahkan catatan klinis tambahan..."
+                  placeholder="Catatan klinis singkat — jangan tulis nama, NIK, alamat, atau no. RM pasien"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="flex w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-none"

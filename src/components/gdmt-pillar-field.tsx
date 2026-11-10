@@ -81,7 +81,7 @@ export function GdmtPillarField({
             <Input
               value={reasonOther}
               onChange={(e) => onReasonOtherChange(e.target.value)}
-              placeholder="Sebutkan singkat (opsional)"
+              placeholder="Sebutkan singkat (opsional) — tanpa nama/identitas pasien"
               maxLength={120}
               className="mt-1.5 h-8 text-xs"
             />
