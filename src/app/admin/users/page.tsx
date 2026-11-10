@@ -17,12 +17,14 @@ import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DOCTOR_TYPE_LABELS, isValidDoctorType } from "@/lib/doctor-type";
 
 interface DoctorRow {
   id: string;
   name: string;
   email: string;
   institutionType: string | null;
+  doctorType: string | null;
   role: string;
   approved: boolean;
   createdAt: string;
@@ -144,7 +146,11 @@ export default function AdminUsersPage() {
                         </div>
                         <p className="text-xs text-gray-500 truncate">{d.email}</p>
                         <p className="text-xs text-gray-400 mt-0.5">
-                          {d.institutionType || "—"} · {d.role}
+                          {d.institutionType || "—"} ·{" "}
+                          {isValidDoctorType(d.doctorType)
+                            ? DOCTOR_TYPE_LABELS[d.doctorType]
+                            : "Jenis dokter belum diisi"}{" "}
+                          · {d.role}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-1.5 shrink-0">

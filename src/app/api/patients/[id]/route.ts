@@ -2,6 +2,14 @@ import { db } from "@/lib/db";
 import { auditLogs, patients, outcomes } from "@/lib/db/schema";
 import { requireApprovedSession } from "@/lib/api-auth";
 import { and, eq } from "drizzle-orm";
+import { parseOptionalEnum } from "@/lib/enum-field";
+import { CARE_SETTING_LABELS } from "@/lib/care-setting";
+import {
+  VISIT_DISPOSITION_LABELS,
+  isDispositionAllowed,
+  readRawDisposition,
+} from "@/lib/disposition";
+import { HF_ONSET_LABELS } from "@/lib/hf-onset";
 
 export async function GET(
   _req: Request,
@@ -67,7 +75,7 @@ export async function PATCH(
     "comorbidCkd", "comorbidAf", "onAceArni", "onBb", "onMra", "onSglt2i",
     "noAceArniReason", "noBbReason", "noMraReason", "noSglt2iReason",
     "noAceArniReasonOther", "noBbReasonOther", "noMraReasonOther", "noSglt2iReasonOther",
-    "nyhaClass", "hfOnset", "edDisposition",
+    "nyhaClass", "hfOnset", "careSetting", "visitDisposition",
   ];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -76,6 +84,49 @@ export async function PATCH(
     if (field in body) {
       updates[field] = body[field];
     }
+  }
+
+  // Field enum divalidasi di server (lihat src/lib/enum-field.ts). Nilai
+  // disposisi lama (DECEASED_ED) dipetakan ke nilai baru dulu — baris yang
+  // belum dimigrasi bisa terbaca form edit lalu dikirim balik apa adanya.
+  if ("visitDisposition" in updates) {
+    updates.visitDisposition = readRawDisposition({ visitDisposition: updates.visitDisposition });
+  }
+  const enumFields: [string, Record<string, unknown>][] = [
+    ["careSetting", CARE_SETTING_LABELS],
+    ["visitDisposition", VISIT_DISPOSITION_LABELS],
+    ["hfOnset", HF_ONSET_LABELS],
+  ];
+  for (const [field, labels] of enumFields) {
+    if (!(field in updates)) continue;
+    const parsed = parseOptionalEnum(field, updates[field], labels);
+    if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
+    updates[field] = parsed.value;
+  }
+
+  // Lokasi perawatan yang sudah tercatat tidak boleh dikosongkan lagi. Null
+  // hanya sah untuk data lama era IGD yang memang tidak punya nilainya.
+  if ("careSetting" in updates && updates.careSetting === null && existing.careSetting) {
+    return Response.json(
+      { error: "Lokasi perawatan tidak boleh dikosongkan setelah diisi." },
+      { status: 400 }
+    );
+  }
+
+  // Cek kombinasi memakai nilai EFEKTIF setelah update — PATCH bisa hanya
+  // membawa salah satu dari kedua field.
+  const effectiveCareSetting =
+    "careSetting" in updates ? updates.careSetting : existing.careSetting;
+  const effectiveDisposition =
+    "visitDisposition" in updates ? updates.visitDisposition : existing.visitDisposition;
+  if (!isDispositionAllowed(effectiveCareSetting, effectiveDisposition)) {
+    return Response.json(
+      {
+        error:
+          "Pasien yang didaftarkan di rawat inap tidak bisa berdisposisi \"Rawat Inap\" — kosongkan disposisi bila pasien masih dirawat.",
+      },
+      { status: 400 }
+    );
   }
 
   // Alasan "GDMT tidak diberikan" hanya bermakna bila pilarnya tidak

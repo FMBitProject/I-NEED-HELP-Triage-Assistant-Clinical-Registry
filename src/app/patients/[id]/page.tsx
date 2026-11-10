@@ -25,7 +25,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Patient, Outcome, AuditLog } from "@/lib/types";
-import { ED_DISPOSITION_LABELS } from "@/lib/disposition";
+import { CARE_SETTING_LABELS } from "@/lib/care-setting";
+import { VISIT_DISPOSITION_LABELS } from "@/lib/disposition";
 import { countGdmt } from "@/lib/gdmt";
 import { GDMT_OMISSION_REASON_LABELS } from "@/lib/gdmt-reasons";
 import { HF_ONSET_LABELS } from "@/lib/hf-onset";
@@ -60,7 +61,10 @@ const FIELD_LABELS: Record<string, string> = {
   lvef: "LVEF", egfr: "eGFR", ntProbnp: "NT-proBNP", nyhaClass: "NYHA",
   comorbidDm: "Komorbid DM", comorbidHtn: "Komorbid HTN", comorbidCkd: "Komorbid CKD",
   comorbidAf: "Komorbid AF", onAceArni: "ACE-I/ARB/ARNI", onBb: "Beta-Blocker",
-  onMra: "MRA", onSglt2i: "SGLT2i", edDisposition: "Disposisi IGD",
+  onMra: "MRA", onSglt2i: "SGLT2i", careSetting: "Lokasi Perawatan",
+  visitDisposition: "Disposisi Akhir",
+  // Nama field sebelum rename — baris audit lama masih menyimpannya.
+  edDisposition: "Disposisi IGD (lama)",
 };
 
 export default function PatientDetailPage() {
@@ -230,11 +234,19 @@ export default function PatientDetailPage() {
                   day: "numeric", month: "long", year: "numeric",
                 })}
               </p>
-              {patient.edDisposition && ED_DISPOSITION_LABELS[patient.edDisposition] && (
+              {patient.careSetting && CARE_SETTING_LABELS[patient.careSetting] && (
                 <p className="text-xs text-gray-600 mt-0.5">
-                  {ED_DISPOSITION_LABELS[patient.edDisposition].icon} Disposisi IGD:{" "}
+                  {CARE_SETTING_LABELS[patient.careSetting].icon} Lokasi:{" "}
                   <span className="font-medium">
-                    {ED_DISPOSITION_LABELS[patient.edDisposition].label}
+                    {CARE_SETTING_LABELS[patient.careSetting].label}
+                  </span>
+                </p>
+              )}
+              {patient.visitDisposition && VISIT_DISPOSITION_LABELS[patient.visitDisposition] && (
+                <p className="text-xs text-gray-600 mt-0.5">
+                  {VISIT_DISPOSITION_LABELS[patient.visitDisposition].icon} Disposisi akhir:{" "}
+                  <span className="font-medium">
+                    {VISIT_DISPOSITION_LABELS[patient.visitDisposition].label}
                   </span>
                 </p>
               )}
@@ -384,9 +396,8 @@ export default function PatientDetailPage() {
                 Status GDMT ({gdmtCount}/4)
               </CardTitle>
               <p className="text-xs text-gray-400 leading-relaxed mt-1">
-                Terapi GDMT yang tercatat saat pendaftaran — mencakup terapi yang diinisiasi
-                selama perawatan di IGD maupun yang diberikan atas advis konsultasi dari IGD
-                untuk rawat inap.
+                Terapi GDMT yang tercatat saat pendaftaran — mencakup resep yang diberikan
+                di poli maupun terapi yang sedang berjalan selama rawat inap.
               </p>
             </CardHeader>
             <CardContent className="p-4 pt-0">

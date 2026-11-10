@@ -1,8 +1,10 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
+import { APIError } from "better-auth/api";
 import { db } from "./db";
 import * as schema from "./db/schema";
+import { INVALID_DOCTOR_TYPE_MESSAGE, isValidDoctorType } from "./doctor-type";
 
 const appUrl = process.env.BETTER_AUTH_URL || "http://localhost:3000";
 
@@ -95,6 +97,15 @@ export const auth = betterAuth({
         required: false,
         fieldName: "institutionType",
       },
+      // Dokter umum atau spesialis — keduanya boleh mengisi registri; ini
+      // dicatat sebagai provenans data, bukan sebagai pembatas akses.
+      // `required: false` hanya di level skema (akun lama null); untuk akun
+      // baru diwajibkan oleh databaseHooks.user.create di bawah.
+      doctorType: {
+        type: "string",
+        required: false,
+        fieldName: "doctorType",
+      },
       // `input: false` stops sign-up payloads from setting this themselves —
       // without it, a client could POST role: "ADMIN" at sign-up and get an
       // admin session with zero approval.
@@ -127,6 +138,32 @@ export const auth = betterAuth({
         type: "string",
         required: false,
         fieldName: "ethicalClearanceDate",
+      },
+    },
+  },
+  // Validasi doctorType di server. Field ini harus `input: true` agar bisa
+  // dikirim saat sign-up, tapi itu juga membuka endpoint update-user milik
+  // better-auth — keduanya lewat hook di bawah, jadi nilai di luar
+  // DOCTOR_TYPE_LABELS tidak pernah masuk ke DB dari jalur mana pun.
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (newUser) => {
+          // Wajib untuk akun BARU. Akun lama yang null melengkapinya lewat
+          // halaman Pengaturan (PATCH /api/profile).
+          if (!isValidDoctorType(newUser.doctorType)) {
+            throw new APIError("BAD_REQUEST", { message: INVALID_DOCTOR_TYPE_MESSAGE });
+          }
+        },
+      },
+      update: {
+        before: async (data) => {
+          // Hanya divalidasi bila memang ikut diubah. Mengosongkan (null)
+          // juga ditolak — sekali diisi, provenans tidak boleh hilang.
+          if ("doctorType" in data && !isValidDoctorType(data.doctorType)) {
+            throw new APIError("BAD_REQUEST", { message: INVALID_DOCTOR_TYPE_MESSAGE });
+          }
+        },
       },
     },
   },

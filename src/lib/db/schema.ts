@@ -21,6 +21,10 @@ export const user = pgTable("user", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   // Custom app fields
   institutionType: text("institution_type"),
+  // Jenis dokter pengisi: GENERAL_PRACTITIONER | INTERNAL_MEDICINE |
+  // CARDIOLOGY | OTHER_SPECIALIST. Nullable — akun yang dibuat sebelum field
+  // ini ada tidak punya nilainya.
+  doctorType: text("doctor_type"),
   role: text("role").notNull().default("DOCTOR"),
   // Defaults to true at the DB level so accounts that existed before this
   // column was introduced are grandfathered in as approved. New sign-ups are
@@ -114,10 +118,18 @@ export const patients = pgTable("patients", {
   // Onset gagal jantung: DE_NOVO | CHRONIC. Nullable (opsional di form)
   // agar data lama tetap valid.
   hfOnset: text("hf_onset"),
-  // Disposisi akhir kunjungan IGD — endpoint minimal yang diketahui dokter
-  // hari itu juga, tanpa perlu follow-up: DISCHARGED | ADMITTED | REFERRED |
-  // DECEASED_ED. Nullable agar data lama tetap valid.
-  edDisposition: text("ed_disposition"),
+  // Lokasi perawatan saat pasien didaftarkan: POLI | INPATIENT. Registri diisi
+  // di poliklinik rawat jalan dan di ruang rawat inap. Wajib dipilih di form,
+  // tapi nullable di DB agar data lama (sebelum field ini ada) tetap valid.
+  careSetting: text("care_setting"),
+  // Disposisi akhir episode perawatan: DISCHARGED | ADMITTED | REFERRED |
+  // DECEASED. Untuk pasien poli umumnya diketahui hari itu juga; untuk pasien
+  // bangsal baru diketahui saat pulang/dirujuk/meninggal, jadi null = "belum
+  // ada disposisi / masih dirawat". ADMITTED hanya bermakna untuk careSetting
+  // POLI (diputuskan rawat inap) — kombinasi INPATIENT+ADMITTED ditolak API.
+  // Kolom ini hasil RENAME dari ed_disposition (DECEASED_ED → DECEASED); lihat
+  // scripts/migrate-2026-11-care-setting.mjs — jangan dibuat ulang via push.
+  visitDisposition: text("visit_disposition"),
   comorbidDm: boolean("comorbid_dm").notNull().default(false),
   comorbidHtn: boolean("comorbid_htn").notNull().default(false),
   comorbidCkd: boolean("comorbid_ckd").notNull().default(false),

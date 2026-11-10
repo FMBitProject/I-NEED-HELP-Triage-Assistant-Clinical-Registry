@@ -10,6 +10,7 @@ import {
   Pill,
   AlertCircle,
   CheckSquare,
+  Building2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Navbar } from "@/components/layout/navbar";
@@ -18,10 +19,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { EdDisposition, GdmtOmissionReason, HfOnset } from "@/lib/types";
+import { CareSetting, GdmtOmissionReason, HfOnset, VisitDisposition } from "@/lib/types";
 import { HF_ONSET_OPTIONS } from "@/lib/hf-onset";
 import { GdmtPillarField } from "@/components/gdmt-pillar-field";
-import { ED_DISPOSITION_OPTIONS } from "@/lib/disposition";
+import { OptionCardGroup } from "@/components/option-card-group";
+import { CARE_SETTING_OPTIONS } from "@/lib/care-setting";
+import { dispositionOptionsFor, isDispositionAllowed } from "@/lib/disposition";
 import { enqueuePendingPatient, isNetworkError, PendingPatientPayload } from "@/lib/offline-queue";
 import { getVitalsWarnings } from "@/lib/vitals";
 import { cn } from "@/lib/utils";
@@ -54,7 +57,8 @@ interface ProfileData {
   noSglt2iReasonOther: string;
   nyhaClass: "" | "I" | "II" | "III" | "IV";
   hfOnset: "" | HfOnset;
-  edDisposition: "" | EdDisposition;
+  careSetting: "" | CareSetting;
+  visitDisposition: "" | VisitDisposition;
 }
 
 const defaultProfile: ProfileData = {
@@ -85,7 +89,8 @@ const defaultProfile: ProfileData = {
   noSglt2iReasonOther: "",
   nyhaClass: "",
   hfOnset: "",
-  edDisposition: "",
+  careSetting: "",
+  visitDisposition: "",
 };
 
 /**
@@ -163,6 +168,20 @@ export default function NewPatientPage() {
     setErrors([]);
   };
 
+  // Ganti lokasi perawatan. Bila pindah ke Rawat Inap sementara disposisi
+  // "Rawat Inap" sudah dipilih, disposisinya ikut dikosongkan dalam update
+  // yang sama — kombinasi itu tidak bermakna dan akan ditolak server.
+  const selectCareSetting = (value: "" | CareSetting) => {
+    setProfile((p) => ({
+      ...p,
+      careSetting: value,
+      visitDisposition: isDispositionAllowed(value || null, p.visitDisposition || null)
+        ? p.visitDisposition
+        : "",
+    }));
+    setErrors([]);
+  };
+
   // Saat pilar GDMT dicentang, alasan "tidak diberikan" (dan teks Lainnya)
   // ikut dikosongkan supaya tidak ada data kontradiktif.
   const updateGdmtPillar = (
@@ -204,6 +223,8 @@ export default function NewPatientPage() {
     const egfr = parseNum(profile.egfr);
 
     if (!profile.patientInitial.trim()) errs.push("Inisial pasien wajib diisi");
+    if (!profile.careSetting)
+      errs.push("Lokasi perawatan wajib dipilih (poliklinik atau rawat inap)");
     if (age === null || age < 1) errs.push("Usia wajib diisi berupa angka");
     if (!profile.gender) errs.push("Jenis kelamin wajib dipilih");
     if (systolicBp === null || systolicBp < 50)
@@ -271,7 +292,8 @@ export default function NewPatientPage() {
         : null,
     nyhaClass: profile.nyhaClass || null,
     hfOnset: profile.hfOnset || null,
-    edDisposition: profile.edDisposition || null,
+    careSetting: profile.careSetting || null,
+    visitDisposition: profile.visitDisposition || null,
   });
 
   const handleSubmit = async () => {
@@ -415,6 +437,22 @@ export default function NewPatientPage() {
                 </ul>
               </div>
             )}
+
+            {/* Lokasi perawatan — pemisah populasi poli vs rawat inap */}
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Building2 className="w-4 h-4 text-blue-600" />
+                  <h3 className="text-sm font-semibold text-gray-900">Lokasi Perawatan *</h3>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed -mt-1">
+                  Di mana pasien ini Anda periksa saat didaftarkan. Pilihan ini yang
+                  memisahkan populasi poli rawat jalan dari pasien rawat inap saat
+                  analisis — profil GDMT keduanya wajar berbeda.
+                </p>
+                <OptionCardGroup options={CARE_SETTING_OPTIONS} value={profile.careSetting} onChange={selectCareSetting} />
+              </CardContent>
+            </Card>
 
             {/* Identitas */}
             <Card className="border-0 shadow-sm">
@@ -631,9 +669,9 @@ export default function NewPatientPage() {
                   <h3 className="text-sm font-semibold text-gray-900">Status GDMT Saat Ini</h3>
                 </div>
                 <p className="text-xs text-gray-500 leading-relaxed -mt-1">
-                  Centang seluruh terapi GDMT yang sedang diterima pasien — termasuk yang
-                  diinisiasi selama perawatan di IGD maupun yang diberikan atas advis konsultasi
-                  dari IGD untuk rawat inap. Untuk pilar yang <strong>tidak</strong> diberikan,
+                  Centang seluruh terapi GDMT yang sedang diterima pasien — termasuk resep
+                  yang Anda berikan di poli hari ini maupun terapi yang sedang berjalan
+                  selama rawat inap. Untuk pilar yang <strong>tidak</strong> diberikan,
                   pilih alasannya bila diketahui (opsional).
                 </p>
                 <div className="grid grid-cols-1 gap-2">
@@ -645,63 +683,29 @@ export default function NewPatientPage() {
               </CardContent>
             </Card>
 
-            {/* Disposisi akhir IGD — opsional, nol beban follow-up */}
+            {/* Disposisi akhir episode perawatan — opsional, nol beban follow-up */}
             <Card className="border-0 shadow-sm">
               <CardContent className="p-4 space-y-3">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900">
-                    Disposisi Akhir IGD{" "}
+                    Disposisi Akhir Perawatan{" "}
                     <span className="font-normal text-gray-400">(opsional)</span>
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                    Apa yang <strong>benar-benar terjadi</strong> pada pasien di akhir
-                    kunjungan IGD ini. Di RS yang sudah mampu kelola mandiri (mis. RS
-                    rujukan Tipe A/B) biasanya wujudnya <strong>Rawat Inap</strong> di
-                    RS sendiri; pilihan <strong>Dirujuk</strong> hanya bila pasien
-                    benar-benar dikirim ke faskes lain. Dapat diisi sekarang atau
-                    dilengkapi kemudian melalui Edit Data.
+                    Apa yang <strong>benar-benar terjadi</strong> di akhir episode
+                    perawatan ini. Dari poli: pasien pulang lanjut rawat jalan, atau
+                    diputuskan <strong>Rawat Inap</strong>. Dari bangsal: pulang setelah
+                    selesai dirawat — <strong>kosongkan bila pasien masih dirawat</strong>.
+                    Pilihan <strong>Dirujuk</strong> hanya bila pasien benar-benar
+                    dikirim ke faskes lain. Dapat diisi sekarang atau dilengkapi
+                    kemudian melalui Edit Data.
                   </p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {ED_DISPOSITION_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() =>
-                        updateProfile(
-                          "edDisposition",
-                          profile.edDisposition === opt.value ? "" : opt.value
-                        )
-                      }
-                      className={cn(
-                        "flex items-start gap-2 p-3 rounded-lg border-2 text-left transition-all",
-                        profile.edDisposition === opt.value
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
-                      )}
-                    >
-                      <span className="text-base">{opt.icon}</span>
-                      <span className="flex flex-col">
-                        <span
-                          className={cn(
-                            "text-xs font-medium",
-                            profile.edDisposition === opt.value ? "text-blue-800" : "text-gray-700"
-                          )}
-                        >
-                          {opt.label}
-                        </span>
-                        <span
-                          className={cn(
-                            "text-[10px] leading-snug mt-0.5",
-                            profile.edDisposition === opt.value ? "text-blue-600" : "text-gray-400"
-                          )}
-                        >
-                          {opt.desc}
-                        </span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
+                <OptionCardGroup
+                  options={dispositionOptionsFor(profile.careSetting)}
+                  value={profile.visitDisposition}
+                  onChange={(v) => updateProfile("visitDisposition", v)}
+                />
               </CardContent>
             </Card>
 

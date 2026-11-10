@@ -49,6 +49,24 @@ Perintah lain:
 | `npm run db:push` | Sinkronkan skema Drizzle ke database |
 | `npm run db:studio` | GUI inspeksi database |
 
+## Deploy: Urutan Wajib Bila Skema DB Berubah
+
+Kode men-SELECT semua kolom yang ada di `schema.ts`. Kalau kode baru
+ter-deploy sebelum kolomnya ada di DB, **login dan semua halaman pasien
+error 500**. Urutannya selalu:
+
+1. Jalankan migrasi di DB produksi
+2. Baru merge / deploy kode
+
+Untuk **rename** atau **hapus** kolom, jangan pakai `db:push` — push bisa
+men-DROP kolom lama beserta datanya. Tulis skrip migrasi eksplisit.
+
+Migrasi yang tertunda:
+
+| Skrip | Isi | Perintah |
+|---|---|---|
+| [scripts/migrate-2026-11-care-setting.mjs](scripts/migrate-2026-11-care-setting.mjs) | Rename `ed_disposition` → `visit_disposition` (+ `DECEASED_ED` → `DECEASED`), tambah `care_setting` & `doctor_type` | `npm run db:migrate:care-setting` |
+
 ## Peta Kode Penting
 
 | Lokasi | Isi |
@@ -64,5 +82,14 @@ Perintah lain:
 - Data pasien pseudoanonim (inisial saja, tanpa identitas langsung)
 - Ekspor CSV: 1 baris per pasien; outcome yang dipakai adalah yang
   terakhir dicatat per pasien
+- Data dari era IGD (sebelum registri beralih ke poli + rawat inap) punya
+  ciri yang perlu diperhitungkan saat analisis:
+  - `institutionType` = `IGD / Unit Gawat Darurat` — kategori lama yang
+    tidak bisa lagi dipilih saat mendaftar, tapi tetap ada di akun lama
+  - `careSetting` kosong — pasien didaftarkan di IGD, bukan di poli/rawat inap
+  - `doctorType` kosong — akun dibuat sebelum field ini ada (dokter diminta
+    melengkapinya lewat Pengaturan)
+  - `visitDisposition` = `DECEASED` pada data lama berarti meninggal di IGD
+    (dulu `DECEASED_ED`, digabung saat migrasi)
 - Isi nomor **ethical clearance** di menu Pengaturan sebelum data dipakai
   untuk publikasi

@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/auth-context";
+import { DOCTOR_TYPE_OPTIONS } from "@/lib/doctor-type";
 
 export default function RegisterPage() {
   const { doctor, register } = useAuth();
@@ -21,6 +22,7 @@ export default function RegisterPage() {
     password: "",
     institutionType: "",
     institutionName: "",
+    doctorType: "",
   });
   const [consent, setConsent] = useState(false);
   const [consentExpanded, setConsentExpanded] = useState(false);
@@ -41,6 +43,10 @@ export default function RegisterPage() {
     }
     if (!form.institutionType) {
       setError("Pilih jenis fasilitas kesehatan terlebih dahulu.");
+      return;
+    }
+    if (!form.doctorType) {
+      setError("Pilih jenis dokter (umum atau spesialis) terlebih dahulu.");
       return;
     }
     setError("");
@@ -125,7 +131,9 @@ export default function RegisterPage() {
                     <SelectItem value="RS Tipe C">RS Tipe C</SelectItem>
                     <SelectItem value="RS Tipe B">RS Tipe B</SelectItem>
                     <SelectItem value="RS Tipe A / Pusat">RS Tipe A / Pusat</SelectItem>
-                    <SelectItem value="IGD / Unit Gawat Darurat">IGD / Unit Gawat Darurat</SelectItem>
+                    {/* Opsi lama "IGD / Unit Gawat Darurat" sengaja dihapus (registri kini
+                        poli + rawat inap); akun lama tetap menyimpannya — lihat README,
+                        bagian Catatan Riset & Etik. */}
                     <SelectItem value="Klinik Spesialis">Klinik Spesialis</SelectItem>
                     <SelectItem value="Faskes Lainnya">Faskes Lainnya</SelectItem>
                   </SelectContent>
@@ -138,6 +146,30 @@ export default function RegisterPage() {
                 />
                 <p className="text-xs text-gray-400">
                   Nama spesifik faskes untuk keperluan identifikasi data registri
+                </p>
+              </div>
+
+              {/* Jenis dokter — registri terbuka untuk dokter umum maupun spesialis */}
+              <div className="space-y-2">
+                <Label>Jenis Dokter</Label>
+                <Select
+                  value={form.doctorType}
+                  onValueChange={(v) => setForm({ ...form, doctorType: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Dokter umum atau spesialis..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DOCTOR_TYPE_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-400">
+                  Registri ini diisi dokter di poliklinik rawat jalan maupun ruang
+                  rawat inap — dokter umum dan spesialis sama-sama dapat mendaftar.
                 </p>
               </div>
 

@@ -9,6 +9,7 @@ import {
   FlaskConical,
   Pill,
   AlertCircle,
+  Building2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Navbar } from "@/components/layout/navbar";
@@ -17,10 +18,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { EdDisposition, GdmtOmissionReason, HfOnset } from "@/lib/types";
+import { CareSetting, GdmtOmissionReason, HfOnset, VisitDisposition } from "@/lib/types";
 import { HF_ONSET_OPTIONS } from "@/lib/hf-onset";
-import { ED_DISPOSITION_OPTIONS } from "@/lib/disposition";
+import { CARE_SETTING_OPTIONS } from "@/lib/care-setting";
+import {
+  dispositionOptionsFor,
+  isDispositionAllowed,
+  readRawDisposition,
+} from "@/lib/disposition";
 import { GdmtPillarField } from "@/components/gdmt-pillar-field";
+import { OptionCardGroup } from "@/components/option-card-group";
 import { cn } from "@/lib/utils";
 
 interface EditFormData {
@@ -51,7 +58,8 @@ interface EditFormData {
   noSglt2iReasonOther: string;
   nyhaClass: "" | "I" | "II" | "III" | "IV";
   hfOnset: "" | HfOnset;
-  edDisposition: "" | EdDisposition;
+  careSetting: "" | CareSetting;
+  visitDisposition: "" | VisitDisposition;
 }
 
 const NYHA_OPTIONS = [
@@ -98,6 +106,10 @@ export default function EditPatientPage() {
   const { doctor, isLoading } = useAuth();
   const router = useRouter();
   const [form, setForm] = useState<EditFormData | null>(null);
+  // Apakah record ini SUDAH punya lokasi perawatan saat dimuat. Data lama
+  // era IGD tidak punya — dan jawaban jujurnya memang bukan Poli maupun
+  // Rawat Inap, jadi untuk record seperti itu field ini tidak diwajibkan.
+  const [hadCareSetting, setHadCareSetting] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -140,8 +152,13 @@ export default function EditPatientPage() {
           noSglt2iReasonOther: p.noSglt2iReasonOther ?? "",
           nyhaClass: (p.nyhaClass as "" | "I" | "II" | "III" | "IV") ?? "",
           hfOnset: (p.hfOnset as HfOnset) ?? "",
-          edDisposition: (p.edDisposition as EdDisposition) ?? "",
+          careSetting: (p.careSetting as CareSetting) ?? "",
+          // Baris yang belum dimigrasi bisa masih berisi DECEASED_ED —
+          // petakan ke nilai baru agar tombolnya tampil terpilih.
+          visitDisposition:
+            (readRawDisposition({ visitDisposition: p.visitDisposition }) as VisitDisposition) ?? "",
         });
+        setHadCareSetting(!!p.careSetting);
       });
   }, [id, doctor, router]);
 
@@ -149,6 +166,23 @@ export default function EditPatientPage() {
 
   const update = (key: keyof EditFormData, value: string | boolean) => {
     setForm((f) => f ? { ...f, [key]: value } : f);
+    setErrors([]);
+  };
+
+  // Ganti lokasi perawatan. Pindah ke Rawat Inap saat disposisi "Rawat Inap"
+  // sudah dipilih → disposisi ikut dikosongkan (kombinasi ditolak server).
+  const selectCareSetting = (value: "" | CareSetting) => {
+    setForm((f) =>
+      f
+        ? {
+            ...f,
+            careSetting: value,
+            visitDisposition: isDispositionAllowed(value || null, f.visitDisposition || null)
+              ? f.visitDisposition
+              : "",
+          }
+        : f
+    );
     setErrors([]);
   };
 
@@ -202,6 +236,10 @@ export default function EditPatientPage() {
     if (!form.heartRate || Number(form.heartRate) < 20)
       errs.push("Detak jantung wajib diisi");
     if (!form.nyhaClass) errs.push("Kelas fungsional NYHA wajib dipilih");
+    // Hanya wajib bila record sudah punya nilai. Data lama era IGD boleh
+    // tetap kosong — memaksanya memilih Poli/Rawat Inap = data yang salah.
+    if (!form.careSetting && hadCareSetting)
+      errs.push("Lokasi perawatan wajib dipilih (poliklinik atau rawat inap)");
     if (!form.hfOnset)
       errs.push("Onset gagal jantung wajib dipilih (pilih “Tidak Diketahui” bila riwayat tak dapat dipastikan)");
     setErrors(errs);
@@ -255,12 +293,21 @@ export default function EditPatientPage() {
               : null,
           nyhaClass: form.nyhaClass || null,
           hfOnset: form.hfOnset || null,
-          edDisposition: form.edDisposition || null,
+          careSetting: form.careSetting || null,
+          visitDisposition: form.visitDisposition || null,
         }),
       });
-      if (!res.ok) throw new Error("Gagal menyimpan");
+      if (!res.ok) {
+        // Server menolak dengan alasan spesifik (nilai tidak valid, kombinasi
+        // lokasi×disposisi, data terkunci) — tampilkan, jangan ditelan diam.
+        const body = await res.json().catch(() => null);
+        setErrors([body?.error || `Gagal menyimpan (HTTP ${res.status}). Coba lagi.`]);
+        setSubmitting(false);
+        return;
+      }
       router.push(`/patients/${id}`);
     } catch {
+      setErrors(["Tidak ada koneksi. Perubahan belum tersimpan — coba lagi saat online."]);
       setSubmitting(false);
     }
   };
@@ -294,6 +341,30 @@ export default function EditPatientPage() {
                 </ul>
               </div>
             )}
+
+            {/* Lokasi perawatan — pemisah populasi poli vs rawat inap */}
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Building2 className="w-4 h-4 text-blue-600" />
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    Lokasi Perawatan{hadCareSetting ? " *" : ""}
+                  </h3>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed -mt-1">
+                  Di mana pasien ini diperiksa saat didaftarkan — poli rawat jalan atau
+                  ruang rawat inap.
+                </p>
+                {!hadCareSetting && (
+                  <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5">
+                    Data lama yang didaftarkan sebelum field ini ada (era IGD). Biarkan
+                    kosong bila pasien memang didaftarkan di IGD — jangan memilih hanya
+                    agar bisa menyimpan.
+                  </p>
+                )}
+                <OptionCardGroup options={CARE_SETTING_OPTIONS} value={form.careSetting} onChange={selectCareSetting} />
+              </CardContent>
+            </Card>
 
             {/* Identitas */}
             <Card className="border-0 shadow-sm">
@@ -510,9 +581,9 @@ export default function EditPatientPage() {
                   <h3 className="text-sm font-semibold text-gray-900">Status GDMT Saat Ini</h3>
                 </div>
                 <p className="text-xs text-gray-500 leading-relaxed -mt-1">
-                  Centang seluruh terapi GDMT yang sedang diterima pasien — termasuk yang
-                  diinisiasi selama perawatan di IGD maupun yang diberikan atas advis konsultasi
-                  dari IGD untuk rawat inap. Untuk pilar yang <strong>tidak</strong> diberikan,
+                  Centang seluruh terapi GDMT yang sedang diterima pasien — termasuk resep
+                  yang diberikan di poli maupun terapi yang sedang berjalan selama rawat
+                  inap. Untuk pilar yang <strong>tidak</strong> diberikan,
                   pilih alasannya bila diketahui (opsional).
                 </p>
                 <div className="grid grid-cols-1 gap-2">
@@ -524,60 +595,28 @@ export default function EditPatientPage() {
               </CardContent>
             </Card>
 
-            {/* Disposisi akhir IGD */}
+            {/* Disposisi akhir episode perawatan */}
             <Card className="border-0 shadow-sm">
               <CardContent className="p-4 space-y-3">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900">
-                    Disposisi Akhir IGD{" "}
+                    Disposisi Akhir Perawatan{" "}
                     <span className="font-normal text-gray-400">(opsional)</span>
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                    Apa yang <strong>benar-benar terjadi</strong> pada pasien di akhir
-                    kunjungan IGD — bisa berbeda dari rekomendasi skor. Rekomendasi
-                    &quot;Rujuk&quot; artinya pasien perlu perawatan lanjut: di RS yang sudah
-                    mampu (mis. RS rujukan Tipe A/B) wujudnya <strong>Rawat Inap</strong> di
-                    RS sendiri; pilihan <strong>Dirujuk</strong> hanya bila pasien
-                    benar-benar dikirim ke faskes lain.
+                    Apa yang <strong>benar-benar terjadi</strong> di akhir episode
+                    perawatan ini. Dari poli: pasien pulang lanjut rawat jalan, atau
+                    diputuskan <strong>Rawat Inap</strong>. Dari bangsal: pulang setelah
+                    selesai dirawat — <strong>kosongkan bila pasien masih dirawat</strong>.
+                    Pilihan <strong>Dirujuk</strong> hanya bila pasien benar-benar
+                    dikirim ke faskes lain.
                   </p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {ED_DISPOSITION_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() =>
-                        update("edDisposition", form.edDisposition === opt.value ? "" : opt.value)
-                      }
-                      className={cn(
-                        "flex items-start gap-2 p-3 rounded-lg border-2 text-left transition-all",
-                        form.edDisposition === opt.value
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
-                      )}
-                    >
-                      <span className="text-base">{opt.icon}</span>
-                      <span className="flex flex-col">
-                        <span
-                          className={cn(
-                            "text-xs font-medium",
-                            form.edDisposition === opt.value ? "text-blue-800" : "text-gray-700"
-                          )}
-                        >
-                          {opt.label}
-                        </span>
-                        <span
-                          className={cn(
-                            "text-[10px] leading-snug mt-0.5",
-                            form.edDisposition === opt.value ? "text-blue-600" : "text-gray-400"
-                          )}
-                        >
-                          {opt.desc}
-                        </span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
+                <OptionCardGroup
+                  options={dispositionOptionsFor(form.careSetting)}
+                  value={form.visitDisposition}
+                  onChange={(v) => update("visitDisposition", v)}
+                />
               </CardContent>
             </Card>
 
