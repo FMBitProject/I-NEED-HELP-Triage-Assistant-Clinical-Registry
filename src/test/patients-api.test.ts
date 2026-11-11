@@ -12,11 +12,13 @@ const state = vi.hoisted(() => ({
   accessLogFails: false,
   deleted: false,
   role: "DOCTOR" as "DOCTOR" | "ADMIN",
+  email: "dok@rs.id",
+  demoPatientCount: 0,
 }));
 
 vi.mock("@/lib/api-auth", () => ({
   requireApprovedSession: async () => ({
-    session: { user: { id: "doc-1", name: "Dr. Test", role: state.role, approved: true } },
+    session: { user: { id: "doc-1", name: "Dr. Test", email: state.email, role: state.role, approved: true } },
     error: null,
   }),
 }));
@@ -42,6 +44,9 @@ vi.mock("@/lib/db", () => ({
           }),
         };
       },
+    }),
+    select: () => ({
+      from: () => ({ where: async () => [{ n: state.demoPatientCount }] }),
     }),
     delete: () => ({
       where: async () => {
@@ -122,6 +127,9 @@ beforeEach(() => {
   state.accessLogFails = false;
   state.deleted = false;
   state.role = "DOCTOR";
+  state.email = "dok@rs.id";
+  state.demoPatientCount = 0;
+  vi.unstubAllEnvs();
 });
 
 describe("POST /api/patients", () => {
@@ -354,5 +362,31 @@ describe("DELETE /api/patients/[id]", () => {
     const res = await del();
     expect(res.status).toBe(423);
     expect(state.deleted).toBe(false);
+  });
+});
+
+describe("batas pasien akun demo", () => {
+  beforeEach(() => {
+    vi.stubEnv("DEMO_USER_EMAIL", "demo@registry.test");
+    vi.stubEnv("DEMO_USER_PASSWORD", "x");
+  });
+
+  it("akun demo yang sudah penuh ditolak 429 (antrean offline menahannya, tidak retry)", async () => {
+    state.email = "demo@registry.test";
+    state.demoPatientCount = 30;
+    const res = await post(basePayload);
+    expect(res.status).toBe(429);
+    expect(state.inserted).toBeNull();
+  });
+
+  it("akun demo yang belum penuh tetap bisa menyimpan", async () => {
+    state.email = "demo@registry.test";
+    state.demoPatientCount = 3;
+    expect((await post(basePayload)).status).toBe(201);
+  });
+
+  it("dokter biasa tidak terkena batas demo", async () => {
+    state.demoPatientCount = 999;
+    expect((await post(basePayload)).status).toBe(201);
   });
 });

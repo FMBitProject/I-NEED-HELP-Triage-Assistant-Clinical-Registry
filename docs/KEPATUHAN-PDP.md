@@ -20,6 +20,7 @@ klinis) **tetap dihitung data pribadi**, bukan data anonim.
 | Lokasi data | DB Neon di Singapura; fungsi Vercel dipaksa ke `sin1` lewat `vercel.json` (CDN/edge tetap global) |
 | Data di perangkat | Logout menghapus salinan respons API pasien dari cache (juga saat offline). Bila offline, sesi server belum bisa diakhiri — aplikasi menampilkan peringatan, bukan pura-pura berhasil. Antrean offline terikat ke akun pengisinya: user lain di perangkat yang sama tidak bisa melihat/mengirimnya. **Belum**: cache tidak dibersihkan bila sesi habis tanpa logout manual |
 | Transparansi | Kebijakan privasi v2.0 menyesuaikan perilaku aplikasi yang sebenarnya |
+| Akun demo publik | Tombol "Coba sebagai Demo" (bila env `DEMO_USER_*` diisi) masuk ke satu akun DOKTER bersama. Pasiennya dikecualikan dari ekspor & registry admin, dihapus otomatis setelah 24 jam, maks. 30 pasien; akun tidak bisa diubah/dihapus; banner peringatan di semua halaman. **Risiko tersisa**: pengunjung bisa saja mengetik data pasien asli walau sudah diperingatkan, dan isinya terlihat sesama pengunjung demo |
 
 ## B. WAJIB diurus di luar kode (kode tidak bisa menyelesaikannya)
 

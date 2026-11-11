@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { HeartPulse, Eye, EyeOff, AlertCircle, Mail } from "lucide-react";
+import { HeartPulse, Eye, EyeOff, AlertCircle, Mail, PlayCircle } from "lucide-react";
+import { useDemoStatus } from "@/hooks/use-demo-status";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,12 +19,32 @@ export default function LoginPage() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [demoLoading, setDemoLoading] = useState(false);
+  const demo = useDemoStatus();
 
   // Navigate only once the session has actually propagated to `doctor`, instead of
   // right after the sign-in call resolves (see auth-context.tsx for why).
   useEffect(() => {
     if (doctor) router.replace("/dashboard");
   }, [doctor, router]);
+
+  const handleDemo = async () => {
+    setError("");
+    setDemoLoading(true);
+    try {
+      const res = await fetch("/api/demo", { method: "POST" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? `Gagal masuk ke demo (HTTP ${res.status}).`);
+      }
+      // Hard navigation: sesi baru langsung terbaca tanpa menunggu refetch
+      // useSession (lihat catatan race di auth-context.tsx).
+      window.location.replace("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal masuk ke demo.");
+      setDemoLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,10 +116,31 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              <Button type="submit" className="w-full" size="lg" disabled={loading || demoLoading}>
                 {loading ? "Memverifikasi..." : "Masuk"}
               </Button>
             </form>
+
+            {demo.enabled && (
+              <div className="mt-5 pt-5 border-t border-gray-100 space-y-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full gap-2"
+                  size="lg"
+                  onClick={handleDemo}
+                  disabled={loading || demoLoading}
+                >
+                  <PlayCircle className="w-4 h-4" />
+                  {demoLoading ? "Masuk ke demo..." : "Coba sebagai Demo"}
+                </Button>
+                <p className="text-[11px] text-gray-500 text-center leading-relaxed">
+                  Tanpa daftar. Akun dipakai bersama semua pengunjung —{" "}
+                  <strong>jangan isi data pasien asli</strong>. Data demo dihapus otomatis
+                  setelah {demo.retentionHours} jam dan tidak masuk data riset.
+                </p>
+              </div>
+            )}
 
           </CardContent>
         </Card>

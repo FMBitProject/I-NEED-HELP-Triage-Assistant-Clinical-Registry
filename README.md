@@ -69,6 +69,30 @@ Migrasi yang tertunda:
 | [scripts/migrate-2026-11-pdp.mjs](scripts/migrate-2026-11-pdp.mjs) | Tambah `patients.consent_basis` & tabel `access_logs` (UU PDP) — hanya menambah, tidak mengubah data | `npm run db:migrate:pdp` |
 | [scripts/migrate-2026-11-consent-check.mjs](scripts/migrate-2026-11-consent-check.mjs) | CHECK constraint nilai `consent_basis` — **opsional**, kode tidak bergantung padanya; batal otomatis bila ada nilai tidak valid | `npm run db:migrate:consent-check` |
 
+## Mode Demo (tombol "Coba sebagai Demo")
+
+Tombol di halaman login yang langsung masuk ke satu akun **dokter** bersama,
+tanpa password. Mati secara default — aktif hanya bila dua env ini diisi di
+Vercel (Settings → Environment Variables, environment *Production*), lalu
+redeploy:
+
+| Env | Isi |
+|---|---|
+| `DEMO_USER_EMAIL` | Email akun demo, mis. `demo@registry.test` |
+| `DEMO_USER_PASSWORD` | Password akun itu (hanya dibaca server, tidak pernah dikirim ke browser) |
+
+Syarat akun demo: role **DOCTOR** (bila ADMIN, login demo menolak) dan sudah
+di-approve. Untuk mematikan: hapus salah satu env lalu redeploy.
+
+Isolasi (lihat [src/lib/demo.ts](src/lib/demo.ts)):
+- Pasien akun demo tidak ikut ekspor CSV maupun registry admin
+- Pasien & sesi demo > 24 jam dihapus setiap ada yang login demo; maks. 30 pasien demo
+- Akun demo tidak bisa ganti password/email, ubah profil/data etik, hapus akun, atau mencabut sesi
+- Banner "Mode demo — jangan isi data pasien asli" tampil di semua halaman
+
+Catatan: semua pengunjung demo berbagi akun yang sama, jadi isi demo bisa
+dilihat sesama pengunjung demo.
+
 ## Peta Kode Penting
 
 | Lokasi | Isi |

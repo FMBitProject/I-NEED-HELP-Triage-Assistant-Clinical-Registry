@@ -3,6 +3,7 @@ import { outcomes, patients, user } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/api-auth";
 import { desc, eq, inArray } from "drizzle-orm";
 import { ACCESS_LOG_FAILED_MESSAGE, recordAccess } from "@/lib/access-log";
+import { excludeDemoUser } from "@/lib/demo";
 
 // Registry lintas dokter — hanya ADMIN. Read-only: tidak pernah menulis
 // atau mengubah data pasien milik dokter manapun.
@@ -30,6 +31,8 @@ export async function GET(request: Request) {
     })
     .from(patients)
     .innerJoin(user, eq(patients.doctorId, user.id))
+    // Pasien akun demo tidak ditampilkan — juga dipakai untuk statistik di /export.
+    .where(excludeDemoUser())
     .orderBy(desc(patients.createdAt));
 
   if (rows.length === 0) return Response.json([]);

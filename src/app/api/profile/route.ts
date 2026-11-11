@@ -3,10 +3,15 @@ import { user } from "@/lib/db/schema";
 import { requireSession } from "@/lib/api-auth";
 import { eq } from "drizzle-orm";
 import { INVALID_DOCTOR_TYPE_MESSAGE, isValidDoctorType } from "@/lib/doctor-type";
+import { DEMO_FORBIDDEN_MESSAGE, isDemoUser } from "@/lib/demo";
 
 export async function PATCH(request: Request) {
   const { session, error } = await requireSession();
   if (error) return error;
+
+  if (isDemoUser(session.user)) {
+    return Response.json({ error: DEMO_FORBIDDEN_MESSAGE }, { status: 403 });
+  }
 
   const body = await request.json();
   const allowed = ["ethicalClearanceNo", "ethicalClearanceDate"];
