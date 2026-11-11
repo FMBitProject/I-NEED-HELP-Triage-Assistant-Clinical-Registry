@@ -20,6 +20,33 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+// "Generasi" data pasien. Naik setiap logout (pesan CLEAR_PATIENT_DATA dari
+// src/lib/local-data.ts). Respons /api/ yang request-nya dimulai SEBELUM
+// logout tidak boleh ditulis ke cache SESUDAH cache dibersihkan — tanpa
+// penjaga ini, fetch yang masih di jalan saat logout menulis ulang daftar
+// pasien ke cache (race condition). Kalau SW dimatikan browser, variabel ini
+// ter-reset, tapi fetch yang sedang berjalan ikut mati, jadi tetap aman.
+let patientDataGeneration = 0;
+
+function isApiRequest(request) {
+  return new URL(request.url).pathname.startsWith("/api/");
+}
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "CLEAR_PATIENT_DATA") {
+    patientDataGeneration++;
+    event.waitUntil(
+      caches.open(CACHE).then((cache) =>
+        cache
+          .keys()
+          .then((requests) =>
+            Promise.all(requests.filter(isApiRequest).map((r) => cache.delete(r)))
+          )
+      )
+    );
+  }
+});
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -28,12 +55,22 @@ self.addEventListener("fetch", (event) => {
   // salinan terakhir supaya daftar pasien & follow-up tetap terbaca offline.
   if (url.pathname.startsWith("/api/")) {
     if (request.method === "GET" && url.pathname === "/api/patients") {
+      const startedInGeneration = patientDataGeneration;
       event.respondWith(
         fetch(request)
           .then((res) => {
-            if (res.ok) {
+            if (res.ok && startedInGeneration === patientDataGeneration) {
               const resClone = res.clone();
-              caches.open(CACHE).then((c) => c.put(request, resClone)).catch(() => {});
+              caches
+                .open(CACHE)
+                .then((c) => {
+                  // Cek ulang tepat sebelum menulis: logout bisa terjadi
+                  // selama caches.open() berjalan.
+                  if (startedInGeneration === patientDataGeneration) {
+                    return c.put(request, resClone);
+                  }
+                })
+                .catch(() => {});
             }
             return res;
           })

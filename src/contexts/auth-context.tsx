@@ -1,16 +1,16 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
-import { useRouter } from "next/navigation";
+import React, { createContext, useContext, useState } from "react";
 import { Doctor } from "@/lib/types";
 import { authClient, useSession } from "@/lib/auth-client";
 import { isValidDoctorType } from "@/lib/doctor-type";
+import { clearLocalPatientData } from "@/lib/local-data";
 
 interface AuthContextType {
   doctor: Doctor | null;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -27,7 +27,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { data: session, isPending } = useSession();
-  const router = useRouter();
+  const [logoutError, setLogoutError] = useState<string | null>(null);
 
   const u = session?.user as (NonNullable<typeof session>["user"] & {
     institutionType?: string;
@@ -93,25 +93,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    await authClient.signOut();
-    // Service worker menyimpan salinan daftar pasien untuk mode offline
-    // (public/sw.js). Hapus saat logout supaya data pasien tidak tertinggal
-    // di HP/komputer bersama. Antrean offline (pasien yang belum terkirim)
-    // sengaja TIDAK dihapus — itu data klinis yang belum tersimpan di server.
+    // Urutan penting: data lokal dibersihkan DULU. signOut butuh jaringan dan
+    // melempar error saat offline — kalau ia dipanggil duluan tanpa
+    // penanganan, cache tidak terhapus dan halaman tidak pindah (tombol
+    // Logout terlihat "mati"), justru di HP bersama yang sedang tanpa sinyal.
+    await clearLocalPatientData();
+    setLogoutError(null);
+    let failed = false;
     try {
-      if (typeof caches !== "undefined") {
-        const keys = await caches.keys();
-        await Promise.all(keys.map(async (k) => (await caches.open(k)).delete("/api/patients")));
-      }
-    } catch {
-      // Cache API tidak tersedia (mis. mode privat) — tidak ada yang perlu dihapus.
+      const res = await authClient.signOut();
+      // better-auth bisa melapor gagal lewat { error } alih-alih melempar.
+      failed = !!(res as { error?: unknown } | undefined)?.error;
+    } catch (err) {
+      console.warn("[logout] signOut gagal", err);
+      failed = true;
     }
-    router.push("/login");
+    if (failed) {
+      // JANGAN pura-pura berhasil: cookie sesi (httpOnly) masih berlaku, jadi
+      // orang berikutnya di perangkat ini bisa langsung masuk sebagai user ini
+      // begitu online. Beri tahu dengan jelas dan minta coba lagi.
+      setLogoutError(
+        "Logout belum selesai karena tidak ada koneksi. Data pasien di perangkat sudah dihapus, tetapi sesi Anda masih aktif — sambungkan internet lalu tekan Logout lagi sebelum meninggalkan perangkat ini."
+      );
+      return;
+    }
+    // Hard navigation, bukan router.push: buang juga state React di memori
+    // (daftar pasien yang sudah dimuat halaman sebelumnya).
+    window.location.replace("/login");
   };
 
   return (
     <AuthContext.Provider value={{ doctor, login, register, logout, isLoading: isPending }}>
       {children}
+      {logoutError && (
+        <div role="alert" className="fixed top-16 left-4 right-4 z-[60] max-w-xl mx-auto">
+          <div className="bg-red-50 border border-red-300 rounded-xl shadow-lg p-3 flex items-start gap-2">
+            <span className="shrink-0">⚠️</span>
+            <p className="flex-1 text-xs text-red-800 font-medium">{logoutError}</p>
+            <button
+              onClick={() => setLogoutError(null)}
+              className="shrink-0 text-xs text-red-700 underline"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      )}
     </AuthContext.Provider>
   );
 }
