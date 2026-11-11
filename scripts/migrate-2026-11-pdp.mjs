@@ -23,8 +23,16 @@ if (!url) {
   process.exit(1);
 }
 
+// new URL() yang gagal mencetak error berisi `input` = URL lengkap TERMASUK
+// password. Jangan biarkan error itu lolos ke terminal / log CI.
+let host;
+try {
+  host = new URL(url).host;
+} catch {
+  console.error("DATABASE_URL tidak valid (isinya sengaja tidak ditampilkan). Migrasi dibatalkan.");
+  process.exit(1);
+}
 const sql = neon(url);
-const host = new URL(url).host;
 console.log(`Menjalankan migrasi pada host: ${host}`);
 
 try {
@@ -52,9 +60,21 @@ try {
       WHERE table_schema = 'public' AND table_name = 'access_logs'
     ) AS exists
   `;
+  // Kolom inilah yang membuat SEMUA halaman pasien error 500 bila tidak ada.
+  const [{ exists: hasConsentColumn }] = await sql`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'patients' AND column_name = 'consent_basis'
+    ) AS exists
+  `;
 
-  if (!hasAccessLogs) {
-    console.error("PERINGATAN: tabel access_logs tidak terbentuk. Periksa manual sebelum deploy.");
+  if (!hasAccessLogs || !hasConsentColumn) {
+    console.error(
+      "PERINGATAN: skema belum lengkap —" +
+        (hasAccessLogs ? "" : " tabel access_logs tidak ada;") +
+        (hasConsentColumn ? "" : " kolom patients.consent_basis tidak ada;") +
+        " periksa manual sebelum deploy."
+    );
     process.exit(1);
   }
   console.log("Migrasi selesai. Sekarang aman untuk deploy kode versi ini.");

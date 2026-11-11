@@ -1,7 +1,9 @@
 import { db } from "@/lib/db";
-import { accessLogs, outcomes, patients, user } from "@/lib/db/schema";
+import { outcomes, patients, user } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/api-auth";
 import { buildCsv } from "@/lib/csv";
+import { ACCESS_LOG_FAILED_MESSAGE, recordAccess } from "@/lib/access-log";
+import { EXPORT_HEADERS } from "@/lib/export-columns";
 import { eq } from "drizzle-orm";
 
 // Minimalisasi data (UU PDP): ekspor riset sengaja TIDAK memuat inisial
@@ -96,33 +98,20 @@ export async function GET(request: Request) {
     };
   });
 
-  const headers = [
-    "doctorId","institutionType","doctorType","ethicalClearanceNo","ethicalClearanceDate",
-    "patientId","consentBasis","careSetting","age","gender",
-    "systolicBp","diastolicBp","heartRate",
-    "lvef","efCategory","egfr","ntProbnp","nyhaClass","hfOnset",
-    "comorbidDm","comorbidHtn","comorbidCkd","comorbidAf",
-    "onAceArni","onBb","onMra","onSglt2i",
-    "noAceArniReason","noBbReason","noMraReason","noSglt2iReason",
-    "noAceArniReasonOther","noBbReasonOther","noMraReasonOther","noSglt2iReasonOther",
-    "visitDisposition",
-    "patientCreatedAt",
-    "outcomeStatus","outcomeFollowUpDays","outcomeNotes",
-    "outcomeAdmissionDate","outcomeDischargeDate",
-    "outcomeRecordedAt",
-  ];
+  // CSV dibangun dulu: kalau gagal, jangan sampai log mencatat ekspor yang
+  // tidak pernah terkirim.
+  const csv = buildCsv([...EXPORT_HEADERS], rows);
 
   // Catat SEBELUM file dikirim: kalau pencatatan gagal, ekspor ikut gagal —
   // tidak boleh ada unduhan seluruh registri yang tidak meninggalkan jejak.
-  await db.insert(accessLogs).values({
-    userId: session.user.id,
-    userName: session.user.name,
-    action: "export_csv",
-    detail: `${rows.length} pasien`,
-    ipAddress: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null,
-  });
+  try {
+    await recordAccess(request, session.user, "export_csv", { patients: rows.length });
+  } catch (err) {
+    console.error("[export] gagal mencatat access_log, ekspor dibatalkan", err);
+    return Response.json({ error: ACCESS_LOG_FAILED_MESSAGE }, { status: 503 });
+  }
 
-  return new Response(buildCsv(headers, rows), {
+  return new Response(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="registry_export_${new Date().toISOString().slice(0, 10)}.csv"`,

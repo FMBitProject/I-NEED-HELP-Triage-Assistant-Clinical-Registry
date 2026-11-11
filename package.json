@@ -14,7 +14,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:migrate:care-setting": "node scripts/migrate-2026-11-care-setting.mjs",
-    "db:migrate:pdp": "node scripts/migrate-2026-11-pdp.mjs"
+    "db:migrate:pdp": "node scripts/migrate-2026-11-pdp.mjs",
+    "db:migrate:consent-check": "node scripts/migrate-2026-11-consent-check.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
