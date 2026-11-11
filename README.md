@@ -86,6 +86,7 @@ Migrasi yang tertunda:
 - Data pasien pseudonim (inisial maks. 4 huruf, ditegakkan di server)
 - Setiap pasien wajib punya `consentBasis` (`INFORMED_CONSENT` /
   `ETHICS_WAIVER`); kosong hanya pada data lama sebelum field ini ada
+- `efCategory` di CSV hanya **dua kategori**: LVEF < 50% = `HFrEF`, ≥ 50% = `HFpEF` (kelompok 41–49% yang dulu HFmrEF digabung ke HFrEF). LVEF mentah tetap diekspor untuk pembagian lain
 - Ekspor CSV: 1 baris per pasien; outcome yang dipakai adalah yang
   terakhir dicatat per pasien. **Tidak** memuat inisial pasien dan nama
   dokter — pakai `patientId` / `doctorId`. Setiap ekspor tercatat di

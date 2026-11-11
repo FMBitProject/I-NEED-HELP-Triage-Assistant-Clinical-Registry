@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/api-auth";
 import { buildCsv } from "@/lib/csv";
 import { ACCESS_LOG_FAILED_MESSAGE, recordAccess } from "@/lib/access-log";
 import { EXPORT_HEADERS } from "@/lib/export-columns";
+import { efCategory } from "@/lib/ef-category";
 import { eq } from "drizzle-orm";
 
 // Minimalisasi data (UU PDP): ekspor riset sengaja TIDAK memuat inisial
@@ -74,21 +75,10 @@ export async function GET(request: Request) {
   const rows: Record<string, unknown>[] = patientRows.map((p) => {
     const outcome = latestOutcomeByPatient.get(p.patientId);
 
-    // Kolom turunan dari LVEF (batas ESC/PERKI: <40 HFrEF, 40–49 HFmrEF,
-    // ≥50 HFpEF) — denominator yang benar saat menabulasi kelengkapan GDMT,
-    // tanpa input tambahan dari pengguna.
-    const efCategory =
-      p.lvef == null
-        ? null
-        : p.lvef < 40
-          ? "HFrEF"
-          : p.lvef < 50
-            ? "HFmrEF"
-            : "HFpEF";
-
     return {
       ...p,
-      efCategory,
+      // Dua kategori: <50 HFrEF, ≥50 HFpEF — lihat src/lib/ef-category.ts.
+      efCategory: efCategory(p.lvef),
       outcomeStatus: outcome?.status ?? null,
       outcomeFollowUpDays: outcome?.followUpDays ?? null,
       outcomeNotes: outcome?.notes ?? null,

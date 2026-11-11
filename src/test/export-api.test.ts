@@ -18,7 +18,7 @@ const patientRow = {
   patientId: "p-1",
   consentBasis: "ETHICS_WAIVER",
   age: 60,
-  lvef: 35,
+  lvef: 45, // rentang yang dulu "HFmrEF" — sekarang harus jadi HFrEF
   patientCreatedAt: new Date("2026-11-01T00:00:00Z"),
 };
 
@@ -81,5 +81,14 @@ describe("GET /api/export", () => {
     expect(res.status).toBe(503);
     expect(res.headers.get("Content-Type")).not.toContain("text/csv");
     expect((await res.json()).error).toContain("pencatatan akses gagal");
+  });
+});
+
+describe("kolom efCategory", () => {
+  it("LVEF 45 diekspor sebagai HFrEF (hanya dua kategori)", async () => {
+    const lines = (await get()).text();
+    const [header, row] = (await lines).split("\n");
+    const col = header.split(",").indexOf("efCategory");
+    expect(row.split(",")[col]).toBe("HFrEF");
   });
 });
