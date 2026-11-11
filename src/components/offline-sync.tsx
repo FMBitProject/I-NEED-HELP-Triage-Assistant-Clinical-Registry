@@ -1,58 +1,72 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useAuth } from "@/contexts/auth-context";
 import {
   QUEUE_CHANGED_EVENT,
-  countPendingPatients,
+  QueueSummary,
+  summarizePendingPatients,
   syncPendingPatients,
 } from "@/lib/offline-queue";
 import { cn } from "@/lib/utils";
 
+const EMPTY: QueueSummary = { total: 0, needsAttention: 0 };
+
 // Banner global antrean offline: tampil di semua halaman selama masih ada
-// pendaftaran pasien yang menunggu sinkronisasi, dan mencoba mengirim ulang
-// otomatis saat koneksi kembali / aplikasi dibuka lagi.
+// pendaftaran pasien milik user ini yang menunggu sinkronisasi, dan mencoba
+// mengirim ulang otomatis saat koneksi kembali / aplikasi dibuka lagi.
+//
+// Harus dirender DI DALAM <AuthProvider>: antrean ada di perangkat (bisa
+// dipakai bergantian), jadi yang dikirim hanya entri milik user yang login.
 export function OfflineSync() {
-  const [pendingCount, setPendingCount] = useState(0);
+  const { doctor } = useAuth();
+  const userId = doctor?.id ?? null;
+  const pathname = usePathname();
+
+  const [summary, setSummary] = useState<QueueSummary>(EMPTY);
   const [justSynced, setJustSynced] = useState<number | null>(null);
   const [needsLogin, setNeedsLogin] = useState(false);
-  const [rejectedError, setRejectedError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const syncingRef = useRef(false);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const refresh = useCallback(async () => {
+    if (!userId) {
+      setSummary(EMPTY);
+      return;
+    }
     try {
-      setPendingCount(await countPendingPatients());
+      setSummary(await summarizePendingPatients(userId));
     } catch {
       // IndexedDB tidak tersedia (mis. mode privat) — banner tidak tampil.
     }
-  }, []);
+  }, [userId]);
 
   const attemptSync = useCallback(async () => {
-    if (syncingRef.current || !navigator.onLine) return;
-    if ((await countPendingPatients().catch(() => 0)) === 0) return;
+    if (!userId || syncingRef.current || !navigator.onLine) return;
 
     syncingRef.current = true;
     setSyncing(true);
     try {
-      const result = await syncPendingPatients();
+      const result = await syncPendingPatients(userId);
       setNeedsLogin(result.needsLogin);
-      // Entri yang ditolak server tidak akan pernah terkirim sendiri; tanpa
-      // ditampilkan, banner "menunggu sinkronisasi" akan menempel selamanya
-      // tanpa dokter tahu penyebabnya.
-      setRejectedError(result.rejected > 0 ? result.lastRejectionError : null);
       if (result.synced > 0) {
         setJustSynced(result.synced);
-        setTimeout(() => setJustSynced(null), 5000);
+        if (toastTimer.current) clearTimeout(toastTimer.current);
+        toastTimer.current = setTimeout(() => setJustSynced(null), 5000);
       }
-    } catch {
+    } catch (err) {
       // Coba lagi pada pemicu berikutnya.
+      console.warn("[offline-sync] sinkronisasi gagal", err);
     } finally {
       syncingRef.current = false;
       setSyncing(false);
       refresh();
     }
-  }, [refresh]);
+  }, [userId, refresh]);
 
   useEffect(() => {
     // Ditunda satu tick agar tidak setState sinkron di dalam effect
@@ -85,7 +99,14 @@ export function OfflineSync() {
     };
   }, [refresh, attemptSync]);
 
-  if (justSynced !== null && pendingCount === 0) {
+  useEffect(
+    () => () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    },
+    []
+  );
+
+  if (justSynced !== null && summary.total === 0) {
     return (
       <div className="fixed bottom-4 left-4 right-4 z-50 max-w-xl mx-auto">
         <div className="bg-green-50 border border-green-200 rounded-xl shadow-lg p-3 flex items-center gap-2">
@@ -99,7 +120,7 @@ export function OfflineSync() {
   }
 
   // Offline tanpa antrean: cukup info bahwa data yang tampil salinan terakhir
-  if (pendingCount === 0 && isOffline) {
+  if (summary.total === 0 && isOffline) {
     return (
       <div className="fixed bottom-4 left-4 right-4 z-50 max-w-xl mx-auto">
         <div className="bg-slate-100 border border-slate-200 rounded-xl shadow-lg p-3 flex items-center gap-2">
@@ -113,51 +134,51 @@ export function OfflineSync() {
     );
   }
 
-  if (pendingCount === 0) return null;
+  // Di halaman antrean sendiri banner tidak perlu (isinya sudah tampil).
+  if (summary.total === 0 || pathname === "/offline-queue") return null;
 
-  // Entri yang ditolak server butuh tindakan manual — warnanya dibedakan
-  // supaya tidak tertukar dengan antrean normal yang tinggal menunggu sinyal.
-  const isRejected = !!rejectedError;
+  // Entri yang butuh tindakan manual dibedakan warnanya supaya tidak tertukar
+  // dengan antrean normal yang tinggal menunggu sinyal.
+  const attention = summary.needsAttention > 0;
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 max-w-xl mx-auto">
       <div
         className={cn(
           "border rounded-xl shadow-lg p-3 flex items-center gap-3",
-          isRejected ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"
+          attention ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"
         )}
       >
-        <span className="text-lg shrink-0">{isRejected ? "⚠️" : "⏳"}</span>
+        <span className="text-lg shrink-0">{attention ? "⚠️" : "⏳"}</span>
         <div className="flex-1 min-w-0">
-          <p
-            className={cn(
-              "text-xs font-semibold",
-              isRejected ? "text-red-900" : "text-amber-900"
-            )}
-          >
-            {pendingCount} pasien tersimpan offline
+          <p className={cn("text-xs font-semibold", attention ? "text-red-900" : "text-amber-900")}>
+            {summary.total} pasien tersimpan offline
           </p>
-          <p className={cn("text-[11px]", isRejected ? "text-red-700" : "text-amber-700")}>
-            {isRejected
-              ? `Ditolak server: ${rejectedError} — data masih tersimpan, catat ulang manual atau hubungi developer.`
+          <p className={cn("text-[11px]", attention ? "text-red-700" : "text-amber-700")}>
+            {attention
+              ? `${summary.needsAttention} perlu dilengkapi/diperiksa sebelum bisa dikirim.`
               : needsLogin
                 ? "Sesi berakhir — login ulang agar data terkirim."
                 : "Akan terkirim otomatis saat ada koneksi."}
           </p>
         </div>
-        {!isOffline && (
-          <button
-            onClick={attemptSync}
-            disabled={syncing}
-            className={cn(
-              "shrink-0 text-xs font-semibold disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors",
-              isRejected
-                ? "text-red-800 bg-red-100 hover:bg-red-200"
-                : "text-amber-800 bg-amber-100 hover:bg-amber-200"
-            )}
+        {attention ? (
+          <Link
+            href="/offline-queue"
+            className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg text-red-800 bg-red-100 hover:bg-red-200"
           >
-            {syncing ? "Mengirim..." : "Kirim Sekarang"}
-          </button>
+            Periksa
+          </Link>
+        ) : (
+          !isOffline && (
+            <button
+              onClick={attemptSync}
+              disabled={syncing}
+              className="shrink-0 text-xs font-semibold disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors text-amber-800 bg-amber-100 hover:bg-amber-200"
+            >
+              {syncing ? "Mengirim..." : "Kirim Sekarang"}
+            </button>
+          )
         )}
       </div>
     </div>

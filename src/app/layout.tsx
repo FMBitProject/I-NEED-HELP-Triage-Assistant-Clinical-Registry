@@ -38,9 +38,10 @@ export default function RootLayout({
             {children}
             <FeedbackButton />
           </PendingApprovalGate>
+          {/* Di dalam AuthProvider: sinkronisasi butuh tahu siapa yang login. */}
+          <OfflineSync />
         </AuthProvider>
         <PwaRegister />
-        <OfflineSync />
         <ErrorReporter />
       </body>
     </html>
