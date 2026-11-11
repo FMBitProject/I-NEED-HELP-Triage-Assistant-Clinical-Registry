@@ -28,7 +28,7 @@ vi.mock("@/lib/db", () => ({
     // select().from(outcomes)                        → outcome (di-await langsung)
     select: () => ({
       from: () => ({
-        innerJoin: () => ({ orderBy: async () => [patientRow] }),
+        innerJoin: () => ({ where: () => ({ orderBy: async () => [patientRow] }) }),
         then: (resolve: (v: unknown[]) => void) => resolve([]),
       }),
     }),

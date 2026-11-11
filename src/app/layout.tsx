@@ -6,6 +6,7 @@ import { PwaRegister } from "@/components/pwa-register";
 import { OfflineSync } from "@/components/offline-sync";
 import { FeedbackButton } from "@/components/feedback-button";
 import { ErrorReporter } from "@/components/error-reporter";
+import { DemoBanner } from "@/components/demo-banner";
 
 export const metadata: Metadata = {
   title: "Registry Gagal Jantung",
@@ -40,6 +41,7 @@ export default function RootLayout({
           </PendingApprovalGate>
           {/* Di dalam AuthProvider: sinkronisasi butuh tahu siapa yang login. */}
           <OfflineSync />
+          <DemoBanner />
         </AuthProvider>
         <PwaRegister />
         <ErrorReporter />

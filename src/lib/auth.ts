@@ -1,7 +1,8 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { APIError } from "better-auth/api";
+import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
+import { DEMO_BLOCKED_AUTH_PATHS, DEMO_FORBIDDEN_MESSAGE, isDemoUser } from "./demo";
 import { db } from "./db";
 import * as schema from "./db/schema";
 import { INVALID_DOCTOR_TYPE_MESSAGE, isValidDoctorType } from "./doctor-type";
@@ -166,6 +167,18 @@ export const auth = betterAuth({
         },
       },
     },
+  },
+  // Akun demo dipakai bersama semua pengunjung: blokir endpoint bawaan
+  // better-auth yang bisa mengunci/merusak akun itu untuk orang lain
+  // (ganti password, hapus akun, cabut sesi semua orang, dst).
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (!(DEMO_BLOCKED_AUTH_PATHS as readonly string[]).includes(ctx.path)) return;
+      const current = await getSessionFromCtx(ctx);
+      if (isDemoUser(current?.user)) {
+        throw new APIError("FORBIDDEN", { message: DEMO_FORBIDDEN_MESSAGE });
+      }
+    }),
   },
   plugins: [nextCookies()],
 });

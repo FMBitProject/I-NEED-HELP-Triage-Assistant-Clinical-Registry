@@ -5,6 +5,7 @@ import { buildCsv } from "@/lib/csv";
 import { ACCESS_LOG_FAILED_MESSAGE, recordAccess } from "@/lib/access-log";
 import { EXPORT_HEADERS } from "@/lib/export-columns";
 import { efCategory } from "@/lib/ef-category";
+import { excludeDemoUser } from "@/lib/demo";
 import { eq } from "drizzle-orm";
 
 // Minimalisasi data (UU PDP): ekspor riset sengaja TIDAK memuat inisial
@@ -57,6 +58,8 @@ export async function GET(request: Request) {
       })
       .from(patients)
       .innerJoin(user, eq(patients.doctorId, user.id))
+      // Pasien akun demo (publik, isinya data coba-coba) tidak boleh masuk data riset.
+      .where(excludeDemoUser())
       .orderBy(patients.createdAt),
     db.select().from(outcomes),
   ]);

@@ -25,9 +25,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DOCTOR_TYPE_OPTIONS } from "@/lib/doctor-type";
 import { clearLocalPatientData } from "@/lib/local-data";
+import { useDemoStatus } from "@/hooks/use-demo-status";
 
 export default function SettingsPage() {
   const { doctor, isLoading } = useAuth();
+  const demo = useDemoStatus(doctor?.id ?? null);
   const router = useRouter();
   const [deletePhase, setDeletePhase] = useState<"idle" | "confirm" | "typing" | "deleting">("idle");
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -184,6 +186,12 @@ export default function SettingsPage() {
           </button>
 
           <h1 className="text-xl font-bold text-gray-900">Pengaturan Akun</h1>
+          {demo.active && (
+            <p className="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              Anda memakai <strong>akun demo bersama</strong>. Ubah password, data etik, dan hapus akun
+              tidak tersedia supaya akun ini tetap bisa dipakai pengunjung lain.
+            </p>
+          )}
 
           {/* Profile info */}
           <Card className="border-0 shadow-sm">
@@ -256,6 +264,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Change password */}
+          {!demo.active && (
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -317,6 +326,7 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+          )}
 
           {/* Legal */}
           <Card className="border-0 shadow-sm">
@@ -364,6 +374,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Ethical Clearance */}
+          {!demo.active && (
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -418,8 +429,10 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+          )}
 
           {/* Delete account */}
+          {!demo.active && (
           <Card className="border-red-200 ring-1 ring-red-100 border-0 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2 text-red-700">
@@ -515,6 +528,7 @@ export default function SettingsPage() {
               )}
             </CardContent>
           </Card>
+          )}
         </div>
       </main>
     </div>

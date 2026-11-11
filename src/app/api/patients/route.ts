@@ -13,6 +13,7 @@ import { HF_ONSET_LABELS } from "@/lib/hf-onset";
 import { CONSENT_BASIS_LABELS, MISSING_CONSENT_MESSAGE } from "@/lib/consent";
 import { checkPatientInitial } from "@/lib/patient-initial";
 import { INVALID_BODY_RESPONSE, readJsonObject } from "@/lib/request-helpers";
+import { DEMO_LIMIT_MESSAGE, DEMO_PATIENT_LIMIT, countDemoPatients, isDemoUser } from "@/lib/demo";
 
 export async function GET() {
   const { session, error } = await requireApprovedSession();
@@ -55,6 +56,13 @@ export async function POST(request: Request) {
   // Field selain yang divalidasi di bawah diteruskan apa adanya seperti sebelumnya.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const body = parsedBody as Record<string, any>;
+
+  // Akun demo bersifat publik — batasi jumlah pasiennya supaya tidak bisa
+  // dibanjiri. 429 = ditolak karena isinya, jadi antrean offline menahannya
+  // (tidak dikirim ulang terus-menerus).
+  if (isDemoUser(session.user) && (await countDemoPatients(session.user.id)) >= DEMO_PATIENT_LIMIT) {
+    return Response.json({ error: DEMO_LIMIT_MESSAGE }, { status: 429 });
+  }
 
   // Kriteria inklusi registri: pasien baru wajib punya NT-proBNP. Dicek lagi
   // di sini (bukan cuma di form) supaya entri offline-queue lama yang antre
