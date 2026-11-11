@@ -11,10 +11,10 @@ import {
   AlertCircle,
   CheckSquare,
   Building2,
-  ShieldCheck,
 } from "lucide-react";
-import { CONSENT_BASIS_OPTIONS } from "@/lib/consent";
-import { normalizePatientInitial, INVALID_INITIAL_MESSAGE } from "@/lib/patient-initial";
+import { MISSING_CONSENT_MESSAGE } from "@/lib/consent";
+import { checkPatientInitial, MAX_INITIAL_INPUT_LENGTH } from "@/lib/patient-initial";
+import { ConsentBasisField } from "@/components/consent-basis-field";
 import { useAuth } from "@/contexts/auth-context";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
@@ -227,10 +227,12 @@ export default function NewPatientPage() {
     const lvef = parseNum(profile.lvef);
     const egfr = parseNum(profile.egfr);
 
-    if (!profile.consentBasis)
-      errs.push("Dasar persetujuan pasien wajib dipilih (informed consent atau waiver komite etik)");
+    if (!profile.consentBasis) errs.push(MISSING_CONSENT_MESSAGE);
     if (!profile.patientInitial.trim()) errs.push("Inisial pasien wajib diisi");
-    else if (!normalizePatientInitial(profile.patientInitial)) errs.push(INVALID_INITIAL_MESSAGE);
+    else {
+      const initial = checkPatientInitial(profile.patientInitial);
+      if (!initial.ok) errs.push(initial.error);
+    }
     if (!profile.careSetting)
       errs.push("Lokasi perawatan wajib dipilih (poliklinik atau rawat inap)");
     if (age === null || age < 1) errs.push("Usia wajib diisi berupa angka");
@@ -259,9 +261,17 @@ export default function NewPatientPage() {
 
   // clientRequestId dibuat sekali per submit dan ikut tersimpan di antrean
   // offline, sehingga kirim ulang otomatis tidak membuat pasien dobel.
-  const buildPatientPayload = (): PendingPatientPayload => ({
+  // Hanya dipanggil setelah validate() lolos.
+  const buildPatientPayload = (): PendingPatientPayload => {
+    const initial = checkPatientInitial(profile.patientInitial);
+    if (!initial.ok) {
+      // Tidak boleh terjadi — lebih baik gagal keras daripada nilai mentah
+      // yang tidak valid masuk antrean offline lalu ditolak server.
+      throw new Error("invariant: validate() harus menolak inisial tidak valid");
+    }
+    return {
     clientRequestId: crypto.randomUUID(),
-    patientInitial: normalizePatientInitial(profile.patientInitial) ?? profile.patientInitial.toUpperCase().trim(),
+    patientInitial: initial.value,
     consentBasis: profile.consentBasis || null,
     age: parseNum(profile.age) as number,
     gender: profile.gender as "M" | "F",
@@ -303,7 +313,8 @@ export default function NewPatientPage() {
     hfOnset: profile.hfOnset || null,
     careSetting: profile.careSetting || null,
     visitDisposition: profile.visitDisposition || null,
-  });
+    };
+  };
 
   const handleSubmit = async () => {
     if (!validate()) {
@@ -343,7 +354,8 @@ export default function NewPatientPage() {
       } else if (isNetworkError(err)) {
         // Tidak ada sinyal: antre di perangkat, sinkron otomatis nanti.
         try {
-          await enqueuePendingPatient(payload);
+          // `doctor` pasti ada: halaman ini me-return null sebelum login.
+          await enqueuePendingPatient(payload, doctor!.id);
           setSavedOffline(true);
         } catch {
           setSubmitError(
@@ -448,24 +460,10 @@ export default function NewPatientPage() {
             )}
 
             {/* Dasar hukum pemrosesan data pasien (UU PDP) — diisi paling awal */}
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <ShieldCheck className="w-4 h-4 text-blue-600" />
-                  <h3 className="text-sm font-semibold text-gray-900">Persetujuan Pasien *</h3>
-                </div>
-                <p className="text-xs text-gray-500 leading-relaxed -mt-1">
-                  Data kesehatan termasuk data pribadi spesifik (UU PDP). Pasien hanya
-                  boleh didaftarkan bila sudah memberi persetujuan, atau bila komite etik
-                  studi ini memberikan waiver informed consent.
-                </p>
-                <OptionCardGroup
-                  options={CONSENT_BASIS_OPTIONS}
-                  value={profile.consentBasis}
-                  onChange={(v) => updateProfile("consentBasis", v)}
-                />
-              </CardContent>
-            </Card>
+            <ConsentBasisField
+              value={profile.consentBasis}
+              onChange={(v) => updateProfile("consentBasis", v)}
+            />
 
             {/* Lokasi perawatan — pemisah populasi poli vs rawat inap */}
             <Card className="border-0 shadow-sm">
@@ -498,11 +496,11 @@ export default function NewPatientPage() {
                       placeholder="misal: BW"
                       value={profile.patientInitial}
                       onChange={(e) => updateProfile("patientInitial", e.target.value.toUpperCase())}
-                      maxLength={4}
+                      maxLength={MAX_INITIAL_INPUT_LENGTH}
                       className="uppercase"
                     />
                     <p className="text-[11px] text-gray-400">
-                      Huruf saja. Jangan isi nama, NIK, atau no. RM.
+                      Huruf saja, maks. 4. Jangan isi nama, NIK, atau no. RM.
                     </p>
                   </div>
                   <div className="space-y-1">

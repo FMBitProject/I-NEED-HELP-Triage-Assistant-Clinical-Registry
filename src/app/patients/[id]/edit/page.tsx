@@ -10,10 +10,10 @@ import {
   Pill,
   AlertCircle,
   Building2,
-  ShieldCheck,
 } from "lucide-react";
-import { CONSENT_BASIS_OPTIONS } from "@/lib/consent";
-import { normalizePatientInitial, INVALID_INITIAL_MESSAGE } from "@/lib/patient-initial";
+import { MISSING_CONSENT_MESSAGE } from "@/lib/consent";
+import { checkPatientInitial, MAX_INITIAL_INPUT_LENGTH } from "@/lib/patient-initial";
+import { ConsentBasisField } from "@/components/consent-basis-field";
 import { useAuth } from "@/contexts/auth-context";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
@@ -117,6 +117,11 @@ export default function EditPatientPage() {
   // Data lama (sebelum field persetujuan ada) belum punya catatan dasar
   // persetujuan — ditampilkan peringatan agar dokter melengkapinya.
   const [hadConsent, setHadConsent] = useState(true);
+  // Inisial seperti yang tersimpan di server. Data lama bisa berisi inisial
+  // yang kini ditolak aturan "mirip nama" (mis. ANI); kalau tidak diubah,
+  // jangan blokir edit field lain gara-gara itu.
+  const [loadedInitial, setLoadedInitial] = useState("");
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -124,11 +129,21 @@ export default function EditPatientPage() {
     if (!isLoading && !doctor) router.replace("/login");
   }, [doctor, isLoading, router]);
 
+  // Bergantung pada doctorId, BUKAN objek `doctor`: objek itu dibuat ulang
+  // setiap AuthProvider render (mis. session di-refetch saat tab fokus), dan
+  // effect yang ikut jalan ulang akan menimpa isian form yang sedang diedit.
+  const doctorId = doctor?.id;
   useEffect(() => {
-    if (!id || !doctor) return;
-    fetch(`/api/patients/${id}`)
-      .then((r) => (r.ok ? r.json() : null))
+    if (!id || !doctorId) return;
+    const ctrl = new AbortController();
+    fetch(`/api/patients/${id}`, { signal: ctrl.signal })
+      .then((r) => {
+        if (r.status === 404) return null;
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
+        if (ctrl.signal.aborted) return;
         if (!data) { router.replace("/patients"); return; }
         const p = data.patient;
         setForm({
@@ -168,10 +183,34 @@ export default function EditPatientPage() {
         });
         setHadCareSetting(!!p.careSetting);
         setHadConsent(!!p.consentBasis);
+        setLoadedInitial(p.patientInitial ?? "");
+      })
+      .catch((err) => {
+        if (ctrl.signal.aborted) return;
+        console.error("[edit] gagal memuat pasien", err);
+        setLoadError("Gagal memuat data pasien. Periksa koneksi, lalu muat ulang halaman.");
       });
-  }, [id, doctor, router]);
+    return () => ctrl.abort();
+  }, [id, doctorId, router]);
 
-  if (isLoading || !doctor || !form) return null;
+  if (isLoading || !doctor) return null;
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Navbar />
+        <main className="pt-14">
+          <div className="max-w-2xl mx-auto px-4 py-10 text-center space-y-3">
+            <AlertCircle className="w-6 h-6 text-red-500 mx-auto" />
+            <p className="text-sm text-gray-700">{loadError}</p>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Muat ulang
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+  if (!form) return null;
 
   const update = (key: keyof EditFormData, value: string | boolean) => {
     setForm((f) => f ? { ...f, [key]: value } : f);
@@ -233,14 +272,18 @@ export default function EditPatientPage() {
     setErrors([]);
   };
 
+  const initialChanged = form.patientInitial.trim().toUpperCase() !== loadedInitial;
+
   const validate = (): boolean => {
     const errs: string[] = [];
     // Wajib juga untuk data lama: data pasien tanpa dasar persetujuan tidak
     // boleh terus disimpan (UU PDP). Bila memang tidak ada, data harus dihapus.
-    if (!form.consentBasis)
-      errs.push("Dasar persetujuan pasien wajib dipilih — bila pasien tidak pernah memberi persetujuan dan tidak ada waiver komite etik, hapus data pasien ini");
+    if (!form.consentBasis) errs.push(MISSING_CONSENT_MESSAGE);
     if (!form.patientInitial.trim()) errs.push("Inisial pasien wajib diisi");
-    else if (!normalizePatientInitial(form.patientInitial)) errs.push(INVALID_INITIAL_MESSAGE);
+    else if (initialChanged) {
+      const initial = checkPatientInitial(form.patientInitial);
+      if (!initial.ok) errs.push(initial.error);
+    }
     if (!form.age || Number(form.age) < 1) errs.push("Usia wajib diisi");
     if (!form.gender) errs.push("Jenis kelamin wajib dipilih");
     if (!form.systolicBp || Number(form.systolicBp) < 50)
@@ -268,7 +311,11 @@ export default function EditPatientPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          patientInitial: form.patientInitial.toUpperCase().trim(),
+          // Tidak diubah → kirim apa adanya (server melewati validasinya);
+          // diubah → kirim versi ternormalisasi yang sudah lolos validate().
+          patientInitial: initialChanged
+            ? (checkPatientInitial(form.patientInitial) as { ok: true; value: string }).value
+            : loadedInitial,
           age: Number(form.age),
           gender: form.gender,
           systolicBp: Number(form.systolicBp),
@@ -358,26 +405,11 @@ export default function EditPatientPage() {
             )}
 
             {/* Dasar hukum pemrosesan data pasien (UU PDP) */}
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <ShieldCheck className="w-4 h-4 text-blue-600" />
-                  <h3 className="text-sm font-semibold text-gray-900">Persetujuan Pasien *</h3>
-                </div>
-                {!hadConsent && (
-                  <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5">
-                    Data ini didaftarkan sebelum pencatatan persetujuan diwajibkan. Pilih
-                    dasar persetujuan yang sebenarnya. Bila pasien tidak pernah memberi
-                    persetujuan dan tidak ada waiver komite etik, hapus data pasien ini.
-                  </p>
-                )}
-                <OptionCardGroup
-                  options={CONSENT_BASIS_OPTIONS}
-                  value={form.consentBasis}
-                  onChange={(v) => update("consentBasis", v)}
-                />
-              </CardContent>
-            </Card>
+            <ConsentBasisField
+              value={form.consentBasis}
+              onChange={(v) => update("consentBasis", v)}
+              legacyMissing={!hadConsent}
+            />
 
             {/* Lokasi perawatan — pemisah populasi poli vs rawat inap */}
             <Card className="border-0 shadow-sm">
@@ -418,7 +450,7 @@ export default function EditPatientPage() {
                       placeholder="misal: BW"
                       value={form.patientInitial}
                       onChange={(e) => update("patientInitial", e.target.value.toUpperCase())}
-                      maxLength={4}
+                      maxLength={MAX_INITIAL_INPUT_LENGTH}
                       className="uppercase"
                     />
                   </div>

@@ -63,6 +63,44 @@ export interface PendingPatient {
   // menempel "menunggu sinkronisasi" selamanya.
   rejectedAttempts?: number;
   lastError?: string | null;
+  /**
+   * HTTP status penolakan terakhir. 4xx = isi datanya yang ditolak (mis. belum
+   * ada dasar persetujuan) — dikirim ulang otomatis pun pasti ditolak lagi,
+   * jadi entri DITAHAN sampai dokter memperbaikinya di /offline-queue.
+   * 5xx = gangguan server, tetap dicoba ulang otomatis.
+   */
+  lastErrorStatus?: number | null;
+  /**
+   * ID user yang mengisi entri ini. Antrean ada di perangkat, bukan di akun —
+   * tanpa pemilik, entri dokter A ikut terkirim (dan tercatat sebagai pasien
+   * milik dokter B) saat B login di HP yang sama. Entri lama tanpa field ini
+   * tidak pernah dikirim otomatis; harus diklaim manual di /offline-queue.
+   */
+  ownerId?: string;
+}
+
+/** Entri yang ditolak karena isinya — butuh perbaikan manual, jangan auto-retry. */
+export function isHeldForReview(entry: PendingPatient): boolean {
+  return (
+    !!entry.rejectedAttempts &&
+    typeof entry.lastErrorStatus === "number" &&
+    entry.lastErrorStatus >= 400 &&
+    entry.lastErrorStatus < 500
+  );
+}
+
+/**
+ * Entri yang boleh dilihat user ini: miliknya sendiri, plus entri lama tanpa
+ * pemilik (perlu diklaim). Entri milik user lain di perangkat yang sama
+ * TIDAK ditampilkan — itu data pasien dokter lain.
+ */
+export function isVisibleTo(entry: PendingPatient, userId: string): boolean {
+  return entry.ownerId === undefined || entry.ownerId === userId;
+}
+
+/** Entri yang perlu tindakan manual: belum diklaim, atau ditahan karena ditolak. */
+export function needsAttention(entry: PendingPatient): boolean {
+  return entry.ownerId === undefined || isHeldForReview(entry);
 }
 
 export interface QueueStorage {
@@ -270,10 +308,12 @@ export function notifyQueueChanged() {
 
 export async function enqueuePendingPatient(
   patient: PendingPatientPayload,
+  ownerId: string,
   storage: QueueStorage = indexedDbStorage
 ): Promise<PendingPatient> {
   const full: PendingPatient = {
     patient,
+    ownerId,
     queueId: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
   };
@@ -282,14 +322,79 @@ export async function enqueuePendingPatient(
   return full;
 }
 
-export async function countPendingPatients(
+/** Entri yang terlihat oleh user ini (miliknya + entri lama tanpa pemilik). */
+export async function listPendingPatientsFor(
+  userId: string,
   storage: QueueStorage = indexedDbStorage
-): Promise<number> {
-  return (await storage.list()).length;
+): Promise<PendingPatient[]> {
+  return (await storage.list()).filter((e) => isVisibleTo(e, userId));
+}
+
+export interface QueueSummary {
+  /** Semua entri yang terlihat oleh user ini. */
+  total: number;
+  /** Bagian dari `total` yang butuh tindakan manual di /offline-queue. */
+  needsAttention: number;
+}
+
+export async function summarizePendingPatients(
+  userId: string,
+  storage: QueueStorage = indexedDbStorage
+): Promise<QueueSummary> {
+  const visible = await listPendingPatientsFor(userId, storage);
+  return { total: visible.length, needsAttention: visible.filter(needsAttention).length };
+}
+
+async function findVisibleEntry(
+  queueId: string,
+  userId: string,
+  storage: QueueStorage
+): Promise<PendingPatient> {
+  const entry = (await storage.list()).find((e) => e.queueId === queueId);
+  if (!entry || !isVisibleTo(entry, userId)) {
+    throw new Error("Entri antrean tidak ditemukan di perangkat ini.");
+  }
+  return entry;
 }
 
 /**
- * Kirim semua entri antrean ke server, urut dari yang paling lama.
+ * Perbaiki entri (mis. lengkapi dasar persetujuan) dan/atau klaim entri lama
+ * tanpa pemilik, lalu lepaskan tahanannya supaya ikut sinkron berikutnya.
+ * Entri milik user lain tidak bisa disentuh.
+ */
+export async function resolvePendingPatient(
+  queueId: string,
+  userId: string,
+  patch: Partial<PendingPatientPayload>,
+  storage: QueueStorage = indexedDbStorage
+): Promise<void> {
+  const entry = await findVisibleEntry(queueId, userId, storage);
+  await storage.update({
+    ...entry,
+    ownerId: userId,
+    patient: { ...entry.patient, ...patch },
+    rejectedAttempts: 0,
+    lastError: null,
+    lastErrorStatus: null,
+  });
+  notifyQueueChanged();
+}
+
+/** Buang entri secara permanen (dokter memutuskan datanya tidak dipakai). */
+export async function discardPendingPatient(
+  queueId: string,
+  userId: string,
+  storage: QueueStorage = indexedDbStorage
+): Promise<void> {
+  await findVisibleEntry(queueId, userId, storage);
+  await storage.remove(queueId);
+  notifyQueueChanged();
+}
+
+/**
+ * Kirim entri antrean MILIK `userId` ke server, urut dari yang paling lama.
+ * Entri milik user lain, entri lama tanpa pemilik, dan entri yang ditahan
+ * (ditolak 4xx) dilewati — lihat isVisibleTo / isHeldForReview.
  *
  * - Gagal jaringan (fetch reject) → berhenti, entri tetap di antrean.
  * - 401/403 (sesi habis) → berhenti, tandai needsLogin.
@@ -300,10 +405,13 @@ export async function countPendingPatients(
  *   ditolak akan menempel sebagai "menunggu sinkronisasi" selamanya.
  */
 export async function syncPendingPatients(
+  userId: string,
   storage: QueueStorage = indexedDbStorage,
   fetchFn: typeof fetch = fetch
 ): Promise<SyncResult> {
-  const entries = await storage.list();
+  const entries = (await storage.list()).filter(
+    (e) => e.ownerId === userId && !isHeldForReview(e)
+  );
   let synced = 0;
   let rejected = 0;
   let needsLogin = false;
@@ -329,6 +437,7 @@ export async function syncPendingPatients(
             ...entry,
             rejectedAttempts: (entry.rejectedAttempts ?? 0) + 1,
             lastError: reason,
+            lastErrorStatus: res.status,
           })
           .catch(() => {});
         continue;
@@ -345,7 +454,7 @@ export async function syncPendingPatients(
   if (synced > 0 || rejected > 0) notifyQueueChanged();
   return {
     synced,
-    remaining: (await storage.list()).length,
+    remaining: (await listPendingPatientsFor(userId, storage)).length,
     needsLogin,
     rejected,
     lastRejectionError,

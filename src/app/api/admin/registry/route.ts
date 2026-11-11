@@ -2,12 +2,23 @@ import { db } from "@/lib/db";
 import { outcomes, patients, user } from "@/lib/db/schema";
 import { requireAdmin } from "@/lib/api-auth";
 import { desc, eq, inArray } from "drizzle-orm";
+import { ACCESS_LOG_FAILED_MESSAGE, recordAccess } from "@/lib/access-log";
 
 // Registry lintas dokter — hanya ADMIN. Read-only: tidak pernah menulis
 // atau mengubah data pasien milik dokter manapun.
-export async function GET() {
-  const { error } = await requireAdmin();
+//
+// Respons ini berisi SELURUH registri (lebih lengkap dari CSV ekspor), jadi
+// setiap aksesnya dicatat di access_logs sama seperti ekspor.
+export async function GET(request: Request) {
+  const { session, error } = await requireAdmin();
   if (error) return error;
+
+  try {
+    await recordAccess(request, session.user, "view_registry", {});
+  } catch (err) {
+    console.error("[admin/registry] gagal mencatat access_log", err);
+    return Response.json({ error: ACCESS_LOG_FAILED_MESSAGE }, { status: 503 });
+  }
 
   const rows = await db
     .select({

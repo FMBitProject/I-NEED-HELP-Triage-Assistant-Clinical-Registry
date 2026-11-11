@@ -11,10 +11,21 @@ import {
 } from "@/lib/disposition";
 import { HF_ONSET_LABELS } from "@/lib/hf-onset";
 import { CONSENT_BASIS_LABELS, MISSING_CONSENT_MESSAGE } from "@/lib/consent";
-import { INVALID_INITIAL_MESSAGE, normalizePatientInitial } from "@/lib/patient-initial";
+import { checkPatientInitial } from "@/lib/patient-initial";
+import { INVALID_BODY_RESPONSE, readJsonObject } from "@/lib/request-helpers";
+import { ACCESS_LOG_FAILED_MESSAGE, recordAccess } from "@/lib/access-log";
+
+/** Field yang nilainya tidak boleh tersalin ke audit trail (bisa berisi identitas). */
+const REDACTED_AUDIT_FIELDS = new Set(["patientInitial"]);
+const REDACTED_AUDIT_VALUE = "[disamarkan]";
+
+function auditValue(field: string, value: unknown): string {
+  if (REDACTED_AUDIT_FIELDS.has(field)) return REDACTED_AUDIT_VALUE;
+  return String(value ?? "");
+}
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { session, error } = await requireApprovedSession();
@@ -33,6 +44,19 @@ export async function GET(
 
   if (!patient) {
     return Response.json({ error: "Not found" }, { status: 404 });
+  }
+
+  // Admin membuka pasien milik dokter lain = akses lintas dokter → dicatat.
+  if (isAdmin && patient.doctorId !== session.user.id) {
+    try {
+      await recordAccess(req, session.user, "admin_view_patient", {
+        patientId: id,
+        ownerDoctorId: patient.doctorId,
+      });
+    } catch (err) {
+      console.error("[patients/get] gagal mencatat access_log", err);
+      return Response.json({ error: ACCESS_LOG_FAILED_MESSAGE }, { status: 503 });
+    }
   }
 
   const outcome = await db.query.outcomes.findFirst({
@@ -70,7 +94,8 @@ export async function PATCH(
     }
   }
 
-  const body = await req.json();
+  const body = await readJsonObject(req);
+  if (!body) return INVALID_BODY_RESPONSE();
   const allowedFields = [
     "patientInitial", "age", "gender", "systolicBp", "diastolicBp",
     "heartRate", "lvef", "egfr", "ntProbnp", "comorbidDm", "comorbidHtn",
@@ -114,9 +139,16 @@ export async function PATCH(
   }
 
   if ("patientInitial" in updates) {
-    const initial = normalizePatientInitial(updates.patientInitial);
-    if (!initial) return Response.json({ error: INVALID_INITIAL_MESSAGE }, { status: 400 });
-    updates.patientInitial = initial;
+    if (updates.patientInitial === existing.patientInitial) {
+      // Tidak berubah (form edit selalu mengirim ulang inisial). Data lama
+      // bisa berisi inisial yang kini ditolak aturan "mirip nama" — jangan
+      // blokir edit field lain gara-gara nilai yang tidak disentuh.
+      delete updates.patientInitial;
+    } else {
+      const initial = checkPatientInitial(updates.patientInitial);
+      if (!initial.ok) return Response.json({ error: initial.error }, { status: 400 });
+      updates.patientInitial = initial.value;
+    }
   }
 
   // Lokasi perawatan yang sudah tercatat tidak boleh dikosongkan lagi. Null
@@ -174,19 +206,21 @@ export async function PATCH(
     .where(eq(patients.id, id))
     .returning();
 
-  // Log each changed field to audit trail
+  // Log each changed field to audit trail. Field identitas disamarkan: kalau
+  // data lama berisi nama lengkap lalu dikoreksi jadi inisial, nama itu tidak
+  // boleh tetap tersimpan di old_value (koreksinya jadi percuma).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const oldOf = (field: string) => (existing as any)[field];
   const auditEntries = Object.entries(updates)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .filter(([field, newVal]) => String((existing as any)[field] ?? "") !== String(newVal ?? ""))
+    .filter(([field, newVal]) => String(oldOf(field) ?? "") !== String(newVal ?? ""))
     .map(([field, newVal]) => ({
       patientId: id,
       userId: session.user.id,
       userName: session.user.name,
       action: "update",
       changedField: field,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      oldValue: String((existing as any)[field] ?? ""),
-      newValue: String(newVal ?? ""),
+      oldValue: auditValue(field, oldOf(field)),
+      newValue: auditValue(field, newVal),
     }));
 
   if (auditEntries.length > 0) {
@@ -197,7 +231,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { session, error } = await requireApprovedSession();
@@ -205,22 +239,39 @@ export async function DELETE(
 
   const { id } = await params;
 
+  // ADMIN boleh menghapus pasien dokter manapun — jalur hak hapus (UU PDP)
+  // untuk data yang sudah difinalisasi. Sebelumnya query ini selalu memfilter
+  // doctorId = admin sendiri, sehingga cabang "isAdmin" di bawah tidak pernah
+  // tercapai untuk pasien milik dokter lain.
+  const isAdmin = (session.user as { role?: string }).role === "ADMIN";
   const patient = await db.query.patients.findFirst({
-    where: and(eq(patients.id, id), eq(patients.doctorId, session.user.id)),
+    where: isAdmin
+      ? eq(patients.id, id)
+      : and(eq(patients.id, id), eq(patients.doctorId, session.user.id)),
   });
 
   if (!patient) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (patient.finalizedAt) {
-    const isAdmin = (session.user as { role?: string }).role === "ADMIN";
-    if (!isAdmin) {
-      return Response.json(
-        { error: "Data sudah difinalisasi dan tidak dapat dihapus. Hubungi developer." },
-        { status: 423 }
-      );
-    }
+  if (patient.finalizedAt && !isAdmin) {
+    return Response.json(
+      { error: "Data sudah difinalisasi dan tidak dapat dihapus. Minta admin untuk menghapusnya." },
+      { status: 423 }
+    );
+  }
+
+  // audit_logs pasien ikut terhapus (cascade), jadi jejak penghapusan dicatat
+  // di access_logs — tanpa data klinis, hanya ID. Gagal catat = batal hapus.
+  try {
+    await recordAccess(req, session.user, "delete_patient", {
+      patientId: id,
+      ownerDoctorId: patient.doctorId,
+      finalized: !!patient.finalizedAt,
+    });
+  } catch (err) {
+    console.error("[patients/delete] gagal mencatat access_log", err);
+    return Response.json({ error: ACCESS_LOG_FAILED_MESSAGE }, { status: 503 });
   }
 
   await db.delete(patients).where(eq(patients.id, id));

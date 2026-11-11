@@ -28,6 +28,7 @@ import { Patient, Outcome, AuditLog } from "@/lib/types";
 import { CARE_SETTING_LABELS } from "@/lib/care-setting";
 import { CONSENT_BASIS_LABELS } from "@/lib/consent";
 import { VISIT_DISPOSITION_LABELS } from "@/lib/disposition";
+import { isEnumValue } from "@/lib/enum-field";
 import { countGdmt } from "@/lib/gdmt";
 import { GDMT_OMISSION_REASON_LABELS } from "@/lib/gdmt-reasons";
 import { HF_ONSET_LABELS } from "@/lib/hf-onset";
@@ -244,12 +245,18 @@ export default function PatientDetailPage() {
                   </span>
                 </p>
               )}
-              {patient.consentBasis && CONSENT_BASIS_LABELS[patient.consentBasis] ? (
+              {/* isEnumValue, bukan bracket lookup: aman dari key prototype
+                  ("toString") dan membedakan "nilai aneh di DB" dari "kosong". */}
+              {isEnumValue(CONSENT_BASIS_LABELS, patient.consentBasis) ? (
                 <p className="text-xs text-gray-600 mt-0.5">
                   {CONSENT_BASIS_LABELS[patient.consentBasis].icon} Persetujuan:{" "}
                   <span className="font-medium">
                     {CONSENT_BASIS_LABELS[patient.consentBasis].label}
                   </span>
+                </p>
+              ) : patient.consentBasis ? (
+                <p className="text-xs text-red-700 mt-0.5">
+                  ⚠️ Nilai dasar persetujuan tidak dikenal: {String(patient.consentBasis).slice(0, 40)} — hubungi developer
                 </p>
               ) : (
                 <p className="text-xs text-amber-700 mt-0.5">

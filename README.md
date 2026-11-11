@@ -67,6 +67,7 @@ Migrasi yang tertunda:
 |---|---|---|
 | [scripts/migrate-2026-11-care-setting.mjs](scripts/migrate-2026-11-care-setting.mjs) | Rename `ed_disposition` → `visit_disposition` (+ `DECEASED_ED` → `DECEASED`), tambah `care_setting` & `doctor_type` | `npm run db:migrate:care-setting` |
 | [scripts/migrate-2026-11-pdp.mjs](scripts/migrate-2026-11-pdp.mjs) | Tambah `patients.consent_basis` & tabel `access_logs` (UU PDP) — hanya menambah, tidak mengubah data | `npm run db:migrate:pdp` |
+| [scripts/migrate-2026-11-consent-check.mjs](scripts/migrate-2026-11-consent-check.mjs) | CHECK constraint nilai `consent_basis` — **opsional**, kode tidak bergantung padanya; batal otomatis bila ada nilai tidak valid | `npm run db:migrate:consent-check` |
 
 ## Peta Kode Penting
 

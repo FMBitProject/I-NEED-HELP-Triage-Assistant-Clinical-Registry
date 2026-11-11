@@ -17,17 +17,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { countGdmt } from "@/lib/gdmt";
+import { EXPORT_HEADERS } from "@/lib/export-columns";
 
 async function downloadFromAPI(filename: string) {
   const res = await fetch("/api/export");
-  if (!res.ok) throw new Error("Export gagal");
+  if (!res.ok) {
+    // Server mengirim alasan spesifik (mis. pencatatan akses gagal) — teruskan.
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? `Ekspor gagal (HTTP ${res.status}). Coba lagi.`);
+  }
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   a.click();
-  URL.revokeObjectURL(url);
+  // Revoke ditunda: sebagian browser membatalkan unduhan bila URL langsung dicabut.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export default function ExportPage() {
@@ -35,6 +41,7 @@ export default function ExportPage() {
   const router = useRouter();
   const [exporting, setExporting] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
   const [stats, setStats] = useState({ total: 0, withOutcome: 0, fullGdmt: 0 });
 
   useEffect(() => {
@@ -62,14 +69,17 @@ export default function ExportPage() {
 
   const exportAll = async () => {
     setExporting("all");
+    setExportError(null);
     try {
       await downloadFromAPI(`registry_export_${new Date().toISOString().slice(0, 10)}.csv`);
       setDone("all");
       setTimeout(() => setDone(null), 3000);
-    } catch {
-      // silent
+    } catch (err) {
+      console.error("[export] gagal", err);
+      setExportError(err instanceof Error ? err.message : "Ekspor gagal. Coba lagi.");
+    } finally {
+      setExporting(null);
     }
-    setExporting(null);
   };
 
 
@@ -167,7 +177,7 @@ export default function ExportPage() {
                     <span className="text-xs text-blue-600 font-medium">
                       {stats.total} pasien
                     </span>
-                    <span className="text-xs text-gray-400">43 kolom</span>
+                    <span className="text-xs text-gray-400">{EXPORT_HEADERS.length} kolom</span>
                     <span className="text-xs text-gray-400">.csv</span>
                   </div>
                 </div>
@@ -196,6 +206,12 @@ export default function ExportPage() {
               </>
             )}
           </Button>
+
+          {exportError && (
+            <p role="alert" className="text-center text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              {exportError}
+            </p>
+          )}
 
           {stats.total === 0 && (
             <p className="text-center text-xs text-gray-400">

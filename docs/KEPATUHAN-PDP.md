@@ -12,13 +12,13 @@ klinis) **tetap dihitung data pribadi**, bukan data anonim.
 | Kewajiban | Implementasi |
 |---|---|
 | Dasar hukum per pasien | Field wajib `consentBasis` (informed consent / waiver komite etik); API menolak pasien tanpa ini |
-| Minimalisasi data | Inisial maks. 4 huruf, tanpa angka, ditegakkan di server; peringatan di kolom teks bebas |
-| Minimalisasi saat ekspor | CSV riset tanpa inisial pasien & nama dokter |
-| Akuntabilitas | Audit trail per perubahan pasien; tabel `access_logs` untuk setiap ekspor CSV |
+| Minimalisasi data | Inisial maks. 4 huruf, tanpa angka, ditegakkan di server. Satu kata berpola nama (BUDI, SITI) ditolak kecuali ditulis bertitik (A.N.I). **Ini mitigasi, bukan jaminan**: kode tidak bisa membedakan nama dari inisial (mis. "ANDI" tetap lolos). Peringatan di kolom teks bebas |
+| Minimalisasi saat ekspor | CSV riset tanpa inisial pasien & nama dokter. **Belum**: kolom teks bebas (`outcomeNotes`, `*ReasonOther`) masih ikut terekspor |
+| Akuntabilitas | Audit trail per perubahan pasien (nilai inisial disamarkan). Tabel `access_logs` mencatat: ekspor CSV, buka registry admin, admin membuka pasien dokter lain, dan setiap penghapusan pasien. Gagal mencatat = aksinya dibatalkan |
 | Pembatasan akses | Dokter hanya melihat pasiennya sendiri; akun baru harus di-approve admin |
-| Hak hapus | Dokter bisa hapus pasien; dokter bisa hapus akun beserta datanya |
-| Lokasi data | DB Neon di Singapura; fungsi Vercel dipaksa ke `sin1` lewat `vercel.json` |
-| Data di perangkat | Cache daftar pasien dihapus saat logout |
+| Hak hapus | Dokter bisa hapus pasien yang belum final; **admin** bisa hapus pasien mana pun termasuk yang sudah final; dokter bisa hapus akun beserta datanya |
+| Lokasi data | DB Neon di Singapura; fungsi Vercel dipaksa ke `sin1` lewat `vercel.json` (CDN/edge tetap global) |
+| Data di perangkat | Logout menghapus salinan respons API pasien dari cache (juga saat offline). Bila offline, sesi server belum bisa diakhiri — aplikasi menampilkan peringatan, bukan pura-pura berhasil. Antrean offline terikat ke akun pengisinya: user lain di perangkat yang sama tidak bisa melihat/mengirimnya. **Belum**: cache tidak dibersihkan bila sesi habis tanpa logout manual |
 | Transparansi | Kebijakan privasi v2.0 menyesuaikan perilaku aplikasi yang sebenarnya |
 
 ## B. WAJIB diurus di luar kode (kode tidak bisa menyelesaikannya)
@@ -64,5 +64,6 @@ ekspor disimpan di database (`access_logs`), bukan hanya di log.
 1. Isi inisial saja. Jangan pernah nama, NIK, atau no. RM, termasuk di kolom catatan
 2. Pilih dasar persetujuan dengan jujur. Kalau tidak ada persetujuan, jangan didaftarkan
 3. Pasien minta datanya dihapus → hapus pasien di aplikasi (atau minta admin bila sudah final)
-4. File CSV ekspor: simpan di laptop terenkripsi, **jangan** kirim lewat grup WA
-5. Logout setelah memakai HP/komputer bersama
+4. Banner merah "perlu dilengkapi" di bawah layar → tekan **Periksa**, lengkapi persetujuan pasien yang tersimpan offline atau buang bila memang tidak ada persetujuan
+5. File CSV ekspor: simpan di laptop terenkripsi, **jangan** kirim lewat grup WA
+6. Logout setelah memakai HP/komputer bersama

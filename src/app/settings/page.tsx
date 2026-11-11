@@ -24,11 +24,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DOCTOR_TYPE_OPTIONS } from "@/lib/doctor-type";
+import { clearLocalPatientData } from "@/lib/local-data";
 
 export default function SettingsPage() {
-  const { doctor, logout, isLoading } = useAuth();
+  const { doctor, isLoading } = useAuth();
   const router = useRouter();
   const [deletePhase, setDeletePhase] = useState<"idle" | "confirm" | "typing" | "deleting">("idle");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [confirmText, setConfirmText] = useState("");
 
   // Ethical clearance state
@@ -154,9 +156,16 @@ export default function SettingsPage() {
     if (confirmText !== "HAPUS AKUN SAYA") return;
     setDeletePhase("deleting");
     try {
-      await fetch("/api/account", { method: "DELETE" });
-      await logout();
-    } catch {
+      const res = await fetch("/api/account", { method: "DELETE" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // Akun (dan sesinya) sudah terhapus di server — signOut tidak perlu dan
+      // bisa saja gagal karena sesinya sudah tidak ada. Cukup bersihkan data
+      // lokal lalu keluar.
+      await clearLocalPatientData();
+      window.location.replace("/login");
+    } catch (err) {
+      console.error("[settings] hapus akun gagal", err);
+      setDeleteError("Akun belum terhapus (koneksi/server bermasalah). Coba lagi.");
       setDeletePhase("typing");
     }
   };
@@ -480,6 +489,9 @@ export default function SettingsPage() {
                       disabled={deletePhase === "deleting"}
                     />
                   </div>
+                  {deleteError && (
+                    <p role="alert" className="text-xs text-red-700">{deleteError}</p>
+                  )}
                   <div className="flex gap-2">
                     <Button
                       variant="outline"

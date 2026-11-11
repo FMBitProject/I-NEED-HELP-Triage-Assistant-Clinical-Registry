@@ -11,7 +11,8 @@ import {
 } from "@/lib/disposition";
 import { HF_ONSET_LABELS } from "@/lib/hf-onset";
 import { CONSENT_BASIS_LABELS, MISSING_CONSENT_MESSAGE } from "@/lib/consent";
-import { INVALID_INITIAL_MESSAGE, normalizePatientInitial } from "@/lib/patient-initial";
+import { checkPatientInitial } from "@/lib/patient-initial";
+import { INVALID_BODY_RESPONSE, readJsonObject } from "@/lib/request-helpers";
 
 export async function GET() {
   const { session, error } = await requireApprovedSession();
@@ -49,7 +50,11 @@ export async function POST(request: Request) {
   const { session, error } = await requireApprovedSession();
   if (error) return error;
 
-  const body = await request.json();
+  const parsedBody = await readJsonObject(request);
+  if (!parsedBody) return INVALID_BODY_RESPONSE();
+  // Field selain yang divalidasi di bawah diteruskan apa adanya seperti sebelumnya.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const body = parsedBody as Record<string, any>;
 
   // Kriteria inklusi registri: pasien baru wajib punya NT-proBNP. Dicek lagi
   // di sini (bukan cuma di form) supaya entri offline-queue lama yang antre
@@ -66,16 +71,18 @@ export async function POST(request: Request) {
   // entri itu tetap tersimpan di perangkat dan ditandai "ditolak", jadi
   // dokter bisa mendaftarkannya ulang setelah memastikan persetujuannya.
   const consentParsed = parseOptionalEnum("consentBasis", body.consentBasis, CONSENT_BASIS_LABELS);
-  if (!consentParsed.ok || consentParsed.value === null) {
+  // Dua kasus dibedakan: nilai salah ketik/klien lama ("VERBAL") dapat pesan
+  // "nilai tidak valid", bukan "wajib dipilih" yang menyesatkan saat debugging.
+  if (!consentParsed.ok) return Response.json({ error: consentParsed.error }, { status: 400 });
+  if (consentParsed.value === null) {
     return Response.json({ error: MISSING_CONSENT_MESSAGE }, { status: 400 });
   }
   const consentBasis = consentParsed.value;
 
   // Minimalisasi data: hanya inisial, ditegakkan di server.
-  const patientInitial = normalizePatientInitial(body.patientInitial);
-  if (!patientInitial) {
-    return Response.json({ error: INVALID_INITIAL_MESSAGE }, { status: 400 });
-  }
+  const initialCheck = checkPatientInitial(body.patientInitial);
+  if (!initialCheck.ok) return Response.json({ error: initialCheck.error }, { status: 400 });
+  const patientInitial = initialCheck.value;
 
   // Field enum divalidasi di server: nilai sembarang ditolak dengan pesan
   // yang menyebut field-nya (muncul sebagai alasan penolakan di antrean

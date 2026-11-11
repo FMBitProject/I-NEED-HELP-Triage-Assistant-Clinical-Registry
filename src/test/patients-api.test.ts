@@ -7,11 +7,16 @@ const state = vi.hoisted(() => ({
   inserted: null as Record<string, unknown> | null,
   updated: null as Record<string, unknown> | null,
   existing: null as Record<string, unknown> | null,
+  audit: [] as Record<string, unknown>[],
+  accessLogs: [] as Record<string, unknown>[],
+  accessLogFails: false,
+  deleted: false,
+  role: "DOCTOR" as "DOCTOR" | "ADMIN",
 }));
 
 vi.mock("@/lib/api-auth", () => ({
   requireApprovedSession: async () => ({
-    session: { user: { id: "doc-1", name: "Dr. Test", role: "DOCTOR", approved: true } },
+    session: { user: { id: "doc-1", name: "Dr. Test", role: state.role, approved: true } },
     error: null,
   }),
 }));
@@ -19,14 +24,28 @@ vi.mock("@/lib/api-auth", () => ({
 vi.mock("@/lib/db", () => ({
   db: {
     insert: () => ({
-      values: (v: Record<string, unknown>) => {
-        // insert pasien (punya patientInitial) vs insert audit log (array)
-        if (!Array.isArray(v)) state.inserted = v;
+      values: (v: Record<string, unknown> | Record<string, unknown>[]) => {
+        // Tiga jenis insert: audit log (array), access log (punya ipAddress),
+        // dan pasien.
+        if (Array.isArray(v)) {
+          state.audit.push(...v);
+        } else if ("ipAddress" in v) {
+          if (state.accessLogFails) return Promise.reject(new Error("db down"));
+          state.accessLogs.push(v);
+          return Promise.resolve();
+        } else {
+          state.inserted = v;
+        }
         return {
           onConflictDoNothing: () => ({
-            returning: async () => [{ id: "p-1", egfr: null, ...v }],
+            returning: async () => [{ id: "p-1", egfr: null, ...(v as Record<string, unknown>) }],
           }),
         };
+      },
+    }),
+    delete: () => ({
+      where: async () => {
+        state.deleted = true;
       },
     }),
     update: () => ({
@@ -44,7 +63,7 @@ vi.mock("@/lib/db", () => ({
 }));
 
 const { POST } = await import("@/app/api/patients/route");
-const { PATCH } = await import("@/app/api/patients/[id]/route");
+const { PATCH, DELETE } = await import("@/app/api/patients/[id]/route");
 
 const basePayload = {
   patientInitial: "AB",
@@ -80,10 +99,29 @@ function patch(body: Record<string, unknown>) {
   );
 }
 
+function rawRequest(method: string, body: string) {
+  return new Request("http://test/api/patients", {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body,
+  });
+}
+
+function del() {
+  return DELETE(new Request("http://test/api/patients/p-1", { method: "DELETE" }), {
+    params: Promise.resolve({ id: "p-1" }),
+  });
+}
+
 beforeEach(() => {
   state.inserted = null;
   state.updated = null;
   state.existing = null;
+  state.audit = [];
+  state.accessLogs = [];
+  state.accessLogFails = false;
+  state.deleted = false;
+  state.role = "DOCTOR";
 });
 
 describe("POST /api/patients", () => {
@@ -219,5 +257,102 @@ describe("PATCH /api/patients/[id]", () => {
     const res = await patch({ patientInitial: "Siti Aminah" });
     expect(res.status).toBe(400);
     expect(state.updated).toBeNull();
+  });
+});
+
+// ─── Temuan review lanjutan ──────────────────────────────────────────────────
+describe("body request tidak valid", () => {
+  it("POST dengan JSON rusak → 400 berpesan, bukan 500", async () => {
+    const res = await POST(rawRequest("POST", "{bukan json"));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toContain("JSON");
+  });
+
+  it("POST dengan body null → 400", async () => {
+    const res = await POST(rawRequest("POST", "null"));
+    expect(res.status).toBe(400);
+  });
+
+  it("PATCH dengan body array → 400", async () => {
+    state.existing = { id: "p-1", doctorId: "doc-1", finalizedAt: null };
+    const res = await PATCH(rawRequest("PATCH", "[]"), { params: Promise.resolve({ id: "p-1" }) });
+    expect(res.status).toBe(400);
+    expect(state.updated).toBeNull();
+  });
+});
+
+describe("pesan consentBasis", () => {
+  it("nilai salah ketik dapat pesan 'tidak valid', bukan 'wajib dipilih'", async () => {
+    const res = await post({ ...basePayload, consentBasis: "VERBAL" });
+    const { error } = await res.json();
+    expect(error).toContain("tidak valid");
+    expect(error).toContain("VERBAL");
+  });
+
+  it("nama depan pendek sebagai inisial ditolak dengan pesan 'terbaca seperti nama'", async () => {
+    const res = await post({ ...basePayload, patientInitial: "Budi" });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toContain("seperti nama");
+  });
+});
+
+describe("PATCH inisial & audit trail", () => {
+  const row = { id: "p-1", doctorId: "doc-1", finalizedAt: null, careSetting: "POLI", visitDisposition: null };
+
+  it("inisial lama yang kini 'mirip nama' tidak memblokir edit field lain bila tidak diubah", async () => {
+    state.existing = { ...row, patientInitial: "ANI", age: 60 };
+    const res = await patch({ patientInitial: "ANI", age: 61 });
+    expect(res.status).toBe(200);
+    expect(state.updated).not.toHaveProperty("patientInitial");
+    expect(state.updated?.age).toBe(61);
+  });
+
+  it("koreksi inisial tidak menyalin nilai lama (bisa nama lengkap) ke audit trail", async () => {
+    state.existing = { ...row, patientInitial: "BUDI SANTOSO" };
+    const res = await patch({ patientInitial: "BS" });
+    expect(res.status).toBe(200);
+    const entry = state.audit.find((a) => a.changedField === "patientInitial");
+    expect(entry?.oldValue).toBe("[disamarkan]");
+    expect(entry?.newValue).toBe("[disamarkan]");
+    expect(JSON.stringify(state.audit)).not.toContain("SANTOSO");
+  });
+});
+
+describe("DELETE /api/patients/[id]", () => {
+  it("penghapusan dicatat di access_logs sebelum data dihapus", async () => {
+    state.existing = { id: "p-1", doctorId: "doc-1", finalizedAt: null };
+    const res = await del();
+    expect(res.status).toBe(200);
+    expect(state.deleted).toBe(true);
+    expect(state.accessLogs).toHaveLength(1);
+    expect(state.accessLogs[0].action).toBe("delete_patient");
+    expect(JSON.parse(String(state.accessLogs[0].detail))).toMatchObject({ patientId: "p-1" });
+  });
+
+  it("gagal mencatat → 503 dan data TIDAK dihapus", async () => {
+    state.existing = { id: "p-1", doctorId: "doc-1", finalizedAt: null };
+    state.accessLogFails = true;
+    const res = await del();
+    expect(res.status).toBe(503);
+    expect(state.deleted).toBe(false);
+  });
+
+  it("admin bisa menghapus pasien final milik dokter lain (jalur hak hapus)", async () => {
+    state.role = "ADMIN";
+    state.existing = { id: "p-1", doctorId: "doc-LAIN", finalizedAt: new Date() };
+    const res = await del();
+    expect(res.status).toBe(200);
+    expect(state.deleted).toBe(true);
+    expect(JSON.parse(String(state.accessLogs[0].detail))).toMatchObject({
+      ownerDoctorId: "doc-LAIN",
+      finalized: true,
+    });
+  });
+
+  it("dokter biasa tidak bisa menghapus pasien yang sudah final", async () => {
+    state.existing = { id: "p-1", doctorId: "doc-1", finalizedAt: new Date() };
+    const res = await del();
+    expect(res.status).toBe(423);
+    expect(state.deleted).toBe(false);
   });
 });
