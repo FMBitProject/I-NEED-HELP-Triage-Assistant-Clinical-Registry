@@ -23,6 +23,38 @@ interface RegisterData {
   doctorType: string;
 }
 
+interface AuthError {
+  message?: string;
+  code?: string;
+  status?: number;
+}
+
+// Pesan bawaan better-auth berbahasa Inggris ("Password too short", "User
+// already exists...", "Too many requests"). Pesan dari hook kita sendiri
+// (mis. jenis dokter) sudah berbahasa Indonesia dan diteruskan apa adanya.
+function translateSignUpError(error: AuthError): string {
+  if (error.status === 429) {
+    return "Terlalu banyak percobaan dari jaringan ini. Tunggu sekitar 1 menit, lalu coba lagi.";
+  }
+  switch (error.code) {
+    case "PASSWORD_TOO_SHORT":
+      return "Password terlalu pendek — minimal 8 karakter.";
+    case "PASSWORD_TOO_LONG":
+      return "Password terlalu panjang — maksimal 128 karakter.";
+    case "USER_ALREADY_EXISTS":
+    case "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL":
+      return "Email ini sudah terdaftar. Silakan masuk lewat halaman Login, atau gunakan email lain.";
+    case "INVALID_EMAIL":
+      return "Format email tidak valid. Periksa kembali alamat email Anda.";
+    case "VALIDATION_ERROR":
+      if (error.message?.includes("email")) {
+        return "Format email tidak valid. Periksa kembali alamat email Anda.";
+      }
+      break;
+  }
+  return error.message || "Pendaftaran gagal. Periksa koneksi internet lalu coba lagi.";
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -79,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       institutionType: string;
       doctorType: string;
       researchConsent: boolean;
-    }) => Promise<{ error: { message?: string } | null }>;
+    }) => Promise<{ error: AuthError | null }>;
     const { error } = await signUpEmail({
       email: data.email,
       password: data.password,
@@ -88,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       doctorType: data.doctorType,
       researchConsent: true,
     });
-    if (error) return { success: false, error: error.message || "Pendaftaran gagal." };
+    if (error) return { success: false, error: translateSignUpError(error) };
     return { success: true };
   };
 

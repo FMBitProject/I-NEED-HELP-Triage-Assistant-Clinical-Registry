@@ -111,7 +111,9 @@ export default function RegisterPage() {
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   required
-                  minLength={6}
+                  // Harus sama dengan minPasswordLength better-auth (default 8);
+                  // dulu 6, sehingga password 6–7 karakter lolos form lalu ditolak server.
+                  minLength={8}
                 />
               </div>
 
